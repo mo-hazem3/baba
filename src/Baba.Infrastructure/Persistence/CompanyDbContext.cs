@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Baba.Application.Abstractions;
 using Baba.Domain;
+using Baba.Domain.Accounting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -20,6 +21,11 @@ public sealed class CompanyDbContext(
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<StoredFile> Files => Set<StoredFile>();
     public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
+    public DbSet<Voucher> Vouchers => Set<Voucher>();
+    public DbSet<VoucherLine> VoucherLines => Set<VoucherLine>();
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<Period> Periods => Set<Period>();
+    public DbSet<NumberSequence> NumberSequences => Set<NumberSequence>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -30,6 +36,9 @@ public sealed class CompanyDbContext(
         configuration.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
         configuration.Properties<AccountType>().HaveConversion<string>();
         configuration.Properties<AuditAction>().HaveConversion<string>();
+        configuration.Properties<AccountRole>().HaveConversion<string>();
+        configuration.Properties<VoucherKind>().HaveConversion<string>();
+        configuration.Properties<VoucherStatus>().HaveConversion<string>();
     }
 
     protected override void OnModelCreating(ModelBuilder model)
@@ -57,7 +66,52 @@ public sealed class CompanyDbContext(
         {
             account.HasIndex(a => new { a.CompanyId, a.Code }).IsUnique();
             account.HasOne<Account>().WithMany().HasForeignKey(a => a.ParentId).OnDelete(DeleteBehavior.Restrict);
+            account.Ignore(a => a.IsDebitNormal);
             account.HasQueryFilter(a => a.CompanyId == CurrentCompanyId);
+        });
+
+        // Money is stored as scaled integers (ADR 0002): only the long columns are mapped, the decimal views are ignored.
+        model.Entity<Voucher>(voucher =>
+        {
+            voucher.Ignore(v => v.ExchangeRate).Ignore(v => v.TotalDebit).Ignore(v => v.TotalCredit);
+            voucher.HasMany(v => v.Lines).WithOne().HasForeignKey(l => l.VoucherId).OnDelete(DeleteBehavior.Cascade);
+            voucher.HasOne<Account>().WithMany().HasForeignKey(v => v.CashAccountId).OnDelete(DeleteBehavior.Restrict);
+            // A number is unique once given; drafts have none.
+            voucher.HasIndex(v => new { v.CompanyId, v.Number }).IsUnique().HasFilter("\"Number\" IS NOT NULL");
+            voucher.HasIndex(v => v.Date);
+            voucher.HasQueryFilter(v => v.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<VoucherLine>(line =>
+        {
+            line.Ignore(l => l.Debit).Ignore(l => l.Credit);
+            line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
+            line.HasIndex(l => new { l.VoucherId, l.LineNumber });
+            line.HasIndex(l => l.AccountId);
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<LedgerEntry>(entry =>
+        {
+            entry.Ignore(e => e.Debit).Ignore(e => e.Credit).Ignore(e => e.BaseDebit).Ignore(e => e.BaseCredit);
+            entry.HasOne<Voucher>().WithMany().HasForeignKey(e => e.VoucherId).OnDelete(DeleteBehavior.Cascade);
+            entry.HasOne<Account>().WithMany().HasForeignKey(e => e.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasIndex(e => new { e.AccountId, e.Date });
+            entry.HasIndex(e => e.Date);
+            entry.HasIndex(e => e.VoucherId);
+            entry.HasQueryFilter(e => e.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<Period>(period =>
+        {
+            period.HasIndex(p => new { p.CompanyId, p.Start }).IsUnique();
+            period.HasQueryFilter(p => p.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<NumberSequence>(sequence =>
+        {
+            sequence.HasIndex(s => new { s.CompanyId, s.Kind, s.FiscalYear }).IsUnique();
+            sequence.HasQueryFilter(s => s.CompanyId == CurrentCompanyId);
         });
 
         model.Entity<StoredFile>().HasQueryFilter(f => f.CompanyId == CurrentCompanyId);
@@ -116,7 +170,9 @@ public sealed class CompanyDbContext(
                 }
             }
 
-            auditRows.Add(CreateAuditRow(entry, now, user));
+            // Derived data (ledger entries, number counters) is not logged row by row: the voucher itself is.
+            if (entry.Entity is not INotAudited)
+                auditRows.Add(CreateAuditRow(entry, now, user));
         }
 
         AuditLog.AddRange(auditRows);

@@ -235,6 +235,7 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
             NameEn = s.NameEn,
             Type = s.Type,
             IsPosting = s.IsPosting,
+            Role = s.Role,
         });
 
         foreach (var seed in seeds.Where(s => s.ParentCode is not null))

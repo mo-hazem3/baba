@@ -12,6 +12,9 @@ public interface ICompanyScoped
     Guid CompanyId { get; set; }
 }
 
+/// <summary>Data that is derived from other data (such as ledger entries made by posting). It is not written to the audit log row by row.</summary>
+public interface INotAudited;
+
 /// <summary>Timestamps are UTC. The user ids are opaque text so cloud accounts can use any id format later.</summary>
 public interface IAuditable
 {

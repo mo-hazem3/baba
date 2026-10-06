@@ -1,5 +1,7 @@
+using Baba.Application.Accounting;
 using Baba.Application.Companies;
 using Baba.Application.Printing;
+using Baba.Infrastructure.Accounting;
 using Baba.Infrastructure.CompanyFiles;
 using Baba.Infrastructure.Printing;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +19,10 @@ public static class DependencyInjection
         services.AddSingleton<ICompanyFiles>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
         services.AddSingleton<ICompanyDbContextFactory>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
         services.AddSingleton<IPrintFonts, EmbeddedPrintFonts>();
+        services.AddSingleton<IAccountStore, AccountStore>();
+        services.AddSingleton<IVoucherStore, VoucherStore>();
+        services.AddSingleton<IPeriodStore, PeriodStore>();
+        services.AddSingleton<ILedgerQuery, LedgerQuery>();
         return services;
     }
 }

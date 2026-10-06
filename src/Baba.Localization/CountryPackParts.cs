@@ -63,7 +63,8 @@ public sealed record AccountSeed(
     string NameAr,
     AccountType Type,
     string? ParentCode,
-    bool IsPosting);
+    bool IsPosting,
+    AccountRole Role = AccountRole.None);
 
 /// <summary>An account list used to seed a new company.</summary>
 public sealed record ChartOfAccountsTemplate(
