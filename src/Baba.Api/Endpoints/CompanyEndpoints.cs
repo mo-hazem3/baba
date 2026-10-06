@@ -13,6 +13,8 @@ public static class CompanyEndpoints
         // 200 with the open company, or 204 when none is open.
         company.MapGet("/", (CompanyService service) =>
                 service.Current is { } info ? Results.Ok(info) : Results.NoContent())
+            .Produces<CompanyInfo>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent)
             .WithName("GetCurrentCompany");
 
         company.MapPost("/create", async (CreateCompanyRequest request, CompanyService service, IRecentFiles recent, CancellationToken cancellationToken) =>

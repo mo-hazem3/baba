@@ -1,0 +1,242 @@
+{
+  "app": {
+    "name": "Baba",
+    "arabicName": "بابا",
+    "loading": "Loading…",
+    "skipToContent": "Skip to main content"
+  },
+  "nav": {
+    "label": "Main menu",
+    "summary": "Summary",
+    "settings": "Settings"
+  },
+  "header": {
+    "language": "Language",
+    "switchLanguage": "العربية",
+    "textSize": "Text size",
+    "menu": "Menu",
+    "closeCompany": "Close company",
+    "closeCompanyTitle": "Close {{name}}?",
+    "closeCompanyBody": "The company is saved automatically. You will need the file password to open it again."
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "newCompany": "New company"
+  },
+  "textSize": {
+    "normal": "Normal",
+    "large": "Large",
+    "xlarge": "Extra large"
+  },
+  "digits": {
+    "label": "Numbers",
+    "western": "Western (123)",
+    "arabicIndic": "Arabic-Indic (١٢٣)"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "cancel": "Cancel",
+    "create": "Create company",
+    "open": "Open",
+    "close": "Close",
+    "remove": "Remove from list",
+    "choose": "Choose…",
+    "optional": "optional",
+    "required": "required",
+    "help": "Help",
+    "dismiss": "Got it"
+  },
+  "help": {
+    "start": "Create a new company, or open a company file you already have. Each company is one file on your computer, protected by its own password. You can copy the file to back it up or send it to your accountant.",
+    "wizard": "Answer a few questions to set up your company. You can go back to any step. Nothing is created until the last step.",
+    "summary": "This is your starting page. It shows your company and will show your key balances once you start recording entries.",
+    "settings": "Choose the language, text size and number style. These settings are saved on this computer."
+  },
+  "terms": {
+    "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
+    "baseCurrency": "The main currency your books are kept in. Amounts in other currencies are converted into it.",
+    "chartOfAccounts": "The list of accounts (like Cash, Sales or Rent) that every entry is recorded against.",
+    "taxRegistration": "The number your tax authority gave your business. It is printed on your invoices.",
+    "modules": "Optional parts of Baba. Turn on only what you use. You can change this later.",
+    "filePassword": "Protects your company file. Without it nobody can read the file."
+  },
+  "start": {
+    "title": "Welcome to Baba",
+    "subtitle": "Accounting for your business, kept on your computer.",
+    "newCompany": "New company",
+    "openFile": "Open company file…",
+    "recent": "Recent companies",
+    "emptyTitle": "No companies yet",
+    "emptyBody": "Create your first company, or open a file you already have.",
+    "lastOpened": "Last opened {{date}}",
+    "fileMissing": "File not found. It may have been moved or deleted.",
+    "openRecent": "Open {{name}}",
+    "removeRecent": "Remove {{name}} from the list",
+    "pathLabel": "File location",
+    "pathPlaceholder": "C:\\Books\\My Company.baba",
+    "pathHelp": "Type the full location of the company file."
+  },
+  "openCompany": {
+    "title": "Open {{name}}",
+    "password": "File password",
+    "passwordHelp": "This is the password you chose when you created the company.",
+    "submit": "Open company",
+    "opening": "Opening… this can take a few seconds."
+  },
+  "wizard": {
+    "title": "New company",
+    "steps": {
+      "company": "Company",
+      "taxes": "Tax numbers",
+      "address": "Address",
+      "chart": "Accounts",
+      "modules": "Modules",
+      "file": "Password and file"
+    },
+    "nameAr": "Company name (Arabic)",
+    "nameEn": "Company name (English)",
+    "nameHelp": "Enter at least one name. If you leave one empty, the other is used for both.",
+    "country": "Country",
+    "countryHelp": "Sets the default currency, tax numbers and starting accounts.",
+    "currency": "Base currency",
+    "currencyHelp": "Your books are kept in this currency.",
+    "fiscalYearStartMonth": "Fiscal year starts in",
+    "firstFiscalYear": "First fiscal year",
+    "taxesIntro": "These numbers are printed on your invoices. They are checked against the format your country uses.",
+    "taxesNone": "No tax registration number is needed for {{country}}. You can continue.",
+    "taxInvalid": "This number is not in the right format.",
+    "address": "Address",
+    "addressHelp": "Shown on printed documents. You can change it later.",
+    "chartIntro": "Choose the accounts to start with. You can add, rename and move accounts at any time.",
+    "chartBlank": "Blank chart",
+    "chartBlankHelp": "Start with no accounts and add your own.",
+    "chartAccounts": "{{count}} accounts",
+    "modulesIntro": "Core accounting is always on. Turn on the extra parts you need.",
+    "passwordIntro": "Choose a password for this company file.",
+    "password": "File password",
+    "passwordConfirm": "Confirm password",
+    "passwordMismatch": "The two passwords do not match.",
+    "passwordWarningTitle": "Please remember this password",
+    "passwordWarning": "It cannot be recovered. If you forget it, nobody can open this file, not even us. Write it down and keep it safe.",
+    "filePath": "Save the company file as",
+    "filePathHelp": "Choose a folder you back up regularly.",
+    "creating": "Creating your company… this can take a few seconds.",
+    "chooseLocation": "Choose location…",
+    "fieldRequired": "This field is required."
+  },
+  "modules": {
+    "bank-cash": {
+      "name": "Bank and cash",
+      "description": "Bank and cash accounts, transfers and reconciliation."
+    },
+    "customers-suppliers": {
+      "name": "Customers and suppliers",
+      "description": "Who owes you and whom you owe, with statements and aging."
+    },
+    "cost-centers": {
+      "name": "Cost centers and projects",
+      "description": "Tag entries to see profit per project or department."
+    },
+    "sales": {
+      "name": "Sales",
+      "description": "Quotes, orders, delivery notes and invoices."
+    },
+    "purchases": {
+      "name": "Purchases",
+      "description": "Purchase orders, goods received and supplier bills."
+    },
+    "inventory": {
+      "name": "Inventory",
+      "description": "Stock items, warehouses and cost of goods sold."
+    },
+    "fixed-assets": {
+      "name": "Fixed assets",
+      "description": "Asset register and depreciation."
+    },
+    "payroll": {
+      "name": "Payroll and employees",
+      "description": "Salaries, payslips, social insurance and end-of-service."
+    },
+    "expense-claims": {
+      "name": "Expense claims",
+      "description": "Employees submit expenses and managers approve them."
+    },
+    "budgets": {
+      "name": "Budgets",
+      "description": "Compare budget with actual figures."
+    }
+  },
+  "summary": {
+    "title": "Summary",
+    "company": "Company",
+    "country": "Country",
+    "baseCurrency": "Base currency",
+    "fiscalYear": "Fiscal year starts",
+    "file": "Company file",
+    "modules": "Modules on",
+    "noModules": "Core accounting only",
+    "backup": "Back up now",
+    "backupSaved": "Backup saved to {{path}}",
+    "backupName": "{{name}} backup {{date}}",
+    "welcomeTitle": "Your company is ready",
+    "welcomeBody": "Your accounts are set up. The screens for recording entries are coming next."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "textSize": "Text size",
+    "textSizeHelp": "You can also press Ctrl and + or − to change the size, and Ctrl 0 to reset.",
+    "digits": "Number style",
+    "preview": "Preview",
+    "languageEnglish": "English",
+    "languageArabic": "العربية"
+  },
+  "errors": {
+    "WrongPasswordOrNotABabaFile": "The password is wrong, or this is not a Baba file.",
+    "NotABabaFile": "This file was not made by Baba.",
+    "OpenElsewhere": "This company is already open in another window. Close it there first.",
+    "CreatedByNewerVersion": "This company was saved by a newer version of Baba. Please update Baba to open it.",
+    "FileNotFound": "The file was not found. It may have been moved or deleted.",
+    "FileAlreadyExists": "A file with this name already exists. Choose a different name.",
+    "NoCompanyOpen": "No company is open.",
+    "CompanyAlreadyOpen": "A company is already open. Close it first.",
+    "InvalidRequest": "Something in the request is not right.",
+    "Validation": "Please check the highlighted fields.",
+    "BadRequest": "Something in the request is not right.",
+    "Network": "Baba cannot be reached. Please close it and start it again.",
+    "Unexpected": "Something went wrong. Please try again."
+  },
+  "validation": {
+    "path": {
+      "required": "Choose where to save the file."
+    },
+    "password": {
+      "too-short": "Use at least {{min}} characters."
+    },
+    "name": {
+      "required": "Enter the company name in Arabic or English."
+    },
+    "country": {
+      "unknown": "Choose a country."
+    },
+    "currency": {
+      "unknown": "Choose a currency."
+    },
+    "fiscal-year": {
+      "month-invalid": "Choose a month.",
+      "year-invalid": "Enter a year between 1900 and 2200."
+    },
+    "module": {
+      "unknown": "This module is not available."
+    },
+    "chart": {
+      "unknown": "Choose a chart of accounts."
+    },
+    "tax": {
+      "required": "This number is required.",
+      "invalid": "This number is not in the right format.",
+      "unknown": "This number is not used in this country."
+    }
+  }
+}

@@ -1,0 +1,242 @@
+/*
+ * Layout rules use CSS logical properties only (inline-start / inline-end), never left/right,
+ * so the whole page mirrors in Arabic (brief section 6). Stylelint enforces this.
+ */
+
+html,
+body,
+#root {
+  min-block-size: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f4f6f9;
+}
+
+.numbers,
+.ant-table-cell,
+.ant-descriptions-item-content {
+  font-variant-numeric: tabular-nums;
+}
+
+.negative {
+  color: #b00020;
+}
+
+.muted {
+  color: #444b57;
+}
+
+/* Paths and file names are always left-to-right, even inside Arabic text. */
+.path {
+  display: inline-block;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  unicode-bidi: isolate;
+}
+
+:focus-visible {
+  outline: 3px solid #12356b;
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 8px;
+  inset-block-start: -60px;
+  z-index: 100;
+  padding: 8px 12px;
+  background: #fff;
+  color: #12356b;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  inset-block-start: 8px;
+}
+
+.app-shell {
+  min-block-size: 100vh;
+}
+
+.app-header-bar {
+  display: flex;
+  align-items: center;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  inline-size: 100%;
+}
+
+.brand {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.company-name {
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid rgb(255 255 255 / 55%);
+  color: #fff;
+  font-weight: 600;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.text-size-select {
+  min-inline-size: 11em;
+}
+
+.app-sider {
+  border-inline-end: 1px solid #7b8597;
+}
+
+.app-content {
+  padding: 20px 28px 40px;
+  outline: none;
+}
+
+.page-header {
+  margin-block-end: 16px;
+}
+
+.page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 6px;
+}
+
+.page-title.ant-typography {
+  margin: 0;
+  font-size: 1.6em;
+}
+
+.page-header-action {
+  margin-inline-start: auto;
+}
+
+.page-spinner {
+  display: block;
+  margin: 20vh auto;
+}
+
+.term-tooltip {
+  margin-inline-start: 4px;
+  color: #12356b;
+  cursor: help;
+}
+
+.empty-body {
+  margin-block: 0 12px;
+  color: #444b57;
+}
+
+.form-alert {
+  margin-block-end: 16px;
+}
+
+.form-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.form-row .ant-form-item {
+  min-inline-size: 14em;
+}
+
+.vertical-options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.file-row {
+  display: flex;
+  gap: 8px;
+}
+
+.file-row .ant-input {
+  flex: 1;
+}
+
+.start-page {
+  max-inline-size: 860px;
+}
+
+.start-subtitle {
+  font-size: 1.1em;
+}
+
+.recent-card {
+  margin-block-start: 16px;
+}
+
+.recent-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 12px;
+  border-block-end: 1px solid #c3c9d4;
+}
+
+.recent-item:last-child {
+  border-block-end: none;
+}
+
+.recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.recent-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wizard {
+  max-inline-size: 900px;
+}
+
+.wizard-steps {
+  margin-block-end: 16px;
+}
+
+.company-details {
+  max-inline-size: 760px;
+}
+
+.settings-form {
+  max-inline-size: 640px;
+}
+
+.preview {
+  margin: 0;
+  font-size: 1.1em;
+}

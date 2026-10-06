@@ -83,7 +83,7 @@ public class CountryRuleTests
     private static readonly Regex CountryText = new(
         @"\b(Egypt|Egyptian|Saudi|Emirates|Emirati|Kuwait|Kuwaiti|Bahrain|Bahraini|Oman|Omani|Qatar|Qatari|ZATCA|FATOORA|Zakat)\b" +
         @"|\b(EGP|SAR|AED|KWD|BHD|OMR|QAR)\b" +
-        @"|""(EG|SA|AE|KW|BH|OM|QA)""",
+        @"|[""'`](EG|SA|AE|KW|BH|OM|QA)[""'`]", // quoted country codes in C# (double quotes) and TypeScript (any quote)
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly string[] SourceExtensions = [".cs", ".ts", ".tsx", ".css"];

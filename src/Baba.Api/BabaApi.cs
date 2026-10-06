@@ -33,7 +33,12 @@ public static class BabaApi
 
         var services = builder.Services;
         services.AddSingleton(options);
-        services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        services.ConfigureHttpJsonOptions(json =>
+        {
+            json.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            // Numbers must be JSON numbers (not "12" in quotes): keeps the OpenAPI types and the generated client exact.
+            json.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+        });
         services.AddOpenApi();
         services.AddSingleton(CountryPackRegistry.Discover());
         services.AddSingleton<CompanyService>();

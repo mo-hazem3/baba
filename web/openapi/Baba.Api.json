@@ -53,7 +53,17 @@
         "operationId": "PickCompanyFileToOpen",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathChoice"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented"
           }
         }
       }
@@ -76,7 +86,17 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathChoice"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented"
           }
         }
       }
@@ -158,7 +178,17 @@
         "operationId": "GetCurrentCompany",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInfo"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -375,11 +405,7 @@
             "type": "string"
           },
           "accountCount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           }
         }
@@ -415,19 +441,11 @@
             "type": "string"
           },
           "fiscalYearStartMonth": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "firstFiscalYear": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "enabledModules": {
@@ -489,11 +507,7 @@
             }
           },
           "defaultFiscalYearStartMonth": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "taxRegistration": {
@@ -548,11 +562,7 @@
             "type": "string"
           },
           "minorUnits": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "nameEn": {
@@ -578,11 +588,7 @@
             "type": "string"
           },
           "minorUnits": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "majorNameEn": {
@@ -664,19 +670,11 @@
             "type": "string"
           },
           "fiscalYearStartMonth": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "firstFiscalYear": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "taxNumbers": {
@@ -717,6 +715,20 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "PathChoice": {
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

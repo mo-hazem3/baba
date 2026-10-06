@@ -24,6 +24,8 @@ public static class HostEndpoints
                     return Results.StatusCode(StatusCodes.Status501NotImplemented);
                 return Results.Ok(new PathChoice(await dialogs.PickCompanyFileToOpenAsync(cancellationToken)));
             })
+            .Produces<PathChoice>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status501NotImplemented)
             .WithName("PickCompanyFileToOpen").WithTags("Host");
 
         api.MapPost("/dialogs/save-company-file", async (SaveDialogRequest request, IServiceProvider services, CancellationToken cancellationToken) =>
@@ -32,6 +34,8 @@ public static class HostEndpoints
                     return Results.StatusCode(StatusCodes.Status501NotImplemented);
                 return Results.Ok(new PathChoice(await dialogs.PickCompanyFileToSaveAsync(request.SuggestedFileName, cancellationToken)));
             })
+            .Produces<PathChoice>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status501NotImplemented)
             .WithName("PickCompanyFileToSave").WithTags("Host");
     }
 }

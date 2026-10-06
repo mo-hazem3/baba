@@ -16,3 +16,32 @@ jobs:
           global-json-file: global.json
       - run: dotnet build Baba.slnx --configuration Release
       - run: dotnet test Baba.slnx --configuration Release --no-build
+
+  web:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # The API writes web/openapi/Baba.Api.json when it is built; the TypeScript client is generated from it.
+      # If either is out of date, this fails and tells you to regenerate and commit.
+      - run: dotnet build ../src/Baba.Api --configuration Release
+      - run: npm run api
+      - name: Generated API client is up to date
+        run: git diff --exit-code -- openapi src/api/generated
+      - run: npm run build
+      # End-to-end tests drive the built app and the real API in Microsoft Edge (installed on the runner).
+      - run: npm run e2e

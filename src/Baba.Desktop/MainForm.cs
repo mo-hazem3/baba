@@ -116,8 +116,12 @@ internal sealed class MainForm : Form
         };
         _webView.CoreWebView2.NavigationCompleted += async (_, e) =>
         {
-            if (_smokeTestOutput is not null)
-                await RunSmokeTestAsync(e.IsSuccess);
+            if (_smokeTestOutput is null)
+                return;
+            if (_smokeApiResult is null)
+                await RunApiSmokeTestAsync(e.IsSuccess);
+            else
+                await RunPageSmokeTestAsync();
         };
     }
 
@@ -176,9 +180,14 @@ internal sealed class MainForm : Form
         await api.DisposeAsync();
     }
 
-    // --- Smoke test: `Baba.Desktop.exe --smoke-test <result.json>` proves WebView2 + token + API work end to end. ---
+    // --- Smoke test: `Baba.Desktop.exe --smoke-test <result.json>` proves WebView2 + token + API + web app work end to end. ---
 
-    private async Task RunSmokeTestAsync(bool navigated)
+    private SmokeApiResult? _smokeApiResult;
+
+    private sealed record SmokeApiResult(bool Ok, string BrowserSawApi, int RequestWithoutTokenStatus);
+
+    /// <summary>Stage 1: the window can call the API with its cookie, and a plain client without it is refused.</summary>
+    private async Task RunApiSmokeTestAsync(bool navigated)
     {
         try
         {
@@ -190,12 +199,40 @@ internal sealed class MainForm : Form
             var ok = navigated
                      && viaBrowser.Contains("\"fileDialogs\":true", StringComparison.OrdinalIgnoreCase)
                      && withoutToken.StatusCode == System.Net.HttpStatusCode.Unauthorized;
+            _smokeApiResult = new SmokeApiResult(ok, viaBrowser, (int)withoutToken.StatusCode);
 
+            if (Directory.Exists(Path.Combine(AppContext.BaseDirectory, "wwwroot")))
+                _webView.CoreWebView2.Navigate(_origin!.ToString()); // stage 2 runs when this page has loaded
+            else
+                await FinishSmokeTestAsync(new { ok, browserSawApi = viaBrowser, requestWithoutTokenStatus = _smokeApiResult.RequestWithoutTokenStatus, webApp = "not bundled" });
+        }
+        catch (Exception e)
+        {
+            await FinishSmokeTestAsync(new { ok = false, error = e.ToString() });
+        }
+    }
+
+    /// <summary>Stage 2: the bundled web app starts and shows its first screen (a page heading).</summary>
+    private async Task RunPageSmokeTestAsync()
+    {
+        try
+        {
+            string heading = "";
+            for (var attempt = 0; attempt < 60 && heading.Length == 0; attempt++)
+            {
+                var result = await _webView.CoreWebView2.ExecuteScriptAsync("document.querySelector('h1')?.innerText ?? ''");
+                heading = System.Text.Json.JsonSerializer.Deserialize<string>(result) ?? "";
+                if (heading.Length == 0)
+                    await Task.Delay(250);
+            }
+
+            var api = _smokeApiResult!;
             await FinishSmokeTestAsync(new
             {
-                ok,
-                browserSawApi = viaBrowser,
-                requestWithoutTokenStatus = (int)withoutToken.StatusCode,
+                ok = api.Ok && heading.Length > 0,
+                browserSawApi = api.BrowserSawApi,
+                requestWithoutTokenStatus = api.RequestWithoutTokenStatus,
+                webApp = heading,
             });
         }
         catch (Exception e)

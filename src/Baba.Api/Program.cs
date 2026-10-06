@@ -7,6 +7,7 @@ var options = new BabaApiOptions
     Port = int.TryParse(Environment.GetEnvironmentVariable("BABA_PORT"), out var port) ? port : 5054,
     AccessToken = Environment.GetEnvironmentVariable("BABA_TOKEN"),
     WebRootPath = Environment.GetEnvironmentVariable("BABA_WEBROOT"),
+    RecentFilesPath = Environment.GetEnvironmentVariable("BABA_RECENT_FILES"),
     AdditionalAllowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"],
 };
 
