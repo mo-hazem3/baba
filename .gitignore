@@ -1,0 +1,46 @@
+# Private, personal files: never commit
+docs/baba-brief.md
+
+# Local tooling (portable Node etc.)
+.tools/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+artifacts/
+
+# Company files and local data (can contain real financial data)
+*.baba
+*.baba.lock
+*.baba-wal
+*.baba-shm
+*.baba-journal
+data/
+
+# Node / web
+node_modules/
+web/dist/
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+*.pfx
+*.snk
+
+# Editors / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+.DS_Store
+*.log
