@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    # Windows because the desktop host (WinForms/WebView2) and its architecture tests are Windows-only.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet build Baba.slnx --configuration Release
+      - run: dotnet test Baba.slnx --configuration Release --no-build

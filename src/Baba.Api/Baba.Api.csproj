@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Baba.Application\Baba.Application.csproj" />
+    <ProjectReference Include="..\Baba.Infrastructure\Baba.Infrastructure.csproj" />
+    <ProjectReference Include="..\Baba.Localization\Baba.Localization.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

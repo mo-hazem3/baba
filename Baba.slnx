@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Baba.Api/Baba.Api.csproj" />
+    <Project Path="src/Baba.Application/Baba.Application.csproj" />
+    <Project Path="src/Baba.Desktop/Baba.Desktop.csproj" />
+    <Project Path="src/Baba.Domain/Baba.Domain.csproj" />
+    <Project Path="src/Baba.Infrastructure/Baba.Infrastructure.csproj" />
+    <Project Path="src/Baba.Localization/Baba.Localization.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Baba.Architecture.Tests/Baba.Architecture.Tests.csproj" />
+    <Project Path="tests/Baba.Domain.Tests/Baba.Domain.Tests.csproj" />
+    <Project Path="tests/Baba.Localization.Tests/Baba.Localization.Tests.csproj" />
+  </Folder>
+</Solution>

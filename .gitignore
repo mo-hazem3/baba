@@ -1,5 +1,6 @@
 # Private, personal files: never commit
 docs/baba-brief.md
+CLAUDE.md
 
 # Local tooling (portable Node etc.)
 .tools/
@@ -19,7 +20,7 @@ artifacts/
 *.baba-wal
 *.baba-shm
 *.baba-journal
-data/
+/data/
 
 # Node / web
 node_modules/
