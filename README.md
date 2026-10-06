@@ -63,6 +63,7 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 | `web/` | React + TypeScript + Vite + Ant Design |
 | `tests/` | Unit, API, architecture and desktop smoke tests |
 | `installer/` | Inno Setup script and build script |
+| `tools/real-window-check/` | Drives the real desktop window end to end (run after every phase) |
 | `docs/adr/` | Decision records (why things are the way they are) |
 
 ## Rules the code follows
