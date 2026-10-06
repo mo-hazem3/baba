@@ -1,0 +1,829 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Baba.Api | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/host": {
+      "get": {
+        "tags": [
+          "Host"
+        ],
+        "operationId": "GetHostInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/startup": {
+      "get": {
+        "tags": [
+          "Host"
+        ],
+        "operationId": "GetStartup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartupInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dialogs/open-company-file": {
+      "post": {
+        "tags": [
+          "Host"
+        ],
+        "operationId": "PickCompanyFileToOpen",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dialogs/save-company-file": {
+      "post": {
+        "tags": [
+          "Host"
+        ],
+        "operationId": "PickCompanyFileToSave",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDialogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/countries": {
+      "get": {
+        "tags": [
+          "Reference"
+        ],
+        "operationId": "ListCountries",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/currencies": {
+      "get": {
+        "tags": [
+          "Reference"
+        ],
+        "operationId": "ListCurrencies",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/modules": {
+      "get": {
+        "tags": [
+          "Reference"
+        ],
+        "operationId": "ListModules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/company": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "GetCurrentCompany",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/company/create": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "CreateCompany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/company/open": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "OpenCompany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/company/close": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "CloseCompany",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/company/backup": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "BackupCompany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recent-files": {
+      "get": {
+        "tags": [
+          "Recent files"
+        ],
+        "operationId": "ListRecentFiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecentFileDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recent-files/remove": {
+      "post": {
+        "tags": [
+          "Recent files"
+        ],
+        "operationId": "RemoveRecentFile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveRecentFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BackupRequest": {
+        "required": [
+          "destinationPath"
+        ],
+        "type": "object",
+        "properties": {
+          "destinationPath": {
+            "type": "string"
+          }
+        }
+      },
+      "CalendarKind": {
+        "enum": [
+          "Gregorian",
+          "HijriUmmAlQura"
+        ]
+      },
+      "CapabilitiesDto": {
+        "required": [
+          "hasTaxCodes",
+          "hasTaxReturn",
+          "hasEInvoicing",
+          "hasWithholding",
+          "hasPayroll",
+          "hasStatutoryReports"
+        ],
+        "type": "object",
+        "properties": {
+          "hasTaxCodes": {
+            "type": "boolean"
+          },
+          "hasTaxReturn": {
+            "type": "boolean"
+          },
+          "hasEInvoicing": {
+            "type": "boolean"
+          },
+          "hasWithholding": {
+            "type": "boolean"
+          },
+          "hasPayroll": {
+            "type": "boolean"
+          },
+          "hasStatutoryReports": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ChartTemplateDto": {
+        "required": [
+          "key",
+          "nameEn",
+          "nameAr",
+          "accountCount"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "accountCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CompanyInfo": {
+        "required": [
+          "id",
+          "nameAr",
+          "nameEn",
+          "countryCode",
+          "baseCurrencyCode",
+          "fiscalYearStartMonth",
+          "firstFiscalYear",
+          "enabledModules",
+          "filePath"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "baseCurrencyCode": {
+            "type": "string"
+          },
+          "fiscalYearStartMonth": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "firstFiscalYear": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enabledModules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filePath": {
+            "type": "string"
+          }
+        }
+      },
+      "CountryDto": {
+        "required": [
+          "code",
+          "nameEn",
+          "nameAr",
+          "languages",
+          "currency",
+          "calendars",
+          "defaultWeekend",
+          "defaultFiscalYearStartMonth",
+          "taxRegistration",
+          "chartsOfAccounts",
+          "bilingualPrintRequired",
+          "capabilities"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currency": {
+            "$ref": "#/components/schemas/CurrencyUnitsDto"
+          },
+          "calendars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalendarKind"
+            }
+          },
+          "defaultWeekend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DayOfWeek"
+            }
+          },
+          "defaultFiscalYearStartMonth": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taxRegistration": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxRegistrationRuleDto"
+            }
+          },
+          "chartsOfAccounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChartTemplateDto"
+            }
+          },
+          "bilingualPrintRequired": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/CapabilitiesDto"
+          }
+        }
+      },
+      "CreateCompanyRequest": {
+        "required": [
+          "path",
+          "password",
+          "company"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "company": {
+            "$ref": "#/components/schemas/NewCompanyRequest"
+          }
+        }
+      },
+      "CurrencyDto": {
+        "required": [
+          "code",
+          "minorUnits",
+          "nameEn",
+          "nameAr"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          }
+        }
+      },
+      "CurrencyUnitsDto": {
+        "required": [
+          "code",
+          "minorUnits",
+          "majorNameEn",
+          "majorNameAr",
+          "minorNameEn",
+          "minorNameAr"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "majorNameEn": {
+            "type": "string"
+          },
+          "majorNameAr": {
+            "type": "string"
+          },
+          "minorNameEn": {
+            "type": "string"
+          },
+          "minorNameAr": {
+            "type": "string"
+          }
+        }
+      },
+      "DayOfWeek": {
+        "enum": [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ]
+      },
+      "HostInfo": {
+        "required": [
+          "fileDialogs",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "fileDialogs": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ModuleDto": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "NewCompanyRequest": {
+        "required": [
+          "nameAr",
+          "nameEn",
+          "countryCode",
+          "baseCurrencyCode",
+          "fiscalYearStartMonth",
+          "firstFiscalYear",
+          "taxNumbers",
+          "address",
+          "chartTemplateKey",
+          "enabledModules"
+        ],
+        "type": "object",
+        "properties": {
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "baseCurrencyCode": {
+            "type": "string"
+          },
+          "fiscalYearStartMonth": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "firstFiscalYear": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taxNumbers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "chartTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabledModules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OpenCompanyRequest": {
+        "required": [
+          "path",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "RecentFileDto": {
+        "required": [
+          "path",
+          "name",
+          "lastOpenedAt",
+          "exists"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lastOpenedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RemoveRecentFileRequest": {
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "SaveDialogRequest": {
+        "required": [
+          "suggestedFileName"
+        ],
+        "type": "object",
+        "properties": {
+          "suggestedFileName": {
+            "type": "string"
+          }
+        }
+      },
+      "StartupInfo": {
+        "required": [
+          "openPath"
+        ],
+        "type": "object",
+        "properties": {
+          "openPath": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TaxRegistrationRuleDto": {
+        "required": [
+          "key",
+          "nameEn",
+          "nameAr",
+          "pattern",
+          "requiredForCompany"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredForCompany": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Host"
+    },
+    {
+      "name": "Reference"
+    },
+    {
+      "name": "Company"
+    },
+    {
+      "name": "Recent files"
+    }
+  ]
+}
