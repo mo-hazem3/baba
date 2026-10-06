@@ -8,8 +8,10 @@
     <Project Path="src/Baba.Localization/Baba.Localization.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Baba.Application.Tests/Baba.Application.Tests.csproj" />
     <Project Path="tests/Baba.Architecture.Tests/Baba.Architecture.Tests.csproj" />
     <Project Path="tests/Baba.Domain.Tests/Baba.Domain.Tests.csproj" />
+    <Project Path="tests/Baba.Infrastructure.Tests/Baba.Infrastructure.Tests.csproj" />
     <Project Path="tests/Baba.Localization.Tests/Baba.Localization.Tests.csproj" />
   </Folder>
 </Solution>
