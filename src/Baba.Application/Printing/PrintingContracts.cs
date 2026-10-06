@@ -1,15 +1,5 @@
 namespace Baba.Application.Printing;
 
-/// <summary>Which language(s) a printout uses. Document language is separate from the screen language (brief section 6).</summary>
-public enum PrintLayout
-{
-    Arabic,
-    English,
-
-    /// <summary>Arabic and English together on the same page (common in the Gulf, required for some e-invoices).</summary>
-    Both,
-}
-
 public sealed record PdfOptions(double MarginMillimeters = 14, bool Landscape = false);
 
 /// <summary>

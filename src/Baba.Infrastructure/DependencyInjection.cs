@@ -19,6 +19,8 @@ public static class DependencyInjection
         services.AddSingleton<ICompanyFiles>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
         services.AddSingleton<ICompanyDbContextFactory>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
         services.AddSingleton<IPrintFonts, EmbeddedPrintFonts>();
+        services.AddSingleton<IBrandingStore, BrandingStore>();
+        services.AddSingleton<IReportXlsxWriter, ClosedXmlReportWriter>();
         services.AddSingleton<IAccountStore, AccountStore>();
         services.AddSingleton<IVoucherStore, VoucherStore>();
         services.AddSingleton<IPeriodStore, PeriodStore>();

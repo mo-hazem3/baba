@@ -26,6 +26,7 @@ public sealed class CompanyDbContext(
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
     public DbSet<Period> Periods => Set<Period>();
     public DbSet<NumberSequence> NumberSequences => Set<NumberSequence>();
+    public DbSet<PrintSettings> PrintSettings => Set<PrintSettings>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -39,6 +40,7 @@ public sealed class CompanyDbContext(
         configuration.Properties<AccountRole>().HaveConversion<string>();
         configuration.Properties<VoucherKind>().HaveConversion<string>();
         configuration.Properties<VoucherStatus>().HaveConversion<string>();
+        configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
 
     protected override void OnModelCreating(ModelBuilder model)
@@ -106,6 +108,12 @@ public sealed class CompanyDbContext(
         {
             period.HasIndex(p => new { p.CompanyId, p.Start }).IsUnique();
             period.HasQueryFilter(p => p.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PrintSettings>(settings =>
+        {
+            settings.HasIndex(s => s.CompanyId).IsUnique(); // one print template per company
+            settings.HasQueryFilter(s => s.CompanyId == CurrentCompanyId);
         });
 
         model.Entity<NumberSequence>(sequence =>

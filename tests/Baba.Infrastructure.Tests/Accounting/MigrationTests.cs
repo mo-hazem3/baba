@@ -84,7 +84,7 @@ public class MigrationTests : AccountingFixture
         await again.OpenAsync(path, Password);
         using (var context = again.Create())
         {
-            Assert.Equal(2, (await context.Database.GetAppliedMigrationsAsync()).Count());
+            Assert.Equal(context.Database.GetMigrations().Count(), (await context.Database.GetAppliedMigrationsAsync()).Count()); // every migration, however many there are by now
             var cash = await context.Accounts.SingleAsync();
             Assert.Equal((AccountRole.None, "Cash"), (cash.Role, cash.NameEn));
             Assert.Empty(context.Vouchers);

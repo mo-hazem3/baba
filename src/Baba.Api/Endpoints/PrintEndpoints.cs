@@ -1,3 +1,4 @@
+using Baba.Domain;
 using Baba.Application.Printing;
 
 namespace Baba.Api.Endpoints;

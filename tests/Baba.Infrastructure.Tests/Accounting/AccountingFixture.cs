@@ -7,6 +7,19 @@ using Baba.Infrastructure.Tests.CompanyFiles;
 
 namespace Baba.Infrastructure.Tests.Accounting;
 
+/// <summary>Stands in for the PDF engine: remembers the page it was asked to print and returns a tiny fake PDF.</summary>
+public sealed class CapturingRenderer : Baba.Application.Printing.IPdfRenderer
+{
+    public string? Html { get; private set; }
+    public Baba.Application.Printing.PdfOptions? Options { get; private set; }
+
+    public Task<byte[]> RenderAsync(string html, Baba.Application.Printing.PdfOptions options, CancellationToken cancellationToken = default)
+    {
+        (Html, Options) = (html, options);
+        return Task.FromResult(System.Text.Encoding.ASCII.GetBytes("%PDF-fake"));
+    }
+}
+
 /// <summary>A real encrypted company with the default chart, and the real accounting services running on it.</summary>
 public abstract class AccountingFixture : CompanyFilesFixture
 {
@@ -16,12 +29,41 @@ public abstract class AccountingFixture : CompanyFilesFixture
         VoucherService Vouchers,
         PeriodService Periods,
         ILedgerQuery Ledger,
-        IReadOnlyDictionary<string, AccountDto> ByCode)
+        Baba.Application.Reporting.ReportService Reports,
+        IReadOnlyDictionary<string, AccountDto> ByCode,
+        Baba.Application.Printing.BrandingService Branding,
+        Baba.Application.Reporting.ListingService Listings,
+        Baba.Application.Reporting.DashboardService Dashboard,
+        Baba.Application.Printing.DocumentPrintService Documents,
+        Baba.Application.Printing.ExportService Exports,
+        CapturingRenderer Renderer)
     {
         public Guid Id(string code) => ByCode[code].Id;
     }
 
     protected static readonly DateOnly Oct6 = new(2026, 10, 6);
+    protected static readonly DateOnly Oct1 = new(2026, 10, 1);
+    protected static readonly DateOnly Oct31 = new(2026, 10, 31);
+
+    /// <summary>
+    /// October 2026 (three-decimal dinars), plus one sale in October 2025 for the comparisons:
+    /// capital in, a bank withdrawal, rent and utilities, a credit sale, a customer receipt, a cash sale, and salaries.
+    /// </summary>
+    protected async Task<Env> SeedMonthAsync()
+    {
+        var e = await NewEnvAsync();
+        async Task Post(VoucherInput input) => await e.Vouchers.SaveAndPostAsync(null, input);
+
+        await Post(Receipt(e, new DateOnly(2025, 10, 5), ("511", 400m)));                                     // last year: bank +400, sales 400
+        await Post(Receipt(e, new DateOnly(2026, 10, 1), ("31", 10_000m)));                                   // capital: bank +10,000
+        await Post(Journal(e, new DateOnly(2026, 10, 2), ("111", 2_000m, 0), ("112", 0, 2_000m)));           // cash withdrawal
+        await Post(Payment(e, new DateOnly(2026, 10, 3), ("422", 750m), ("423", 120.5m)));                    // from cash: rent + utilities
+        await Post(Journal(e, new DateOnly(2026, 10, 5), ("113", 3_500m, 0), ("511", 0, 3_500m)));            // credit sale
+        await Post(Receipt(e, new DateOnly(2026, 10, 10), ("113", 1_200m)));                                  // customer pays into the bank
+        await Post(Journal(e, new DateOnly(2026, 10, 12), ("111", 500m, 0), ("512", 0, 500m)));               // cash sale of services
+        await Post(Payment(e, new DateOnly(2026, 10, 15), ("421", 1_000m)) with { CashAccountId = e.Id("112") }); // salaries from the bank
+        return e;
+    }
 
     protected async Task<Env> NewEnvAsync(string user = "accountant")
     {
@@ -33,7 +75,20 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var vouchers = new VoucherService(new VoucherStore(files), accounts, new PeriodStore(files), files, Clock);
         var periods = new PeriodService(new PeriodStore(files), files);
         var byCode = (await chart.ListAsync()).ToDictionary(a => a.Code);
-        return new Env(files, chart, vouchers, periods, new LedgerQuery(files), byCode);
+        var ledger = new LedgerQuery(files);
+        var reports = new Baba.Application.Reporting.ReportService(accounts, ledger, files);
+
+        var brandingStore = new Printing.BrandingStore(files);
+        var renderer = new CapturingRenderer();
+        var documents = new Baba.Application.Printing.DocumentPrintService(
+            renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, vouchers, chart, Clock);
+        var exports = new Baba.Application.Printing.ExportService(new Printing.ClosedXmlReportWriter(), documents, brandingStore);
+        return new Env(
+            files, chart, vouchers, periods, ledger, reports, byCode,
+            new Baba.Application.Printing.BrandingService(brandingStore),
+            new Baba.Application.Reporting.ListingService(chart, vouchers, files),
+            new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
+            documents, exports, renderer);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

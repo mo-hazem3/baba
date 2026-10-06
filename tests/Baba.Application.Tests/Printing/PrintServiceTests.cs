@@ -1,3 +1,4 @@
+using Baba.Domain;
 using Baba.Application.Companies;
 using Baba.Application.Printing;
 
