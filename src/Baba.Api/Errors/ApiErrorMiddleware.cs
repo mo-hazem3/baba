@@ -31,6 +31,7 @@ public sealed class ApiErrorMiddleware(RequestDelegate next, ILogger<ApiErrorMid
     {
         ValidationException v => (StatusCodes.Status400BadRequest, new ApiProblem("Validation", v.Message, v.Issues)),
         CompanyFileException c => (StatusFor(c.Problem), new ApiProblem(c.Problem.ToString(), c.Message)),
+        NotFoundException n => (StatusCodes.Status404NotFound, new ApiProblem("NotFound", n.Message)),
         InvalidOperationException { Message: var m } when m.Contains("already open", StringComparison.OrdinalIgnoreCase)
             => (StatusCodes.Status409Conflict, new ApiProblem("CompanyAlreadyOpen", m)),
         BadHttpRequestException b => (StatusCodes.Status400BadRequest, new ApiProblem("BadRequest", b.Message)),

@@ -3,6 +3,8 @@ using Baba.Api.Endpoints;
 using Baba.Api.Errors;
 using Baba.Api.Security;
 using Baba.Application.Abstractions;
+using Baba.Application.Accounting;
+using Baba.Application.Reporting;
 using Baba.Application.Companies;
 using Baba.Application.Printing;
 using Baba.Infrastructure;
@@ -45,6 +47,19 @@ public static class BabaApi
         services.AddSingleton<CompanyService>();
         services.AddSingleton<StartupRequest>();
         services.AddBabaInfrastructure();
+        services.AddSingleton<ChartOfAccountsService>();
+        services.AddSingleton<VoucherService>();
+        services.AddSingleton<PeriodService>();
+        services.AddSingleton<ReportService>();
+        services.AddSingleton<ListingService>();
+        services.AddSingleton<DashboardService>();
+        services.AddSingleton<BrandingService>();
+        services.AddSingleton<ExportService>();
+        services.AddSingleton(sp => new DocumentPrintService(
+            sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(),
+            sp.GetRequiredService<IBrandingStore>(), sp.GetRequiredService<VoucherService>(), sp.GetRequiredService<ChartOfAccountsService>(),
+            sp.GetRequiredService<TimeProvider>()));
+
         // The PDF renderer is optional: only hosts that can make PDFs (the desktop app) register one.
         services.AddSingleton(sp => new PrintService(
             sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(), sp.GetRequiredService<TimeProvider>()));
@@ -74,6 +89,12 @@ public static class BabaApi
         api.MapReferenceEndpoints();
         api.MapCompanyEndpoints();
         api.MapPrintEndpoints();
+        api.MapAccountEndpoints();
+        api.MapVoucherEndpoints();
+        api.MapPeriodEndpoints();
+        api.MapReportEndpoints();
+        api.MapBrandingEndpoints();
+        api.MapDashboardEndpoints();
         app.MapOpenApi("/api/openapi/{documentName}.json");
 
         if (hasWebApp)

@@ -196,6 +196,26 @@
         }
       }
     },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Summary"
+        ],
+        "operationId": "GetDashboard",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/company": {
       "get": {
         "tags": [
@@ -360,10 +380,889 @@
           }
         }
       }
+    },
+    "/api/accounts": {
+      "get": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "ListAccounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "CreateAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}": {
+      "put": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "UpdateAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "DeleteAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/active": {
+      "post": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "SetAccountActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/move-entries": {
+      "post": {
+        "tags": [
+          "Chart of accounts"
+        ],
+        "operationId": "MoveAccountEntries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveEntriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveEntriesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers": {
+      "get": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "ListVouchers",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherKind"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherStatus"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VoucherSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers/{id}": {
+      "get": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "GetVoucher",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoucherDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "DeleteVoucher",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vouchers/draft": {
+      "post": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "SaveVoucherDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveVoucherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoucherDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers/post": {
+      "post": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "SaveAndPostVoucher",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveVoucherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoucherDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers/{id}/post": {
+      "post": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "PostVoucher",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoucherDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers/{id}/pdf": {
+      "get": {
+        "tags": [
+          "Vouchers"
+        ],
+        "operationId": "PrintVoucher",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrintLayout"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/api/periods": {
+      "get": {
+        "tags": [
+          "Periods"
+        ],
+        "operationId": "ListPeriods",
+        "parameters": [
+          {
+            "name": "fiscalYear",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PeriodDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/periods/lock": {
+      "post": {
+        "tags": [
+          "Periods"
+        ],
+        "operationId": "SetPeriodLocked",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockPeriodRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/{key}": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetReport",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "AsOf",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "AccountId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Comparison",
+            "in": "query",
+            "schema": {
+              "default": "None",
+              "$ref": "#/components/schemas/Comparison"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/reports/{key}/export": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ExportReport",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExportFormat"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrintLayout"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "AsOf",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "AccountId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Comparison",
+            "in": "query",
+            "schema": {
+              "default": "None",
+              "$ref": "#/components/schemas/Comparison"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/api/branding": {
+      "get": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "GetPrintSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "SavePrintSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrintSettingsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branding/{image}": {
+      "get": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "GetBrandingImage",
+        "parameters": [
+          {
+            "name": "image",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "SetBrandingImage",
+        "parameters": [
+          {
+            "name": "image",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "ClearBrandingImage",
+        "parameters": [
+          {
+            "name": "image",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccountDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "parentId",
+          "type",
+          "isPosting",
+          "isActive",
+          "role",
+          "hasEntries"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "isPosting": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AccountRole"
+          },
+          "hasEntries": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AccountInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn",
+          "parentId",
+          "type",
+          "isPosting",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "isPosting": {
+            "type": "boolean"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AccountRole"
+          }
+        }
+      },
+      "AccountRole": {
+        "enum": [
+          "None",
+          "CashOrBank",
+          "Receivable",
+          "Payable",
+          "RetainedEarnings"
+        ]
+      },
+      "AccountType": {
+        "enum": [
+          "Asset",
+          "Liability",
+          "Equity",
+          "Revenue",
+          "Expense"
+        ]
+      },
       "BackupRequest": {
         "required": [
           "destinationPath"
@@ -436,6 +1335,13 @@
           }
         }
       },
+      "ColumnKind": {
+        "enum": [
+          "Text",
+          "Date",
+          "Amount"
+        ]
+      },
       "CompanyInfo": {
         "required": [
           "id",
@@ -484,6 +1390,12 @@
             "type": "string"
           }
         }
+      },
+      "Comparison": {
+        "enum": [
+          "None",
+          "PreviousYear"
+        ]
       },
       "CountryDto": {
         "required": [
@@ -631,6 +1543,57 @@
           }
         }
       },
+      "DashboardDto": {
+        "required": [
+          "currencyCode",
+          "minorUnits",
+          "cash",
+          "receivables",
+          "payables",
+          "profitThisMonth",
+          "monthStart",
+          "monthEnd",
+          "draftVouchers"
+        ],
+        "type": "object",
+        "properties": {
+          "currencyCode": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cash": {
+            "type": "number",
+            "format": "double"
+          },
+          "receivables": {
+            "type": "number",
+            "format": "double"
+          },
+          "payables": {
+            "type": "number",
+            "format": "double"
+          },
+          "profitThisMonth": {
+            "type": "number",
+            "format": "double"
+          },
+          "monthStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "monthEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "draftVouchers": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "DayOfWeek": {
         "enum": [
           "Sunday",
@@ -640,6 +1603,13 @@
           "Thursday",
           "Friday",
           "Saturday"
+        ]
+      },
+      "ExportFormat": {
+        "enum": [
+          "Pdf",
+          "Xlsx",
+          "Csv"
         ]
       },
       "HostInfo": {
@@ -657,6 +1627,22 @@
           }
         }
       },
+      "LockPeriodRequest": {
+        "required": [
+          "monthStart",
+          "locked"
+        ],
+        "type": "object",
+        "properties": {
+          "monthStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "locked": {
+            "type": "boolean"
+          }
+        }
+      },
       "ModuleDto": {
         "required": [
           "key"
@@ -665,6 +1651,30 @@
         "properties": {
           "key": {
             "type": "string"
+          }
+        }
+      },
+      "MoveEntriesRequest": {
+        "required": [
+          "targetAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "targetAccountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "MoveEntriesResult": {
+        "required": [
+          "vouchersMoved"
+        ],
+        "type": "object",
+        "properties": {
+          "vouchersMoved": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -758,12 +1768,167 @@
           }
         }
       },
+      "PeriodDto": {
+        "required": [
+          "start",
+          "end",
+          "isLocked"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "isLocked": {
+            "type": "boolean"
+          }
+        }
+      },
       "PrintLayout": {
         "enum": [
           "Arabic",
           "English",
           "Both"
         ]
+      },
+      "PrintSettingsDto": {
+        "required": [
+          "showCompanyName",
+          "showLogo",
+          "showStamp",
+          "showSignatures",
+          "showAmountInWords",
+          "headerTextEn",
+          "headerTextAr",
+          "footerTextEn",
+          "footerTextAr",
+          "defaultLayout",
+          "arabicIndicDigits",
+          "hasLogo",
+          "hasStamp"
+        ],
+        "type": "object",
+        "properties": {
+          "showCompanyName": {
+            "type": "boolean"
+          },
+          "showLogo": {
+            "type": "boolean"
+          },
+          "showStamp": {
+            "type": "boolean"
+          },
+          "showSignatures": {
+            "type": "boolean"
+          },
+          "showAmountInWords": {
+            "type": "boolean"
+          },
+          "headerTextEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "headerTextAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "footerTextEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "footerTextAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultLayout": {
+            "$ref": "#/components/schemas/PrintLayout"
+          },
+          "arabicIndicDigits": {
+            "type": "boolean"
+          },
+          "hasLogo": {
+            "type": "boolean"
+          },
+          "hasStamp": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PrintSettingsInput": {
+        "required": [
+          "showCompanyName",
+          "showLogo",
+          "showStamp",
+          "showSignatures",
+          "showAmountInWords",
+          "headerTextEn",
+          "headerTextAr",
+          "footerTextEn",
+          "footerTextAr",
+          "defaultLayout",
+          "arabicIndicDigits"
+        ],
+        "type": "object",
+        "properties": {
+          "showCompanyName": {
+            "type": "boolean"
+          },
+          "showLogo": {
+            "type": "boolean"
+          },
+          "showStamp": {
+            "type": "boolean"
+          },
+          "showSignatures": {
+            "type": "boolean"
+          },
+          "showAmountInWords": {
+            "type": "boolean"
+          },
+          "headerTextEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "headerTextAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "footerTextEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "footerTextAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultLayout": {
+            "$ref": "#/components/schemas/PrintLayout"
+          },
+          "arabicIndicDigits": {
+            "type": "boolean"
+          }
+        }
       },
       "RecentFileDto": {
         "required": [
@@ -800,6 +1965,216 @@
           }
         }
       },
+      "ReportCell": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "textAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "date": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "ReportCheck": {
+        "required": [
+          "textEn",
+          "textAr",
+          "passed"
+        ],
+        "type": "object",
+        "properties": {
+          "textEn": {
+            "type": "string"
+          },
+          "textAr": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReportColumn": {
+        "required": [
+          "key",
+          "kind",
+          "titleEn",
+          "titleAr"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ColumnKind"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "titleAr": {
+            "type": "string"
+          }
+        }
+      },
+      "ReportLink": {
+        "required": [
+          "kind",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "ReportResult": {
+        "required": [
+          "key",
+          "titleEn",
+          "titleAr",
+          "subtitleEn",
+          "subtitleAr",
+          "companyNameEn",
+          "companyNameAr",
+          "currencyCode",
+          "minorUnits",
+          "columns",
+          "rows",
+          "checks"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "titleAr": {
+            "type": "string"
+          },
+          "subtitleEn": {
+            "type": "string"
+          },
+          "subtitleAr": {
+            "type": "string"
+          },
+          "companyNameEn": {
+            "type": "string"
+          },
+          "companyNameAr": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportColumn"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportRow"
+            }
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportCheck"
+            }
+          }
+        }
+      },
+      "ReportRow": {
+        "required": [
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportCell"
+            }
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "style": {
+            "$ref": "#/components/schemas/RowStyle"
+          },
+          "link": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReportLink"
+              }
+            ]
+          }
+        }
+      },
+      "RowStyle": {
+        "enum": [
+          "Normal",
+          "Group",
+          "Subtotal",
+          "Total",
+          "Heading"
+        ],
+        "default": "Normal"
+      },
       "SaveDialogRequest": {
         "required": [
           "suggestedFileName"
@@ -808,6 +2183,36 @@
         "properties": {
           "suggestedFileName": {
             "type": "string"
+          }
+        }
+      },
+      "SaveVoucherRequest": {
+        "required": [
+          "id",
+          "input"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "input": {
+            "$ref": "#/components/schemas/VoucherInput"
+          }
+        }
+      },
+      "SetActiveRequest": {
+        "required": [
+          "active"
+        ],
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
           }
         }
       },
@@ -865,6 +2270,269 @@
             "$ref": "#/components/schemas/PrintLayout"
           }
         }
+      },
+      "VoucherDto": {
+        "required": [
+          "id",
+          "kind",
+          "number",
+          "date",
+          "status",
+          "currencyCode",
+          "cashAccountId",
+          "reference",
+          "memo",
+          "lines",
+          "total",
+          "postedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/VoucherKind"
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VoucherStatus"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "cashAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VoucherLineDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "postedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "VoucherInput": {
+        "required": [
+          "kind",
+          "date",
+          "cashAccountId",
+          "reference",
+          "memo",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/VoucherKind"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cashAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VoucherLineInput"
+            }
+          }
+        }
+      },
+      "VoucherKind": {
+        "enum": [
+          "Payment",
+          "Receipt",
+          "Journal"
+        ]
+      },
+      "VoucherLineDto": {
+        "required": [
+          "id",
+          "accountId",
+          "description",
+          "debit",
+          "credit"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debit": {
+            "type": "number",
+            "format": "double"
+          },
+          "credit": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "VoucherLineInput": {
+        "required": [
+          "id",
+          "accountId",
+          "description",
+          "debit",
+          "credit"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debit": {
+            "type": "number",
+            "format": "double"
+          },
+          "credit": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "VoucherStatus": {
+        "enum": [
+          "Draft",
+          "Posted"
+        ]
+      },
+      "VoucherSummary": {
+        "required": [
+          "id",
+          "kind",
+          "number",
+          "date",
+          "status",
+          "reference",
+          "memo",
+          "total",
+          "lineCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/VoucherKind"
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VoucherStatus"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "lineCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     }
   },
@@ -879,10 +2547,25 @@
       "name": "Printing"
     },
     {
+      "name": "Summary"
+    },
+    {
       "name": "Company"
     },
     {
       "name": "Recent files"
+    },
+    {
+      "name": "Chart of accounts"
+    },
+    {
+      "name": "Vouchers"
+    },
+    {
+      "name": "Periods"
+    },
+    {
+      "name": "Reports"
     }
   ]
 }
