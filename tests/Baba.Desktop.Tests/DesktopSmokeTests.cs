@@ -32,7 +32,8 @@ public class DesktopSmokeTests
             Assert.Equal(401, root.GetProperty("requestWithoutTokenStatus").GetInt32());
             // A change made by the page itself (cookie + Origin header) is accepted: this is how the real app talks to the API.
             Assert.Equal(204, root.GetProperty("postFromPageStatus").GetInt32());
-            // When the web app is bundled (web/dist exists), its first screen must have appeared in the window.
+            // When the web app is bundled (web/dist was built), its first screen must have appeared in the window; the result
+            // says "not bundled" otherwise (CI builds the backend before the web app), and everything else is still checked.
             Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("webApp").GetString()), root.ToString());
 
             // The app makes real PDFs of the Arabic, English and bilingual test pages, with the Arabic font embedded.

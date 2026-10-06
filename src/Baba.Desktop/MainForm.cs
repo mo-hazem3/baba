@@ -281,7 +281,7 @@ internal sealed class MainForm : Form
             if (Directory.Exists(Path.Combine(AppContext.BaseDirectory, "wwwroot")))
                 _webView.CoreWebView2.Navigate(_origin!.ToString()); // stage 2 runs when this page has loaded
             else
-                await FinishSmokeTestAsync(new { ok, browserSawApi = viaBrowser, requestWithoutTokenStatus = _smokeApiResult.RequestWithoutTokenStatus, webApp = "not bundled" });
+                await RunPageSmokeTestAsync(webAppBundled: false); // e.g. CI builds the backend without the web app: still check the rest
         }
         catch (Exception e)
         {
@@ -289,12 +289,15 @@ internal sealed class MainForm : Form
         }
     }
 
-    /// <summary>Stage 2: the bundled web app starts and shows its first screen (a page heading).</summary>
-    private async Task RunPageSmokeTestAsync()
+    /// <summary>
+    /// Stage 2: the bundled web app starts and shows its first screen (a page heading), then the checks that work with or
+    /// without the web app: a change sent by the page, and the three PDFs.
+    /// </summary>
+    private async Task RunPageSmokeTestAsync(bool webAppBundled = true)
     {
         try
         {
-            string heading = "";
+            var heading = webAppBundled ? "" : "not bundled";
             for (var attempt = 0; attempt < 60 && heading.Length == 0; attempt++)
             {
                 var result = await _webView.CoreWebView2.ExecuteScriptAsync("document.querySelector('h1')?.innerText ?? ''");
