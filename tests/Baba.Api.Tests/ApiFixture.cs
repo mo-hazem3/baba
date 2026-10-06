@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Baba.Api.Contracts;
 using Baba.Application.Abstractions;
 using Baba.Application.Companies;
+using Baba.Application.Printing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -31,6 +32,7 @@ public abstract class ApiFixture : IAsyncLifetime
     /// <summary>Set to null in a test class to switch the token check off.</summary>
     protected virtual string? Token => null;
     protected virtual IFileDialogs? FileDialogs => null;
+    protected virtual IPdfRenderer? PdfRenderer => null;
 
     public async Task InitializeAsync()
     {
@@ -48,6 +50,8 @@ public abstract class ApiFixture : IAsyncLifetime
             builder.Services.AddSingleton<ICurrentUser>(new TestUser());
             if (FileDialogs is { } dialogs)
                 builder.Services.AddSingleton(dialogs);
+            if (PdfRenderer is { } renderer)
+                builder.Services.AddSingleton(renderer);
         });
         await _app.StartAsync();
         Client = _app.GetTestClient();

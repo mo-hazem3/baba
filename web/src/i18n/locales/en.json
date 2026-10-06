@@ -190,7 +190,15 @@
     "digits": "Number style",
     "preview": "Preview",
     "languageEnglish": "English",
-    "languageArabic": "العربية"
+    "languageArabic": "العربية",
+    "printing": {
+      "title": "Test printing",
+      "body": "Print a sample invoice to check that Arabic and English print correctly on your computer. The PDF opens in a viewer where you can print or save it.",
+      "Arabic": "Print in Arabic",
+      "English": "Print in English",
+      "Both": "Print in Arabic and English",
+      "unavailable": "Printing to PDF is available in the Baba desktop app."
+    }
   },
   "errors": {
     "WrongPasswordOrNotABabaFile": "The password is wrong, or this is not a Baba file.",

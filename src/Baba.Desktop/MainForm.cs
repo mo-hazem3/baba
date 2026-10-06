@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using Baba.Api;
 using Baba.Application.Abstractions;
 using Baba.Application.Companies;
+using Baba.Application.Printing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +29,11 @@ internal sealed class MainForm : Form
     private readonly string _token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private WebApplication? _api;
     private Uri? _origin;
+    private WebView2PdfRenderer? _pdfRenderer;
+
+    // One browser environment shared by the window and the hidden PDF renderer (they must use the same profile folder).
+    private readonly Task<CoreWebView2Environment> _environment = CoreWebView2Environment.CreateAsync(
+        userDataFolder: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Baba", "WebView2"));
 
     public MainForm(string? openPath, SingleInstance? instance, string? smokeTestOutput)
     {
@@ -61,10 +68,12 @@ internal sealed class MainForm : Form
                 AdditionalAllowedOrigins = devUrl is null ? [] : [new Uri(devUrl).GetLeftPart(UriPartial.Authority)],
             };
 
+            _pdfRenderer = new WebView2PdfRenderer(this, () => _environment);
             _api = BabaApi.Create(options, builder =>
             {
                 builder.Logging.SetMinimumLevel(LogLevel.Warning); // a desktop app has no console to fill with request logs
                 builder.Services.AddSingleton<IFileDialogs>(new WinFormsFileDialogs(this));
+                builder.Services.AddSingleton<IPdfRenderer>(_pdfRenderer);
             });
             _api.Services.GetRequiredService<StartupRequest>().OpenPath = _openPath;
             await _api.StartAsync();
@@ -85,9 +94,7 @@ internal sealed class MainForm : Form
 
     private async Task StartBrowserAsync()
     {
-        var dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Baba", "WebView2");
-        var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataFolder);
-        await _webView.EnsureCoreWebView2Async(environment);
+        await _webView.EnsureCoreWebView2Async(await _environment);
 
         var settings = _webView.CoreWebView2.Settings;
         settings.AreDevToolsEnabled = Debugger.IsAttached || Environment.GetEnvironmentVariable("BABA_DEVTOOLS") == "1";
@@ -106,6 +113,9 @@ internal sealed class MainForm : Form
         _webView.CoreWebView2.NavigationStarting += OnNavigationStarting;
         _webView.CoreWebView2.NewWindowRequested += (_, e) =>
         {
+            if (e.Uri.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+                return; // a PDF the app just made: let it open in its own viewer window (print, save)
+
             e.Handled = true;
             OpenExternally(e.Uri);
         };
@@ -178,6 +188,7 @@ internal sealed class MainForm : Form
         api.Services.GetRequiredService<ICompanyFiles>().Close(); // release the .baba file first
         await api.StopAsync();
         await api.DisposeAsync();
+        _pdfRenderer?.Dispose();
     }
 
     // --- Smoke test: `Baba.Desktop.exe --smoke-test <result.json>` proves WebView2 + token + API + web app work end to end. ---
@@ -227,18 +238,45 @@ internal sealed class MainForm : Form
             }
 
             var api = _smokeApiResult!;
+            var pdfs = await RenderSmokeTestPdfsAsync();
             await FinishSmokeTestAsync(new
             {
-                ok = api.Ok && heading.Length > 0,
+                ok = api.Ok && heading.Length > 0 && pdfs.All(p => p.Value.Ok),
                 browserSawApi = api.BrowserSawApi,
                 requestWithoutTokenStatus = api.RequestWithoutTokenStatus,
                 webApp = heading,
+                pdfs,
             });
         }
         catch (Exception e)
         {
             await FinishSmokeTestAsync(new { ok = false, error = e.ToString() });
         }
+    }
+
+    private sealed record SmokePdf(bool Ok, int Status, int Bytes, bool IsPdf, bool EmbedsArabicFont, string File);
+
+    /// <summary>Stage 3: the app makes the Arabic, English and bilingual test pages as real PDFs, saved next to the result file.</summary>
+    private async Task<Dictionary<string, SmokePdf>> RenderSmokeTestPdfsAsync()
+    {
+        using var client = new HttpClient { BaseAddress = _origin };
+        client.DefaultRequestHeaders.Add("X-Baba-Token", _token);
+
+        var results = new Dictionary<string, SmokePdf>();
+        foreach (var layout in new[] { "Arabic", "English", "Both" })
+        {
+            var response = await client.PostAsJsonAsync("/api/print/test-page", new { layout });
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var file = Path.ChangeExtension(_smokeTestOutput!, $".{layout.ToLowerInvariant()}.pdf");
+            await File.WriteAllBytesAsync(file, bytes);
+
+            var isPdf = bytes.Length > 4 && System.Text.Encoding.ASCII.GetString(bytes, 0, 4) == "%PDF";
+            var embedsFont = System.Text.Encoding.Latin1.GetString(bytes).Contains("NotoSansArabic", StringComparison.Ordinal);
+            results[layout] = new SmokePdf(response.IsSuccessStatusCode && isPdf && bytes.Length > 10_000 && embedsFont,
+                (int)response.StatusCode, bytes.Length, isPdf, embedsFont, file);
+        }
+
+        return results;
     }
 
     private async Task FinishSmokeTestAsync(object result)

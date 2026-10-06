@@ -1,5 +1,10 @@
-import { Card, Form, Radio } from 'antd'
+import { App, Button, Card, Form, Radio, Typography } from 'antd'
+import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { printTestPage } from '../../api/generated/baba'
+import type { PrintLayout } from '../../api/generated/model'
+import { asBlob } from '../../api/http'
+import { errorMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { textSizes } from '../../settings/settings'
@@ -9,6 +14,22 @@ import { formatAmount, formatDate } from '../../utils/format'
 export function SettingsPage() {
   const { t } = useTranslation()
   const { settings, setLanguage, setTextSize, setDigits } = useSettings()
+  const { message } = App.useApp()
+
+  // Makes a sample invoice PDF and opens it in the viewer, where it can be checked, printed or saved.
+  const print = useMutation({
+    mutationFn: (layout: PrintLayout) => printTestPage({ layout }),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        void message.info(t('settings.printing.unavailable'))
+        return
+      }
+      const url = URL.createObjectURL(asBlob(response.data))
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000)
+    },
+    onError: (error) => void message.error(errorMessage(error, t)),
+  })
 
   return (
     <div>
@@ -54,6 +75,22 @@ export function SettingsPage() {
             </p>
           </Form.Item>
         </Form>
+      </Card>
+
+      <Card title={t('settings.printing.title')} className="settings-card">
+        <Typography.Paragraph>{t('settings.printing.body')}</Typography.Paragraph>
+        <div className="form-buttons">
+          {(['Arabic', 'English', 'Both'] as const).map((layout) => (
+            <Button
+              key={layout}
+              onClick={() => print.mutate(layout)}
+              loading={print.isPending && print.variables === layout}
+              disabled={print.isPending}
+            >
+              {t(`settings.printing.${layout}`)}
+            </Button>
+          ))}
+        </div>
       </Card>
     </div>
   )

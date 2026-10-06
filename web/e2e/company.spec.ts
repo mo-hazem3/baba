@@ -107,6 +107,14 @@ test('Arabic: the whole app mirrors to right-to-left and nothing needs sideways 
   await expectNoHorizontalScroll(page)
   await page.screenshot({ path: 'test-results/ar-summary.png' })
 
+  // Settings has the print test. This browser-only setup cannot make PDFs, and says so in plain words.
+  await page.getByRole('menuitem', { name: 'الإعدادات' }).click()
+  await expect(page.getByRole('heading', { name: 'الإعدادات' })).toBeVisible()
+  await page.getByRole('button', { name: 'طباعة بالعربية', exact: true }).click()
+  await expect(page.getByText('الطباعة إلى ملف PDF متاحة في تطبيق بابا لسطح المكتب.')).toBeVisible()
+  await page.screenshot({ path: 'test-results/ar-settings.png' })
+  await page.getByRole('menuitem', { name: 'الملخص' }).click()
+
   // The sidebar is on the right in Arabic.
   const sider = await page.locator('.app-sider').boundingBox()
   const content = await page.locator('.app-content').boundingBox()

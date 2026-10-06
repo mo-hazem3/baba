@@ -240,3 +240,7 @@ body {
   margin: 0;
   font-size: 1.1em;
 }
+
+.settings-card {
+  margin-block-start: 16px;
+}

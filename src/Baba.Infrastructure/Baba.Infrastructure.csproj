@@ -20,4 +20,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Printing/Fonts/*.woff2" />
+  </ItemGroup>
+
 </Project>

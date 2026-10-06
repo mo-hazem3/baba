@@ -27,6 +27,9 @@ interface ProblemBody {
   issues?: ApiIssue[]
 }
 
+/** The body of a binary (PDF) response, which the generated client types as `void`. */
+export const asBlob = (data: unknown): Blob => data as Blob
+
 export const http = async <T>(url: string, options: RequestInit): Promise<T> => {
   let response: Response
   try {
@@ -35,8 +38,15 @@ export const http = async <T>(url: string, options: RequestInit): Promise<T> => 
     throw new ApiError(0, 'Network', 'Cannot reach Baba.')
   }
 
-  const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : undefined
+  // PDFs come back as a Blob (the OpenAPI document has no schema for them, so the generated type is `void`:
+  // callers use asBlob below). Everything else is JSON, or empty.
+  let data: unknown
+  if ((response.headers.get('content-type') ?? '').startsWith('application/pdf')) {
+    data = await response.blob()
+  } else {
+    const text = await response.text()
+    data = text ? JSON.parse(text) : undefined
+  }
 
   if (!response.ok && response.status !== 501) {
     const body = (data ?? {}) as ProblemBody

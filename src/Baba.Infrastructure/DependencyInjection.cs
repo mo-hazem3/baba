@@ -1,5 +1,7 @@
 using Baba.Application.Companies;
+using Baba.Application.Printing;
 using Baba.Infrastructure.CompanyFiles;
+using Baba.Infrastructure.Printing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -14,6 +16,7 @@ public static class DependencyInjection
         services.AddSingleton<SqliteCompanyFiles>();
         services.AddSingleton<ICompanyFiles>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
         services.AddSingleton<ICompanyDbContextFactory>(sp => sp.GetRequiredService<SqliteCompanyFiles>());
+        services.AddSingleton<IPrintFonts, EmbeddedPrintFonts>();
         return services;
     }
 }

@@ -32,11 +32,22 @@ public class DesktopSmokeTests
             Assert.Equal(401, root.GetProperty("requestWithoutTokenStatus").GetInt32());
             // When the web app is bundled (web/dist exists), its first screen must have appeared in the window.
             Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("webApp").GetString()), root.ToString());
+
+            // The app makes real PDFs of the Arabic, English and bilingual test pages, with the Arabic font embedded.
+            foreach (var layout in new[] { "Arabic", "English", "Both" })
+            {
+                var pdf = root.GetProperty("pdfs").GetProperty(layout);
+                Assert.True(pdf.GetProperty("Ok").GetBoolean(), $"{layout}: {pdf}");
+                Assert.True(pdf.GetProperty("IsPdf").GetBoolean(), layout);
+                Assert.True(pdf.GetProperty("EmbedsArabicFont").GetBoolean(), layout);
+            }
+
             Assert.Equal(0, process.ExitCode);
         }
         finally
         {
-            File.Delete(result);
+            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(result)!, Path.GetFileNameWithoutExtension(result) + ".*"))
+                File.Delete(file);
         }
     }
 }

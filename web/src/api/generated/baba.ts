@@ -36,7 +36,8 @@ import type {
   RecentFileDto,
   RemoveRecentFileRequest,
   SaveDialogRequest,
-  StartupInfo
+  StartupInfo,
+  TestPageRequest
 } from './model';
 
 import { http } from '../http';
@@ -781,6 +782,107 @@ export function useListModules<TData = Awaited<ReturnType<typeof listModules>>, 
 
 
 
+
+export type printTestPageResponse200 = {
+  data: void
+  status: 200
+}
+
+export type printTestPageResponse501 = {
+  data: void
+  status: 501
+}
+
+export type printTestPageResponseSuccess = (printTestPageResponse200) & {
+  headers: Headers;
+};
+export type printTestPageResponseError = (printTestPageResponse501) & {
+  headers: Headers;
+};
+
+export type printTestPageResponse = (printTestPageResponseSuccess | printTestPageResponseError)
+
+export const getPrintTestPageUrl = () => {
+
+
+
+
+  return `/api/print/test-page`
+}
+
+export const printTestPage = async (testPageRequest: TestPageRequest, options?: Parameters<typeof http>[1]): Promise<printTestPageResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<printTestPageResponse>(getPrintTestPageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(testPageRequest)
+  }
+);}
+
+
+
+
+
+export const getPrintTestPageMutationKey = () => ['printTestPage'] as const;
+
+export const getPrintTestPageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof printTestPage>>, TError,PrintTestPageMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof printTestPage>>, TError,PrintTestPageMutationVariables, TContext> => {
+
+const mutationKey = getPrintTestPageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof printTestPage>>, PrintTestPageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  printTestPage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrintTestPageMutationResult = NonNullable<Awaited<ReturnType<typeof printTestPage>>>
+    export type PrintTestPageMutationBody = TestPageRequest
+    export type PrintTestPageMutationError = void
+    export type PrintTestPageMutationVariables = {data: TestPageRequest}
+
+    export const usePrintTestPage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof printTestPage>>, TError,PrintTestPageMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof printTestPage>>,
+        TError,
+        PrintTestPageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrintTestPageMutationOptions(options), queryClient);
+    }
 
 export type getCurrentCompanyResponse200 = {
   data: CompanyInfo

@@ -170,6 +170,32 @@
         }
       }
     },
+    "/api/print/test-page": {
+      "post": {
+        "tags": [
+          "Printing"
+        ],
+        "operationId": "PrintTestPage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestPageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
     "/api/company": {
       "get": {
         "tags": [
@@ -732,6 +758,13 @@
           }
         }
       },
+      "PrintLayout": {
+        "enum": [
+          "Arabic",
+          "English",
+          "Both"
+        ]
+      },
       "RecentFileDto": {
         "required": [
           "path",
@@ -821,6 +854,17 @@
             "type": "boolean"
           }
         }
+      },
+      "TestPageRequest": {
+        "required": [
+          "layout"
+        ],
+        "type": "object",
+        "properties": {
+          "layout": {
+            "$ref": "#/components/schemas/PrintLayout"
+          }
+        }
       }
     }
   },
@@ -830,6 +874,9 @@
     },
     {
       "name": "Reference"
+    },
+    {
+      "name": "Printing"
     },
     {
       "name": "Company"

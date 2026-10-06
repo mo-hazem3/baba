@@ -4,6 +4,7 @@ using Baba.Api.Errors;
 using Baba.Api.Security;
 using Baba.Application.Abstractions;
 using Baba.Application.Companies;
+using Baba.Application.Printing;
 using Baba.Infrastructure;
 using Baba.Infrastructure.RecentFiles;
 using Baba.Localization;
@@ -44,6 +45,9 @@ public static class BabaApi
         services.AddSingleton<CompanyService>();
         services.AddSingleton<StartupRequest>();
         services.AddBabaInfrastructure();
+        // The PDF renderer is optional: only hosts that can make PDFs (the desktop app) register one.
+        services.AddSingleton(sp => new PrintService(
+            sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(), sp.GetRequiredService<TimeProvider>()));
 
         configure?.Invoke(builder);
 
@@ -69,6 +73,7 @@ public static class BabaApi
         api.MapHostEndpoints();
         api.MapReferenceEndpoints();
         api.MapCompanyEndpoints();
+        api.MapPrintEndpoints();
         app.MapOpenApi("/api/openapi/{documentName}.json");
 
         if (hasWebApp)
