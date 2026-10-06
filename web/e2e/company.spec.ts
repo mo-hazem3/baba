@@ -141,6 +141,28 @@ test('Extra-large text still fits a 1366x768 screen in both languages', async ({
   }
 })
 
+test('Closing the window with a half-filled new company asks first, in the user language', async ({ page }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await page.getByRole('button', { name: 'New company' }).click()
+
+  // Nothing typed yet: nothing to lose.
+  expect(await page.evaluate(() => window.__babaUnsaved?.() ?? null)).toBeNull()
+
+  await page.getByLabel('Company name (English)').fill('Half Done Trading')
+  const prompt = await page.evaluate(() => window.__babaUnsaved?.() ?? null)
+  expect(prompt).toMatchObject({ title: 'Leave without saving?', leave: 'Close Baba', stay: 'Keep working', rtl: false })
+
+  // Switching language reloads the page, which stays on the wizard (and starts it again, empty).
+  await setLanguage(page, 'ar')
+  await page.getByLabel('اسم الشركة (بالإنجليزية)').fill('Half Done Trading')
+  expect(await page.evaluate(() => window.__babaUnsaved?.()?.rtl)).toBe(true)
+
+  // Cancelling the wizard leaves nothing pending.
+  await page.getByRole('button', { name: 'إلغاء' }).click()
+  expect(await page.evaluate(() => window.__babaUnsaved?.() ?? null)).toBeNull()
+})
+
 test('A country that requires a registration number checks its format', async ({ page }) => {
   await page.goto('/')
   await setLanguage(page, 'en')

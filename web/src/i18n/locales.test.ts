@@ -49,7 +49,7 @@ describe('translations', () => {
 
   it('explain every field problem the API can return', () => {
     const codes = [
-      'path.required', 'password.too-short', 'name.required', 'country.unknown', 'currency.unknown',
+      'path.required', 'path.not-absolute', 'password.too-short', 'name.required', 'country.unknown', 'currency.unknown',
       'fiscal-year.month-invalid', 'fiscal-year.year-invalid', 'module.unknown', 'chart.unknown',
       'tax.required', 'tax.invalid', 'tax.unknown',
     ]

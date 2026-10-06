@@ -57,6 +57,7 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         {
             fileLock.Dispose();
             SqliteConnection.ClearAllPools();
+            _scope.CompanyId = Guid.Empty;
             TryDelete(path); // never leave a half-made company file behind
             throw;
         }

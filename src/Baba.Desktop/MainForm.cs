@@ -50,7 +50,58 @@ internal sealed class MainForm : Form
         if (_instance is not null)
             _instance.FileRequested += OnFileRequested;
         Load += async (_, _) => await StartAsync();
-        FormClosing += async (_, _) => await ShutDownAsync();
+        FormClosing += OnFormClosing;
+    }
+
+    private bool _closeConfirmed;
+
+    /// <summary>Asks the page whether anything would be lost (an unfinished new-company form), then shuts down.</summary>
+    private async void OnFormClosing(object? sender, FormClosingEventArgs e)
+    {
+        var askFirst = !_closeConfirmed && _smokeTestOutput is null && _webView.CoreWebView2 is not null;
+        if (askFirst)
+        {
+            e.Cancel = true; // hold the window open while we ask
+            if (await UserWantsToCloseAsync())
+            {
+                _closeConfirmed = true;
+                Close();
+            }
+            return;
+        }
+
+        await ShutDownAsync();
+    }
+
+    private async Task<bool> UserWantsToCloseAsync()
+    {
+        try
+        {
+            var json = await _webView.CoreWebView2.ExecuteScriptAsync("(window.__babaUnsaved ? window.__babaUnsaved() : null)");
+            if (json == "null")
+                return true;
+
+            using var prompt = System.Text.Json.JsonDocument.Parse(json);
+            string Text(string name) => prompt.RootElement.GetProperty(name).GetString() ?? "";
+
+            var leave = new TaskDialogButton(Text("leave"));
+            var stay = new TaskDialogButton(Text("stay"));
+            var page = new TaskDialogPage
+            {
+                Caption = Text("title"),
+                Heading = Text("title"),
+                Text = Text("body"),
+                Icon = TaskDialogIcon.Warning,
+                RightToLeftLayout = prompt.RootElement.GetProperty("rtl").GetBoolean(),
+                Buttons = { leave, stay },
+                DefaultButton = stay, // the safe choice is the default
+            };
+            return TaskDialog.ShowDialog(this, page) == leave;
+        }
+        catch (Exception e) when (e is System.Text.Json.JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            return true; // if the page cannot be asked, never trap the user in the window
+        }
     }
 
     private async Task StartAsync()
@@ -82,12 +133,27 @@ internal sealed class MainForm : Form
             await StartBrowserAsync();
             _webView.CoreWebView2.Navigate(_smokeTestOutput is null ? devUrl ?? _origin.ToString() : new Uri(_origin, "/api/host").ToString());
         }
+        catch (WebView2RuntimeNotFoundException) when (_smokeTestOutput is null)
+        {
+            // Both languages: this appears before the app can know which one the user prefers.
+            var openPage = MessageBox.Show(this,
+                "Baba needs the Microsoft Edge WebView2 runtime, which was not found on this computer.\n" +
+                "Click OK to open the Microsoft download page, install it, then start Baba again.\n\n" +
+                "يحتاج بابا إلى بيئة Microsoft Edge WebView2 ولم يتم العثور عليها على هذا الجهاز.\n" +
+                "اضغط موافق لفتح صفحة التنزيل من مايكروسوفت، ثم ثبّتها وشغّل بابا من جديد.",
+                "Baba", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+            if (openPage == DialogResult.OK)
+                OpenExternally("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+            _closeConfirmed = true;
+            Close();
+        }
         catch (Exception e)
         {
             if (_smokeTestOutput is not null)
                 await FinishSmokeTestAsync(new { ok = false, error = e.ToString() });
             else
                 MessageBox.Show(this, e.Message, "Baba could not start", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            _closeConfirmed = true;
             Close();
         }
     }
@@ -238,13 +304,15 @@ internal sealed class MainForm : Form
             }
 
             var api = _smokeApiResult!;
+            var postStatus = await PostFromPageAsync();
             var pdfs = await RenderSmokeTestPdfsAsync();
             await FinishSmokeTestAsync(new
             {
-                ok = api.Ok && heading.Length > 0 && pdfs.All(p => p.Value.Ok),
+                ok = api.Ok && heading.Length > 0 && postStatus == 204 && pdfs.All(p => p.Value.Ok),
                 browserSawApi = api.BrowserSawApi,
                 requestWithoutTokenStatus = api.RequestWithoutTokenStatus,
                 webApp = heading,
+                postFromPageStatus = postStatus,
                 pdfs,
             });
         }
@@ -252,6 +320,26 @@ internal sealed class MainForm : Form
         {
             await FinishSmokeTestAsync(new { ok = false, error = e.ToString() });
         }
+    }
+
+    /// <summary>
+    /// A state-changing request sent by the page itself, as the app does: it carries the cookie and the Origin header, and the
+    /// API must accept it (closing with no company open is a harmless "204 No Content").
+    /// </summary>
+    private async Task<int> PostFromPageAsync()
+    {
+        await _webView.CoreWebView2.ExecuteScriptAsync(
+            "window.__postStatus = null; fetch('/api/company/close', { method: 'POST' })" +
+            ".then(r => { window.__postStatus = r.status; }).catch(() => { window.__postStatus = -1; });");
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            var status = await _webView.CoreWebView2.ExecuteScriptAsync("window.__postStatus");
+            if (status != "null" && int.TryParse(status, out var code))
+                return code;
+            await Task.Delay(100);
+        }
+
+        return 0;
     }
 
     private sealed record SmokePdf(bool Ok, int Status, int Bytes, bool IsPdf, bool EmbedsArabicFont, string File);

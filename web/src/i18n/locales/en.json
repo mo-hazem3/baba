@@ -217,7 +217,8 @@
   },
   "validation": {
     "path": {
-      "required": "Choose where to save the file."
+      "required": "Choose where to save the file.",
+      "not-absolute": "Enter the full location, starting with the drive, for example C:\\Books\\My Company.baba."
     },
     "password": {
       "too-short": "Use at least {{min}} characters."
@@ -246,5 +247,11 @@
       "invalid": "This number is not in the right format.",
       "unknown": "This number is not used in this country."
     }
+  },
+  "unsaved": {
+    "title": "Leave without saving?",
+    "body": "Your new company has not been created yet. If you close Baba now, what you typed will be lost.",
+    "leave": "Close Baba",
+    "stay": "Keep working"
   }
 }

@@ -11,6 +11,7 @@ import { refreshCompany, useCountries, useCurrencies, useHost } from '../../api/
 import { errorMessage, issueMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
 import { TermTooltip, type Term } from '../../layout/TermTooltip'
+import { useUnsavedWork } from '../../layout/useUnsavedWork'
 import { useSettings } from '../../settings/SettingsContext'
 import { monthName } from '../../utils/format'
 import { matchesSearch } from '../../utils/arabic'
@@ -44,6 +45,7 @@ export function NewCompanyWizard() {
   const queryClient = useQueryClient()
   const [form] = Form.useForm<WizardValues>()
   const [step, setStep] = useState(0)
+  const [touched, setTouched] = useState(false)
   const pendingErrors = useRef<PendingErrors | null>(null)
   const [errorVersion, setErrorVersion] = useState(0)
 
@@ -82,6 +84,9 @@ export function NewCompanyWizard() {
     form.setFields(pendingErrors.current.fields as Parameters<typeof form.setFields>[0])
     pendingErrors.current = null
   }, [errorVersion, step, form])
+
+  // Anything typed is lost if the window is closed before the company is created.
+  useUnsavedWork(touched && !create.isSuccess)
 
   const lastStep = step === stepKeys.length - 1
 
@@ -127,6 +132,7 @@ export function NewCompanyWizard() {
           layout="vertical"
           initialValues={initialValues()}
           onFinish={finish}
+          onValuesChange={() => setTouched(true)}
           requiredMark="optional"
           disabled={create.isPending}
         >

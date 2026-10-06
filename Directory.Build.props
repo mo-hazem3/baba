@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <!-- One version for every assembly and the installer. Phase 0 is pre-release. -->
+    <Version>0.1.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

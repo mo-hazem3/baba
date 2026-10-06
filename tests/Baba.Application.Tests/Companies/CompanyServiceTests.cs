@@ -83,6 +83,26 @@ public class CompanyServiceTests
     }
 
     [Fact]
+    public void A_relative_path_is_refused_because_it_would_land_in_the_apps_own_folder()
+    {
+        var error = Invalid(() => _service.CreateAsync("Company.baba", "123456", ValidRequest()));
+
+        Assert.Contains(new ValidationIssue("path", "path.not-absolute"), error.Issues);
+        Assert.Null(_files.CreatedPath);
+    }
+
+    [Theory]
+    [InlineData("C:/Books/Noor", "C:/Books/Noor.baba")]
+    [InlineData("C:/Books/Noor.baba", "C:/Books/Noor.baba")]
+    [InlineData("C:/Books/Noor.BABA", "C:/Books/Noor.BABA")]
+    public async Task Company_files_always_end_in_baba(string typed, string expected)
+    {
+        await _service.CreateAsync(typed, "123456", ValidRequest());
+
+        Assert.Equal(expected, _files.CreatedPath);
+    }
+
+    [Fact]
     public void At_least_one_name_is_required()
     {
         var error = Invalid(() => _service.CreateAsync("C:/x/c.baba", "123456", ValidRequest(r => r with { NameAr = " ", NameEn = "" })));

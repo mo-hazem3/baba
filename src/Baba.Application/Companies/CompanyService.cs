@@ -14,7 +14,7 @@ public sealed class CompanyService(ICompanyFiles files, CountryPackRegistry coun
     public Task<CompanyInfo> CreateAsync(string path, string password, NewCompanyRequest request, CancellationToken cancellationToken = default)
     {
         var (normalised, accounts) = Validate(path, password, request);
-        return files.CreateAsync(path, password, new NewCompanyData(normalised, accounts), cancellationToken);
+        return files.CreateAsync(WithBabaExtension(path), password, new NewCompanyData(normalised, accounts), cancellationToken);
     }
 
     public Task<CompanyInfo> OpenAsync(string path, string password, CancellationToken cancellationToken = default) =>
@@ -25,12 +25,18 @@ public sealed class CompanyService(ICompanyFiles files, CountryPackRegistry coun
     public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default) =>
         files.BackupAsync(destinationPath, cancellationToken);
 
+    /// <summary>Company files always end in .baba, so double-clicking one opens Baba.</summary>
+    private static string WithBabaExtension(string path) =>
+        path.EndsWith(".baba", StringComparison.OrdinalIgnoreCase) ? path : path + ".baba";
+
     private (NewCompanyRequest Request, IReadOnlyList<AccountSeed> Accounts) Validate(string path, string password, NewCompanyRequest request)
     {
         var issues = new List<ValidationIssue>();
 
         if (string.IsNullOrWhiteSpace(path))
             issues.Add(new("path", "path.required"));
+        else if (!Path.IsPathFullyQualified(path))
+            issues.Add(new("path", "path.not-absolute")); // a relative path would land in the app's own folder
         if (string.IsNullOrEmpty(password) || password.Length < MinimumPasswordLength)
             issues.Add(new("password", "password.too-short"));
 

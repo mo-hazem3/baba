@@ -45,3 +45,23 @@ jobs:
       - run: npm run build
       # End-to-end tests drive the built app and the real API in Microsoft Edge (installed on the runner).
       - run: npm run e2e
+
+  installer:
+    needs: [backend, web]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: npm ci
+        working-directory: web
+      # Inno Setup is preinstalled on the Windows runners. Builds the web app, publishes, and compiles the installer.
+      - run: powershell -ExecutionPolicy Bypass -File installer/build-installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baba-installer
+          path: artifacts/installer/*

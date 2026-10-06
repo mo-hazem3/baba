@@ -30,6 +30,8 @@ public class DesktopSmokeTests
 
             Assert.True(root.GetProperty("ok").GetBoolean(), root.ToString());
             Assert.Equal(401, root.GetProperty("requestWithoutTokenStatus").GetInt32());
+            // A change made by the page itself (cookie + Origin header) is accepted: this is how the real app talks to the API.
+            Assert.Equal(204, root.GetProperty("postFromPageStatus").GetInt32());
             // When the web app is bundled (web/dist exists), its first screen must have appeared in the window.
             Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("webApp").GetString()), root.ToString());
 
