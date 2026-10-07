@@ -44,6 +44,7 @@ public static class VoucherPrintBuilder
             VoucherKind.SalesCreditNote => ("Sales credit note entry", "قيد إشعار دائن", "", ""),
             VoucherKind.PurchaseInvoice => ("Purchase invoice entry", "قيد فاتورة مشتريات", "", ""),
             VoucherKind.PurchaseDebitNote => ("Purchase debit note entry", "قيد إشعار مدين", "", ""),
+            VoucherKind.FxSettlement => ("Exchange difference entry", "قيد فروق عملة", "", ""),
             _ => ("Journal voucher", "قيد يومية", "", ""),
         };
         var numberText = voucher.Number is null ? L("Draft", "مسودة") : PrintHtml.E(PrintHtml.Digits(voucher.Number, layout, ai));

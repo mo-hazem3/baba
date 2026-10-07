@@ -166,3 +166,62 @@ test('Arabic: the sales page and the invoice form read right-to-left', async ({ 
   await expectNoHorizontalScroll(page)
   await page.screenshot({ path: 'test-results/ar-invoice-form.png' })
 })
+
+// ---------------------------------------------------------------- Receipts set against invoices, in two currencies
+
+test('English: a dollar invoice is paid at a better rate, the gain is booked and the invoice shows as paid', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await createKuwaitCompany(page, companyFile('p3-settle'), wizardEn)
+  await page.getByRole('button', { name: wizardEn.create }).click()
+  await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
+
+  const accounts = (await (await request.get('/api/accounts')).json()) as { id: string; code: string }[]
+  const customer = (await (await request.post('/api/parties', { data: { kind: 'Customer', code: 'C100', nameAr: '', nameEn: 'Gulf Traders', phone: null, email: null, address: null, taxNumber: null, creditLimit: 0, paymentTermsDays: 30, notes: null, priceListId: null } })).json()) as { id: string }
+  const today = new Date().toISOString().slice(0, 10)
+  await request.post('/api/documents/issue', {
+    data: { id: null, input: { kind: 'SalesInvoice', date: today, dueDate: null, partyId: customer.id, currencyCode: 'USD', exchangeRate: 0.3, reference: null, memo: null, discountPercent: 0, lines: [{ id: null, productId: null, accountId: accounts.find((a) => a.code === '511')!.id, description: 'Consulting', quantity: 1, unitPrice: 1000, discountPercent: 0 }] } },
+  })
+
+  // The invoice list says what is still owed.
+  await menu(page, 'Sales').click()
+  await expect(page.getByRole('row', { name: /SI-/ })).toContainText('1,000.00')
+  await expect(page.getByRole('row', { name: /SI-/ })).toContainText('USD')
+
+  // Open it and receive the money: the payment is in dollars at today's rate, which is better than the invoice's.
+  await page.getByRole('link', { name: /SI-/ }).click()
+  await page.getByRole('button', { name: 'Receive payment' }).click()
+  await expect(page.getByRole('heading', { name: 'Receive payment' })).toBeVisible()
+  await pick(page, 'Received into', '112')
+  await page.getByLabel(/Rate: 1 USD/).fill('0.32')
+  await expect(page.getByLabel(/Paying now SI-/)).toHaveValue('1000.00')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/en-receive-payment.png' })
+  await page.getByRole('button', { name: 'Record receipt' }).click()
+  await expect(page.getByText(/Receipt RV-\d{4}-0001 recorded/)).toBeVisible()
+  await expect(page.getByText(/Exchange gain: 20\.000 KWD/)).toBeVisible()
+
+  // The invoice is paid; it can no longer be changed.
+  await expect(page.getByRole('row', { name: /SI-/ })).toContainText('Paid')
+  await page.getByRole('link', { name: /SI-/ }).click()
+  await expect(page.getByText('This invoice has been paid or credited')).toBeVisible()
+
+  // The books: customers owe nothing, 320 dinars came into the bank, and 20 is income in exchange differences.
+  await page.goto('/reports/trial-balance')
+  await expect(page.getByRole('row', { name: /Exchange differences/ })).toContainText('20.000')
+  await expect(page.getByRole('row', { name: /^112/ })).toContainText('320.000')
+  await expect(page.locator('.check-ok').first()).toBeVisible()
+})
+
+test('Arabic: the receive-payment page reads right-to-left', async ({ page }) => {
+  await page.goto('/')
+  await setLanguage(page, 'ar')
+  await createKuwaitCompany(page, companyFile('p3-settle-ar'), wizardAr)
+  await page.getByRole('button', { name: wizardAr.create }).click()
+  await expect(page.getByRole('heading', { name: 'الملخص' })).toBeVisible()
+
+  await page.goto('/settlements/receive')
+  await expect(page.getByRole('heading', { name: 'استلام دفعة' })).toBeVisible()
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-receive-payment.png' })
+})

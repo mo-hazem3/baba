@@ -71,6 +71,7 @@ public sealed class DocumentService(
     IProductStore products,
     ICostCenterStore costCenters,
     ICurrencyRateStore currencyRates,
+    IAllocationStore allocations,
     VoucherService vouchers,
     ICompanyFiles files,
     TimeProvider clock)
@@ -109,6 +110,8 @@ public sealed class DocumentService(
     public async Task<DocumentDto> IssueAsync(Guid? id, DocumentInput input, CancellationToken cancellationToken = default)
     {
         var existing = await FindForEditAsync(id, cancellationToken);
+        if (existing is { Status: DocumentStatus.Issued })
+            await RefuseIfSettledAsync(existing, cancellationToken);
         var (document, issues) = await BuildAsync(existing, input, cancellationToken);
         Throw(issues);
         await IssueBuiltAsync(document, cancellationToken);
@@ -243,7 +246,8 @@ public sealed class DocumentService(
             Status = DocumentStatus.Draft,
             PartyId = source.PartyId,
             CurrencyCode = source.CurrencyCode,
-            ExchangeRateScaled = foreign ? FxRate.ToScaled(await LatestRateAsync(source.CurrencyCode, today, cancellationToken, fallback: source.ExchangeRate)) : FxRate.One,
+            // A credit or debit note takes back an invoice at the invoice's own rate; anything else starts at today's.
+            ExchangeRateScaled = !foreign ? FxRate.One : target.IsNote() ? source.ExchangeRateScaled : FxRate.ToScaled(await LatestRateAsync(source.CurrencyCode, today, cancellationToken, fallback: source.ExchangeRate)),
             Reference = source.Reference,
             Memo = source.Memo,
             DiscountPercentScaled = source.DiscountPercentScaled,
@@ -284,6 +288,7 @@ public sealed class DocumentService(
         var document = await documents.FindAsync(id, cancellationToken) ?? throw new NotFoundException("document");
         if (document.Status == DocumentStatus.Converted)
             throw Refused("document", "document.converted");
+        await RefuseIfSettledAsync(document, cancellationToken);
 
         if (document.VoucherId is { } voucherId)
             await vouchers.DeleteSystemAsync(voucherId, cancellationToken);
@@ -301,6 +306,21 @@ public sealed class DocumentService(
     }
 
     // ---------------------------------------------------------------- Building and checking
+
+    /// <summary>An invoice that has been paid (even in part) or credited is fixed: take the payment or the note away first.</summary>
+    private async Task RefuseIfSettledAsync(Document document, CancellationToken cancellationToken)
+    {
+        if (document.Kind is not (DocumentKind.SalesInvoice or DocumentKind.PurchaseInvoice))
+            return;
+
+        if ((await allocations.ListAsync(cancellationToken)).Any(a => a.DocumentId == document.Id))
+            throw Refused("document", "document.has-payments");
+
+        var noteKind = document.Kind == DocumentKind.SalesInvoice ? DocumentKind.SalesCreditNote : DocumentKind.PurchaseDebitNote;
+        var notes = await documents.SearchAsync(new DocumentSearch(noteKind, DocumentStatus.Issued, document.PartyId, Limit: 10_000), cancellationToken);
+        if (notes.Any(n => n.SourceDocumentId == document.Id))
+            throw Refused("document", "document.has-notes");
+    }
 
     private async Task<Document?> FindForEditAsync(Guid? id, CancellationToken cancellationToken)
     {

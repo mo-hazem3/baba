@@ -132,6 +132,7 @@ const routeKinds: Record<string, VoucherKind> = {
   transfer: 'Transfer',
   opening: 'Opening',
   closing: 'Closing',
+  fxsettlement: 'FxSettlement',
 }
 
 export const kindFromRoute = (segment: string | undefined): VoucherKind | undefined => (segment ? routeKinds[segment] : undefined)
@@ -142,7 +143,7 @@ export const routeOfKind = (kind: VoucherKind): string => kind.toLowerCase()
 export const usesCashAccount = (kind: VoucherKind): boolean => kind === 'Payment' || kind === 'Receipt' || kind === 'Transfer'
 
 /** Lines written as debits and credits that the user balances. */
-export const hasFreeLines = (kind: VoucherKind): boolean => kind === 'Journal' || kind === 'Opening' || kind === 'Closing'
+export const hasFreeLines = (kind: VoucherKind): boolean => kind === 'Journal' || kind === 'Opening' || kind === 'Closing' || kind === 'FxSettlement'
 
 /** Where "back" and "after saving" go. The opening balances have no list: there is only ever one. */
 export const listPathOf = (kind: VoucherKind): string => (kind === 'Opening' ? '/' : `/vouchers/${routeOfKind(kind)}`)

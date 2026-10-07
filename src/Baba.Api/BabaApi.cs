@@ -53,6 +53,7 @@ public static class BabaApi
         services.AddSingleton<Baba.Application.Trade.ProductService>();
         services.AddSingleton<Baba.Application.Trade.PriceListService>();
         services.AddSingleton<Baba.Application.Trade.PricingService>();
+        services.AddSingleton<Baba.Application.Trade.SettlementService>();
         services.AddSingleton<ExchangeRateService>();
         services.AddSingleton<Baba.Application.Importing.ImportService>();
         services.AddSingleton<FiscalYearService>();

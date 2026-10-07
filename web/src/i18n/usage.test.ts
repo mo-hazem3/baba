@@ -48,7 +48,7 @@ describe('translation keys used in the code', () => {
       'line.amount-decimals', 'line.amount-negative', 'line.amount-required', 'line.amount-wrong-side', 'lines.required',
       'voucher.kind-cannot-change', 'line.party-required', 'line.party-unknown', 'line.party-inactive', 'line.party-not-allowed',
       'line.cost-center-unknown', 'line.cost-center-inactive', 'transfer.one-line-only', 'line.account-not-cash',
-      'line.account-same-as-source', 'line.account-not-balance-sheet', 'opening.already-exists', 'voucher.reconciled', 'voucher.system-generated',
+      'line.account-same-as-source', 'line.account-not-balance-sheet', 'opening.already-exists', 'voucher.reconciled', 'voucher.system-generated', 'voucher.allocated',
     ]
     const bankCodes = ['reconciliation.difference', 'reconciliation.entry-unavailable', 'reconciliation.none-to-undo', 'bank.account-invalid']
     const yearCodes = ['year.already-closed', 'year.not-ended', 'year.drafts-exist', 'year.no-retained-earnings', 'year.nothing-to-close', 'year.not-closed', 'year.later-year-closed']
@@ -68,6 +68,8 @@ describe('translation keys used in the code', () => {
       'line.cost-center-unknown', 'line.account-invalid', 'line.account-required', 'product.code-required', 'product.code-duplicate',
       'product.name-required', 'product.price-negative', 'product.account-invalid', 'product.in-use', 'price-list.name-required',
       'price-list.currency-unknown', 'price-list.product-unknown', 'price-list.product-twice', 'price-list.price-negative', 'price-list.in-use',
+      'document.has-payments', 'document.has-notes', 'settlement.amount-invalid', 'settlement.document-unavailable', 'settlement.amount-too-high',
+      'settlement.nothing-to-settle', 'settlement.mixed-currencies', 'settlement.currency-mismatch', 'fx.account-required',
     ]
     const missing = [
       ...tradeCodes.map((code) => `trade.issues.${code}`),

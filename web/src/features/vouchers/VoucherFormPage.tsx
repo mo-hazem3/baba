@@ -85,7 +85,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
 
   const baseCurrencyCode = company.data?.baseCurrencyCode ?? ''
   const listPath = listPathOf(kind)
-  const readOnly = kind === 'Closing' // made by closing a year, never by hand
+  const readOnly = kind === 'Closing' || kind === 'FxSettlement' // made by Baba (closing a year, a payment), never by hand
   const freeLines = hasFreeLines(kind)
 
   // Opening balances are dated the day before the books start; everything else starts today.
@@ -277,7 +277,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
       cancel={{ label: t('common.cancel'), onClick: cancel, disabled: busy }}
       remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
-      {readOnly && <Alert type="info" showIcon className="form-alert" message={t('voucher.closingNote')} />}
+      {readOnly && <Alert type="info" showIcon className="form-alert" message={t(kind === 'Closing' ? 'voucher.closingNote' : 'voucher.fxNote')} />}
       {kind === 'Opening' && !initial && <Alert type="info" showIcon className="form-alert" message={t('voucher.openingNote')} />}
       {issues && issues.list.length > 0 && (
         <Alert

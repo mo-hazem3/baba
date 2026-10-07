@@ -419,7 +419,8 @@
       "Journal": "Journal voucher",
       "Transfer": "Transfer voucher",
       "Opening": "Opening balances",
-      "Closing": "Closing entry"
+      "Closing": "Closing entry",
+      "FxSettlement": "Exchange difference"
     },
     "plural": {
       "Payment": "Payments",
@@ -427,7 +428,8 @@
       "Journal": "Journal vouchers",
       "Transfer": "Transfers",
       "Opening": "Opening balances",
-      "Closing": "Closing entries"
+      "Closing": "Closing entries",
+      "FxSettlement": "Exchange differences"
     },
     "new": {
       "Payment": "New payment",
@@ -435,7 +437,8 @@
       "Journal": "New journal voucher",
       "Transfer": "New transfer",
       "Opening": "Opening balances",
-      "Closing": "Closing entry"
+      "Closing": "Closing entry",
+      "FxSettlement": "Exchange difference"
     },
     "emptyTitle": {
       "Payment": "No payments yet",
@@ -539,7 +542,8 @@
       "voucher": {
         "kind-cannot-change": "A voucher cannot change from one kind to another.",
         "reconciled": "This voucher has been checked against a bank statement, so it cannot be changed or deleted. Undo that reconciliation first.",
-        "system-generated": "This entry is made by Baba (closing a year) and cannot be changed or deleted by hand."
+        "system-generated": "This entry is made by Baba (closing a year) and cannot be changed or deleted by hand.",
+        "allocated": "This receipt or payment was set against invoices, so it cannot be changed. Delete it and make it again."
       },
       "transfer": {
         "one-line-only": "A transfer goes to one account only."
@@ -552,7 +556,8 @@
     "openingNote": "Enter each account's balance on the day you start. Customers and suppliers are entered one by one on their accounts. Debits and credits must be equal.",
     "currency": "Currency",
     "exchangeRate": "Rate: 1 {{from}} = ? {{to}}",
-    "noRateOnFile": "No rate on file for this date. Type one, or add it in Exchange rates."
+    "noRateOnFile": "No rate on file for this date. Type one, or add it in Exchange rates.",
+    "fxNote": "This entry books the exchange gain or loss of a payment. It is deleted with the payment."
   },
   "reports": {
     "title": "Reports",
@@ -1088,7 +1093,9 @@
         "not-issued": "Issue the document before turning it into another one.",
         "cannot-convert": "This document cannot be turned into that.",
         "total-not-positive": "The total must be more than zero.",
-        "control-account-missing": "There is no active customers or suppliers account to post to. Check the chart of accounts."
+        "control-account-missing": "There is no active customers or suppliers account to post to. Check the chart of accounts.",
+        "has-payments": "This invoice has a payment against it. Delete the receipt or payment first.",
+        "has-notes": "This invoice has a credit or debit note. Delete the note first."
       },
       "line": {
         "product-unknown": "That product no longer exists.",
@@ -1114,7 +1121,36 @@
         "product-twice": "A product can be on the list only once.",
         "price-negative": "A price cannot be negative.",
         "in-use": "A customer uses this price list. Choose another for them first, or switch it off."
+      },
+      "settlement": {
+        "amount-invalid": "Enter an amount above zero.",
+        "document-unavailable": "That invoice is not open for payment any more.",
+        "amount-too-high": "The amount is more than what is outstanding on the invoice.",
+        "nothing-to-settle": "Type an amount for at least one invoice, or an extra amount.",
+        "mixed-currencies": "Invoices in different currencies cannot be paid together.",
+        "currency-mismatch": "The payment must be in the currency of the invoices."
+      },
+      "fx": {
+        "account-required": "Add an active exchange-differences account to the chart of accounts first, so the gain or loss can be booked."
       }
-    }
+    },
+    "receivePayment": "Receive payment",
+    "payInvoices": "Pay supplier",
+    "recordReceipt": "Record receipt",
+    "recordPayment": "Record payment",
+    "receiptRecorded": "Receipt {{number}} recorded.",
+    "paymentRecorded": "Payment {{number}} recorded.",
+    "exchangeGainNote": "Exchange gain: {{amount}} {{currency}}.",
+    "exchangeLossNote": "Exchange loss: {{amount}} {{currency}}.",
+    "settlementNote": "Type how much of each invoice this money pays. If the exchange rate changed since the invoices were issued, the gain or loss is booked for you.",
+    "outstanding": "Outstanding",
+    "payNow": "Paying now",
+    "payInFull": "Pay in full",
+    "onAccount": "Extra, not for an invoice",
+    "onAccountHelp": "An advance that stays on the account until an invoice uses it.",
+    "paid": "Paid",
+    "nothingOutstandingTitle": "Nothing to pay",
+    "nothingOutstandingBody": "There are no unpaid invoices in {{currency}}. Choose another currency, or type an amount below to keep it on account.",
+    "settledNote": "This invoice has been paid or credited, so it cannot be changed. Delete the receipt, payment or credit note first."
   }
 }

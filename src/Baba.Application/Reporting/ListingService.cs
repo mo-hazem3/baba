@@ -106,6 +106,7 @@ public sealed class ListingService(ChartOfAccountsService chart, VoucherService 
         VoucherKind.SalesCreditNote => ("Sales credit note", "إشعار دائن"),
         VoucherKind.PurchaseInvoice => ("Purchase invoice", "فاتورة مشتريات"),
         VoucherKind.PurchaseDebitNote => ("Purchase debit note", "إشعار مدين"),
+        VoucherKind.FxSettlement => ("Exchange difference", "فروق عملة"),
         _ => ("Journal voucher", "قيد يومية"),
     };
 }

@@ -34,6 +34,7 @@ public sealed class CompanyDbContext(
     public DbSet<ReconciledEntry> ReconciledEntries => Set<ReconciledEntry>();
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
+    public DbSet<Allocation> Allocations => Set<Allocation>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
     public DbSet<Product> Products => Set<Product>();
@@ -162,6 +163,17 @@ public sealed class CompanyDbContext(
         });
 
         model.Entity<Voucher>().HasIndex(v => v.DocumentId);
+
+        model.Entity<Allocation>(allocation =>
+        {
+            allocation.Ignore(a => a.Amount).Ignore(a => a.InvoiceBase).Ignore(a => a.PaymentBase);
+            // Deleting the receipt or payment takes its allocations with it; an invoice that has been paid cannot be deleted.
+            allocation.HasOne<Voucher>().WithMany().HasForeignKey(a => a.PaymentVoucherId).OnDelete(DeleteBehavior.Cascade);
+            allocation.HasOne<Document>().WithMany().HasForeignKey(a => a.DocumentId).OnDelete(DeleteBehavior.Restrict);
+            allocation.HasIndex(a => a.PaymentVoucherId);
+            allocation.HasIndex(a => a.DocumentId);
+            allocation.HasQueryFilter(a => a.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<CurrencyRate>(rate =>
         {

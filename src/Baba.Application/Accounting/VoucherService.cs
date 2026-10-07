@@ -53,6 +53,7 @@ public sealed class VoucherService(
     Banking.IReconciliationStore reconciliations,
     IPeriodStore periods,
     ICurrencyRateStore currencyRates,
+    Trade.IAllocationStore allocations,
     ICompanyFiles files,
     TimeProvider clock)
 {
@@ -112,7 +113,7 @@ public sealed class VoucherService(
     /// <summary>The closing entry of a year is made by closing the year, and an invoice's entries by the invoice, so they cannot be saved or deleted like other vouchers.</summary>
     private static void RefuseSystemKind(VoucherKind kind)
     {
-        if (kind == VoucherKind.Closing || kind.IsDocument())
+        if (kind.IsSystemMade())
             throw new ValidationException([new ValidationIssue("kind", "voucher.system-generated")]);
     }
 
@@ -131,6 +132,10 @@ public sealed class VoucherService(
 
         if (wasPosted && id is { } existing && await reconciliations.HasReconciledEntriesAsync(existing, cancellationToken))
             issues.Add(new PostingIssue("voucher", "voucher.reconciled"));
+
+        // A receipt or payment that was set against invoices is not edited: delete it and make it again.
+        if (id is { } payment && (await allocations.ForPaymentAsync(payment, cancellationToken)).Count > 0)
+            issues.Add(new PostingIssue("voucher", "voucher.allocated"));
     }
 
     /// <summary>Posts a draft exactly as it was saved.</summary>
@@ -155,6 +160,10 @@ public sealed class VoucherService(
                 issues.Add(new PostingIssue("voucher", "voucher.reconciled"));
             Throw(issues);
         }
+
+        // The exchange difference that came with a payment goes with it.
+        foreach (var settlementId in (await allocations.ForPaymentAsync(id, cancellationToken)).Select(a => a.SettlementVoucherId).Where(s => s is not null).Distinct())
+            await DeleteSystemAsync(settlementId!.Value, cancellationToken);
 
         await vouchers.DeleteAsync(id, cancellationToken);
     }

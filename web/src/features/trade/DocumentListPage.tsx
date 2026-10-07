@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { listDocuments } from '../../api/generated/baba'
+import { listDocuments, listOutstandingInvoices } from '../../api/generated/baba'
 import type { DocumentKind, DocumentStatus, DocumentSummary } from '../../api/generated/model'
 import { useCurrencies, useCurrentCompany, useParties } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
+import { Button } from 'antd'
 import { ListPage } from '../../layout/ListPage'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
@@ -51,6 +52,14 @@ export function DocumentListPage({ side }: { side: Side }) {
       (await listDocuments({ kind, status: status === 'All' ? undefined : status, from: range.from, to: range.to })).data,
   })
 
+  const invoices = kind === 'SalesInvoice' || kind === 'PurchaseInvoice'
+  const outstandingQuery = useQuery({
+    queryKey: ['/api/settlements/outstanding', 'all'],
+    enabled: invoices,
+    queryFn: async () => (await listOutstandingInvoices()).data,
+  })
+  const outstandingOf = useMemo(() => new Map((outstandingQuery.data ?? []).map((o) => [o.documentId, o.outstanding])), [outstandingQuery.data])
+
   const partyName = (id: string) => {
     const party = parties.get(id)
     return party ? itemName(party, settings.language) : ''
@@ -76,8 +85,16 @@ export function DocumentListPage({ side }: { side: Side }) {
     </span>
   )
 
-  const statusTag = (s: DocumentStatus) =>
-    s === 'Draft' ? <Tag>{t('trade.status.Draft')}</Tag> : s === 'Converted' ? <Tag color="gold">{t('trade.status.Converted')}</Tag> : <Tag color="blue">{t('trade.status.Issued')}</Tag>
+  const statusTag = (d: DocumentSummary) =>
+    d.status === 'Draft' ? (
+      <Tag>{t('trade.status.Draft')}</Tag>
+    ) : d.status === 'Converted' ? (
+      <Tag color="gold">{t('trade.status.Converted')}</Tag>
+    ) : invoices && outstandingOf.get(d.id) === 0 ? (
+      <Tag color="green">{t('trade.paid')}</Tag>
+    ) : (
+      <Tag color="blue">{t('trade.status.Issued')}</Tag>
+    )
 
   const columns: ColumnsType<DocumentSummary> = [
     {
@@ -95,7 +112,18 @@ export function DocumentListPage({ side }: { side: Side }) {
     { title: t('trade.dueDate'), key: 'due', width: 190, render: (_: unknown, d) => (d.dueDate ? formatDate(parseIsoDate(d.dueDate), settings.digits, settings.hijri) : '') },
     { title: t('voucher.reference'), dataIndex: 'reference', width: 140 },
     { title: t('voucher.amount'), key: 'total', align: 'end', width: 160, render: (_: unknown, d) => amount(d.total, d.currencyCode) },
-    { title: t('voucher.status'), key: 'status', width: 120, render: (_: unknown, d) => statusTag(d.status) },
+    ...(invoices
+      ? [
+          {
+            title: t('trade.outstanding'),
+            key: 'outstanding',
+            align: 'end' as const,
+            width: 160,
+            render: (_: unknown, d: DocumentSummary) => (d.status === 'Issued' && outstandingOf.has(d.id) ? amount(outstandingOf.get(d.id)!, d.currencyCode) : null),
+          },
+        ]
+      : []),
+    { title: t('voucher.status'), key: 'status', width: 120, render: (_: unknown, d) => statusTag(d) },
   ]
 
   return (
@@ -104,6 +132,11 @@ export function DocumentListPage({ side }: { side: Side }) {
       help="documents"
       newLabel={t(`trade.new.${kind}`)}
       onNew={create}
+      actions={
+        <Button onClick={() => navigate(side === 'sales' ? '/settlements/receive' : '/settlements/pay')}>
+          {t(side === 'sales' ? 'trade.receivePayment' : 'trade.payInvoices')}
+        </Button>
+      }
       filters={
         <>
           <Segmented
@@ -163,7 +196,7 @@ export function DocumentListPage({ side }: { side: Side }) {
                     <div key={code}>{amount(sum, code)}</div>
                   ))}
                 </Table.Summary.Cell>
-                <Table.Summary.Cell index={2} />
+                <Table.Summary.Cell index={2} colSpan={invoices ? 2 : 1} />
               </Table.Summary.Row>
             ) : null
           }

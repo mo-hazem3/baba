@@ -31,6 +31,9 @@ public enum VoucherKind
 
     /// <summary>The ledger entries of a purchase debit note. Made by the debit note itself.</summary>
     PurchaseDebitNote,
+
+    /// <summary>The exchange gain or loss when a payment is worth a different amount in the company's currency than the invoices it pays. Made by the payment itself.</summary>
+    FxSettlement,
 }
 
 public enum VoucherStatus
@@ -142,7 +145,10 @@ public static class VoucherKindExtensions
 
     /// <summary>Lines are written as debits and credits that the user balances.</summary>
     public static bool HasFreeLines(this VoucherKind kind) =>
-        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing || kind.IsDocument();
+        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing or VoucherKind.FxSettlement || kind.IsDocument();
+
+    /// <summary>Made by Baba itself (closing a year, an invoice, an exchange difference) and never saved or deleted by hand.</summary>
+    public static bool IsSystemMade(this VoucherKind kind) => kind is VoucherKind.Closing or VoucherKind.FxSettlement || kind.IsDocument();
 
     /// <summary>
     /// The ledger side of an invoice or a credit or debit note. Its first line is the customer's or supplier's account for the whole

@@ -61,6 +61,7 @@ public sealed partial class ReportService
     /// Who owes what, and for how long. The entries on receivable accounts (for customers) or payable accounts (for suppliers) are
     /// grouped by party. Credits (payments) are applied to the oldest debits first, and what is left is aged from its due date: the
     /// entry's date plus the party's payment terms. A credit with nothing to pay off is shown as a negative amount (an advance).
+    /// A payment that was set against specific invoices pays exactly those, and only the rest goes by the oldest-first rule.
     /// </summary>
     public async Task<ReportResult> AgingAsync(PartyKind side, DateOnly asOf, CancellationToken cancellationToken = default)
     {
@@ -73,13 +74,14 @@ public sealed partial class ReportService
             .Where(e => accountRoles.GetValueOrDefault(e.AccountId) == role)
             .GroupBy(e => e.PartyId);
 
+        var allocated = await allocations.ListAsync(cancellationToken);
         var lines = new List<AgingLine>();
         foreach (var group in entries)
         {
             if (!allParties.TryGetValue(group.Key, out var party))
                 continue;
 
-            var line = Age(party, group, side, asOf);
+            var line = Age(party, group, side, asOf, allocated);
             if (line.Total != 0 || line.Buckets.Any(b => b != 0))
                 lines.Add(line);
         }
@@ -130,10 +132,26 @@ public sealed partial class ReportService
     private sealed record AgingLine(Party Party, decimal[] Buckets, decimal Total);
 
     /// <summary>Ages one party's entries: oldest debits are paid off first, the rest is placed in a bucket by days past due.</summary>
-    private static AgingLine Age(Party party, IEnumerable<PartyEntry> entries, PartyKind side, DateOnly asOf)
+    private static AgingLine Age(Party party, IEnumerable<PartyEntry> entries, PartyKind side, DateOnly asOf, IReadOnlyList<Domain.Trade.Allocation> allocated)
     {
-        // "Owed" is positive: a debit for a customer, a credit for a supplier.
-        var owed = entries.Select(e => (e.Date, Amount: side == PartyKind.Customer ? e.Debit - e.Credit : e.Credit - e.Debit)).ToList();
+        // "Owed" is positive: a debit for a customer, a credit for a supplier. Exchange differences only settle what the allocations
+        // below already pair off, so they are left out.
+        var items = entries
+            .Where(e => e.Kind != VoucherKind.FxSettlement)
+            .Select(e => (e.VoucherId, e.Date, Amount: side == PartyKind.Customer ? e.Debit - e.Credit : e.Credit - e.Debit))
+            .ToList();
+        foreach (var a in allocated)
+        {
+            var invoice = items.FindIndex(x => x.VoucherId == a.InvoiceVoucherId);
+            var payment = items.FindIndex(x => x.VoucherId == a.PaymentVoucherId);
+            if (invoice < 0 || payment < 0)
+                continue; // the invoice or the payment is not within the dates of this report yet
+
+            items[invoice] = (items[invoice].VoucherId, items[invoice].Date, items[invoice].Amount - a.InvoiceBase);
+            items[payment] = (items[payment].VoucherId, items[payment].Date, items[payment].Amount + a.PaymentBase);
+        }
+
+        var owed = items.Select(x => (x.Date, x.Amount)).ToList();
         var credits = -owed.Where(x => x.Amount < 0).Sum(x => x.Amount);
         var buckets = new decimal[5];
 

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, saveDocumentDraft } from '../../api/generated/baba'
+import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, saveDocumentDraft } from '../../api/generated/baba'
 import type { DocumentDto, DocumentKind, ProductDto } from '../../api/generated/model'
 import { ApiError } from '../../api/http'
 import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useModules, useParties, useProducts } from '../../api/hooks'
@@ -95,7 +95,17 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const listPath = listPathOfKind(kind)
   const issued = initial !== undefined && initial.status !== 'Draft'
   const converted = initial?.status === 'Converted'
-  const readOnly = converted
+  const isInvoice = kind === 'SalesInvoice' || kind === 'PurchaseInvoice'
+
+  // An invoice that has been paid or credited, even in part, is fixed: its payment or credit note has to go first.
+  const standing = useQuery({
+    queryKey: ['/api/settlements/outstanding', initial?.partyId],
+    enabled: isInvoice && initial?.status === 'Issued',
+    queryFn: async () => (await listOutstandingInvoices({ partyId: initial!.partyId })).data,
+  })
+  const outstanding = standing.data?.find((o) => o.documentId === initial?.id)?.outstanding
+  const settled = outstanding !== undefined && initial !== undefined && outstanding < initial.total
+  const readOnly = converted || settled
 
   const [partyId, setPartyId] = useState<string | undefined>(initial?.partyId)
   const [date, setDate] = useState(initial?.date ?? toIsoDate(new Date()))
@@ -285,6 +295,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
       remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
       {converted && <Alert type="info" showIcon className="form-alert" message={t('trade.convertedNote')} />}
+      {settled && <Alert type="info" showIcon className="form-alert" message={t('trade.settledNote')} />}
       {issued && !converted && posts(kind) && <Alert type="info" showIcon className="form-alert" message={t('trade.postedNote')} />}
       {issues && issues.list.length > 0 && (
         <Alert
@@ -300,6 +311,21 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
             </ul>
           }
         />
+      )}
+
+      {isInvoice && initial?.status === 'Issued' && outstanding !== undefined && (
+        <div className="doc-actions">
+          <span>
+            {t('trade.outstanding')}: <AmountText value={outstanding} minorUnits={minorUnits} /> {currencyCode !== baseCurrencyCode && currencyCode}
+          </span>
+          {outstanding > 0 ? (
+            <Button type="primary" onClick={() => navigate(`/settlements/${sales ? 'receive' : 'pay'}?partyId=${initial.partyId}&documentId=${initial.id}`)} disabled={dirty} title={dirty ? t('trade.saveFirst') : undefined}>
+              {t(sales ? 'trade.receivePayment' : 'trade.payInvoices')}
+            </Button>
+          ) : (
+            <Tag color="green">{t('trade.paid')}</Tag>
+          )}
+        </div>
       )}
 
       {initial?.status === 'Issued' && convertibleTo(kind).length > 0 && (

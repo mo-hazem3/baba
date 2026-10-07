@@ -45,6 +45,13 @@ public static class TradeEndpoints
             })
             .WithName("DeleteDocument");
 
+        var settlements = api.MapGroup("/settlements").WithTags("Settlements");
+
+        settlements.MapGet("/outstanding", (SettlementService service, Guid? partyId, CancellationToken ct) => service.OutstandingAsync(partyId, ct))
+            .WithName("ListOutstandingInvoices");
+        settlements.MapPost("/", (SettlementInput input, SettlementService service, CancellationToken ct) => service.SettleAsync(input, ct))
+            .WithName("SettleInvoices");
+
         var productsGroup = api.MapGroup("/products").WithTags("Products");
 
         productsGroup.MapGet("/", (ProductService service, CancellationToken ct) => service.ListAsync(ct))

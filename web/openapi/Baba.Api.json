@@ -1738,6 +1738,69 @@
         }
       }
     },
+    "/api/settlements/outstanding": {
+      "get": {
+        "tags": [
+          "Settlements"
+        ],
+        "operationId": "ListOutstandingInvoices",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutstandingInvoice"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settlements": {
+      "post": {
+        "tags": [
+          "Settlements"
+        ],
+        "operationId": "SettleInvoices",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlementInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products": {
       "get": {
         "tags": [
@@ -4061,6 +4124,58 @@
           }
         }
       },
+      "OutstandingInvoice": {
+        "required": [
+          "documentId",
+          "kind",
+          "number",
+          "partyId",
+          "date",
+          "dueDate",
+          "currencyCode",
+          "total",
+          "outstanding"
+        ],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DocumentKind"
+          },
+          "number": {
+            "type": "string"
+          },
+          "partyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstanding": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "PartyDto": {
         "required": [
           "id",
@@ -5099,6 +5214,110 @@
           }
         }
       },
+      "SettlementInput": {
+        "required": [
+          "partyId",
+          "date",
+          "cashAccountId",
+          "currencyCode",
+          "exchangeRate",
+          "reference",
+          "memo",
+          "allocations",
+          "onAccount"
+        ],
+        "type": "object",
+        "properties": {
+          "partyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cashAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exchangeRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettlementLineInput"
+            }
+          },
+          "onAccount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SettlementLineInput": {
+        "required": [
+          "documentId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SettlementResult": {
+        "required": [
+          "payment",
+          "settlementVoucherId",
+          "exchangeGain"
+        ],
+        "type": "object",
+        "properties": {
+          "payment": {
+            "$ref": "#/components/schemas/VoucherDto"
+          },
+          "settlementVoucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "exchangeGain": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "StartupInfo": {
         "required": [
           "openPath"
@@ -5370,7 +5589,8 @@
           "SalesInvoice",
           "SalesCreditNote",
           "PurchaseInvoice",
-          "PurchaseDebitNote"
+          "PurchaseDebitNote",
+          "FxSettlement"
         ]
       },
       "VoucherLineDto": {
@@ -5579,6 +5799,9 @@
     },
     {
       "name": "Documents"
+    },
+    {
+      "name": "Settlements"
     },
     {
       "name": "Price lists"

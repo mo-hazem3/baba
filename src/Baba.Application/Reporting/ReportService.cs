@@ -11,7 +11,7 @@ namespace Baba.Application.Reporting;
 /// "as of" date, and lets you drill down: figure, statement of account, voucher.
 /// </summary>
 public sealed partial class ReportService(
-    IAccountStore accounts, IPartyStore parties, ICostCenterStore costCenters, ILedgerQuery ledger, ICompanyFiles files)
+    IAccountStore accounts, IPartyStore parties, ICostCenterStore costCenters, ILedgerQuery ledger, Trade.IAllocationStore allocations, ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Trial balance
 

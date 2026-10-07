@@ -312,6 +312,25 @@ public class AccountingApiTests : ApiFixture
         Assert.Equal(20m, price.Price);
     }
 
+    [Fact]
+    public async Task A_payment_set_against_an_invoice_clears_it_and_a_too_big_amount_names_its_line_over_http()
+    {
+        await StartCompanyAsync();
+        var party = await ReadAsync<PartyDto>(await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "C300", "", "Delta Stores", null, null, null, null, 0, 30, null, null)));
+        var line = new DocumentLineInput(null, null, Id("511"), "Goods", 1, 500m);
+        var invoice = await ReadAsync<DocumentDto>(await PostAsync("/api/documents/issue", new SaveDocumentRequest(null, new DocumentInput(DocumentKind.SalesInvoice, Oct6, null, party.Id, null, null, null, null, 0, [line]))));
+
+        var tooMuch = await PostAsync("/api/settlements", new SettlementInput(party.Id, Oct6, Id("112"), null, null, null, null, [new SettlementLineInput(invoice.Id, 600m)], 0));
+        Assert.Equal(HttpStatusCode.BadRequest, tooMuch.StatusCode);
+        Assert.Contains((await ReadAsync<ApiProblem>(tooMuch)).Issues!, i => i is { Field: "allocations[0].amount", Code: "settlement.amount-too-high" });
+
+        var paid = await ReadAsync<SettlementResult>(await PostAsync("/api/settlements", new SettlementInput(party.Id, Oct6, Id("112"), null, null, null, null, [new SettlementLineInput(invoice.Id, 500m)], 0)));
+        Assert.StartsWith("RV-2026-", paid.Payment.Number);
+
+        var outstanding = await ReadAsync<List<OutstandingInvoice>>(await Http.GetAsync($"/api/settlements/outstanding?partyId={party.Id}"));
+        Assert.Equal(0m, outstanding.Single().Outstanding);
+    }
+
     // ------------------------------------------------------------------ Customers, suppliers and cost centers
 
     [Fact]

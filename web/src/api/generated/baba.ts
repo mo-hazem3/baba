@@ -53,6 +53,7 @@ import type {
   ImportResult,
   ListDocumentsParams,
   ListExchangeRatesParams,
+  ListOutstandingInvoicesParams,
   ListPartiesParams,
   ListPeriodsParams,
   ListVouchersParams,
@@ -61,6 +62,7 @@ import type {
   MoveEntriesRequest,
   MoveEntriesResult,
   OpenCompanyRequest,
+  OutstandingInvoice,
   PartyDto,
   PartyInput,
   PartyKind,
@@ -87,6 +89,8 @@ import type {
   SaveVoucherRequest,
   SetActiveRequest,
   SetModulesRequest,
+  SettlementInput,
+  SettlementResult,
   StartupInfo,
   TestPageRequest,
   VoucherDto,
@@ -5581,6 +5585,214 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getConvertDocumentMutationOptions(options), queryClient);
+    }
+
+export type listOutstandingInvoicesResponse200 = {
+  data: OutstandingInvoice[]
+  status: 200
+}
+
+export type listOutstandingInvoicesResponseSuccess = (listOutstandingInvoicesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listOutstandingInvoicesResponse = (listOutstandingInvoicesResponseSuccess)
+
+export const getListOutstandingInvoicesUrl = (params?: ListOutstandingInvoicesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/settlements/outstanding?${stringifiedParams}` : `/api/settlements/outstanding`
+}
+
+export const listOutstandingInvoices = async (params?: ListOutstandingInvoicesParams, options?: Parameters<typeof http>[1]): Promise<listOutstandingInvoicesResponse> => {
+
+  return http<listOutstandingInvoicesResponse>(getListOutstandingInvoicesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOutstandingInvoicesQueryKey = (params?: ListOutstandingInvoicesParams,) => {
+    return [
+    `/api/settlements/outstanding`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListOutstandingInvoicesQueryOptions = <TData = Awaited<ReturnType<typeof listOutstandingInvoices>>, TError = unknown>(params?: ListOutstandingInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOutstandingInvoicesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOutstandingInvoices>>> = ({ signal }) => listOutstandingInvoices(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOutstandingInvoicesQueryResult = NonNullable<Awaited<ReturnType<typeof listOutstandingInvoices>>>
+export type ListOutstandingInvoicesQueryError = unknown
+
+
+export function useListOutstandingInvoices<TData = Awaited<ReturnType<typeof listOutstandingInvoices>>, TError = unknown>(
+ params: undefined |  ListOutstandingInvoicesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOutstandingInvoices>>,
+          TError,
+          Awaited<ReturnType<typeof listOutstandingInvoices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOutstandingInvoices<TData = Awaited<ReturnType<typeof listOutstandingInvoices>>, TError = unknown>(
+ params?: ListOutstandingInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOutstandingInvoices>>,
+          TError,
+          Awaited<ReturnType<typeof listOutstandingInvoices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOutstandingInvoices<TData = Awaited<ReturnType<typeof listOutstandingInvoices>>, TError = unknown>(
+ params?: ListOutstandingInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListOutstandingInvoices<TData = Awaited<ReturnType<typeof listOutstandingInvoices>>, TError = unknown>(
+ params?: ListOutstandingInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOutstandingInvoices>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOutstandingInvoicesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type settleInvoicesResponse200 = {
+  data: SettlementResult
+  status: 200
+}
+
+export type settleInvoicesResponseSuccess = (settleInvoicesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type settleInvoicesResponse = (settleInvoicesResponseSuccess)
+
+export const getSettleInvoicesUrl = () => {
+
+
+
+
+  return `/api/settlements`
+}
+
+export const settleInvoices = async (settlementInput: SettlementInput, options?: Parameters<typeof http>[1]): Promise<settleInvoicesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<settleInvoicesResponse>(getSettleInvoicesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(settlementInput)
+  }
+);}
+
+
+
+
+
+export const getSettleInvoicesMutationKey = () => ['settleInvoices'] as const;
+
+export const getSettleInvoicesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleInvoices>>, TError,SettleInvoicesMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof settleInvoices>>, TError,SettleInvoicesMutationVariables, TContext> => {
+
+const mutationKey = getSettleInvoicesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settleInvoices>>, SettleInvoicesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  settleInvoices(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettleInvoicesMutationResult = NonNullable<Awaited<ReturnType<typeof settleInvoices>>>
+    export type SettleInvoicesMutationBody = SettlementInput
+    export type SettleInvoicesMutationError = unknown
+    export type SettleInvoicesMutationVariables = {data: SettlementInput}
+
+    export const useSettleInvoices = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleInvoices>>, TError,SettleInvoicesMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settleInvoices>>,
+        TError,
+        SettleInvoicesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettleInvoicesMutationOptions(options), queryClient);
     }
 
 export type listProductsResponse200 = {
