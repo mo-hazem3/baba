@@ -28,6 +28,15 @@ public enum AccountRole
 
     /// <summary>Where gains and losses found by counting stock are posted.</summary>
     InventoryAdjustment,
+
+    /// <summary>The account depreciation builds up in (an asset account with a credit balance). The default of a new asset.</summary>
+    AccumulatedDepreciation,
+
+    /// <summary>The expense monthly depreciation is charged to. The default of a new asset.</summary>
+    DepreciationExpense,
+
+    /// <summary>Where the gain or loss on selling or scrapping an asset is posted. The default of a disposal.</summary>
+    AssetDisposal,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

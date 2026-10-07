@@ -2,6 +2,7 @@ using System.Text.Json;
 using Baba.Application.Abstractions;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Assets;
 using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +59,8 @@ public sealed class CompanyDbContext(
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
     public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
+    public DbSet<FixedAsset> FixedAssets => Set<FixedAsset>();
+    public DbSet<AssetDepreciation> AssetDepreciations => Set<AssetDepreciation>();
     public DbSet<RecurringSchedule> RecurringSchedules => Set<RecurringSchedule>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
@@ -84,6 +87,9 @@ public sealed class CompanyDbContext(
         configuration.Properties<TaxTreatment>().HaveConversion<string>();
         configuration.Properties<StockMovementKind>().HaveConversion<string>();
         configuration.Properties<StockDocumentKind>().HaveConversion<string>();
+        configuration.Properties<AssetKind>().HaveConversion<string>();
+        configuration.Properties<DepreciationMethod>().HaveConversion<string>();
+        configuration.Properties<AssetStatus>().HaveConversion<string>();
         configuration.Properties<CostMode>().HaveConversion<string>();
         configuration.Properties<RecurringTemplate>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
@@ -247,6 +253,26 @@ public sealed class CompanyDbContext(
         model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.CostOfSalesAccountId).OnDelete(DeleteBehavior.Restrict);
         model.Entity<Product>().HasIndex(p => p.Barcode);
         model.Entity<Document>().HasOne<Warehouse>().WithMany().HasForeignKey(d => d.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<FixedAsset>(asset =>
+        {
+            asset.Ignore(a => a.Cost).Ignore(a => a.Salvage).Ignore(a => a.AnnualRate).Ignore(a => a.OpeningAccumulated).Ignore(a => a.DisposalProceeds);
+            asset.HasOne<Account>().WithMany().HasForeignKey(a => a.AssetAccountId).OnDelete(DeleteBehavior.Restrict);
+            asset.HasOne<Account>().WithMany().HasForeignKey(a => a.AccumulatedAccountId).OnDelete(DeleteBehavior.Restrict);
+            asset.HasOne<Account>().WithMany().HasForeignKey(a => a.ExpenseAccountId).OnDelete(DeleteBehavior.Restrict);
+            asset.HasOne<CostCenter>().WithMany().HasForeignKey(a => a.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            asset.HasIndex(a => new { a.CompanyId, a.Code }).IsUnique();
+            asset.HasQueryFilter(a => a.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<AssetDepreciation>(row =>
+        {
+            row.Ignore(r => r.Amount);
+            row.HasOne<FixedAsset>().WithMany().HasForeignKey(r => r.AssetId).OnDelete(DeleteBehavior.Restrict);
+            row.HasIndex(r => new { r.AssetId, r.Month }).IsUnique();
+            row.HasIndex(r => r.VoucherId);
+            row.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<RecurringSchedule>(schedule =>
         {

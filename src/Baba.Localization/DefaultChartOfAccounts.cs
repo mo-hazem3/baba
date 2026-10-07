@@ -27,7 +27,7 @@ public static class DefaultChartOfAccounts
             new("12", "Fixed assets", "الأصول الثابتة", AccountType.Asset, "1", false),
             new("121", "Furniture and equipment", "الأثاث والمعدات", AccountType.Asset, "12", true),
             new("122", "Vehicles", "السيارات", AccountType.Asset, "12", true),
-            new("123", "Accumulated depreciation", "مجمع الإهلاك", AccountType.Asset, "12", true),
+            new("123", "Accumulated depreciation", "مجمع الإهلاك", AccountType.Asset, "12", true, AccountRole.AccumulatedDepreciation),
             new("13", "Intangible assets", "الأصول غير الملموسة", AccountType.Asset, "1", false),
             new("131", "Software and licences", "البرامج والتراخيص", AccountType.Asset, "13", true),
 
@@ -59,9 +59,10 @@ public static class DefaultChartOfAccounts
             new("423", "Utilities", "المرافق (كهرباء ومياه واتصالات)", AccountType.Expense, "42", true),
             new("424", "Office supplies", "أدوات مكتبية", AccountType.Expense, "42", true),
             new("425", "Bank charges", "رسوم بنكية", AccountType.Expense, "42", true),
-            new("426", "Depreciation expense", "مصروف الإهلاك", AccountType.Expense, "42", true),
+            new("426", "Depreciation expense", "مصروف الإهلاك", AccountType.Expense, "42", true, AccountRole.DepreciationExpense),
             new("427", "Other expenses", "مصروفات أخرى", AccountType.Expense, "42", true),
             new("429", "Inventory gains and losses", "فروقات جرد المخزون", AccountType.Expense, "42", true, AccountRole.InventoryAdjustment),
+            new("430", "Gain or loss on disposal of assets", "أرباح وخسائر بيع الأصول", AccountType.Expense, "42", true, AccountRole.AssetDisposal),
             new("428", "Exchange differences", "فروق العملة", AccountType.Expense, "42", true, AccountRole.ExchangeDifference),
 
             // Revenues

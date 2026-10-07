@@ -29,6 +29,7 @@ public static class ReportEndpoints
         "party-statement", "aging-receivable", "aging-payable", "cost-centers", "tax-return",
         "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
         "stock-valuation", "stock-movements", "stock-reorder", "warehouses", "stock-documents",
+        "asset-register",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -85,6 +86,7 @@ public static class ReportEndpoints
             case "stock-movements": return await listings.StockMovementsAsync(q.From, q.To, q.ProductId, q.WarehouseId, ct);
             case "stock-reorder": return await listings.StockReorderAsync(ct);
             case "warehouses": return await listings.WarehousesAsync(ct);
+            case "asset-register": return await listings.AssetRegisterAsync(q.AsOf ?? q.To ?? today, ct);
             case "stock-documents": return await listings.StockDocumentsAsync(q.StockDocumentKind, q.From, q.To, ct);
             case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
             case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);

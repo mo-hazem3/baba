@@ -2893,6 +2893,287 @@
         }
       }
     },
+    "/api/assets": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "ListAssets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "CreateAsset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{id}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "GetAsset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "UpdateAsset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "DeleteAsset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/{id}/dispose": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "DisposeAsset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{id}/undispose": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "UndoAssetDisposal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/depreciation/run": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "RunDepreciation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDepreciationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepreciationRunResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/depreciation/run-due": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "RunDueDepreciation",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepreciationRunResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/depreciation/undo-last": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "UndoLastDepreciation",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exchange-rates": {
       "get": {
         "tags": [
@@ -3861,7 +4142,10 @@
           "TaxReceivable",
           "Inventory",
           "CostOfSales",
-          "InventoryAdjustment"
+          "InventoryAdjustment",
+          "AccumulatedDepreciation",
+          "DepreciationExpense",
+          "AssetDisposal"
         ]
       },
       "AccountType": {
@@ -3871,6 +4155,258 @@
           "Equity",
           "Revenue",
           "Expense"
+        ]
+      },
+      "AssetDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "kind",
+          "acquisitionDate",
+          "cost",
+          "salvage",
+          "usefulLifeMonths",
+          "method",
+          "annualRate",
+          "assetAccountId",
+          "accumulatedAccountId",
+          "expenseAccountId",
+          "costCenterId",
+          "openingAccumulated",
+          "depreciatedThrough",
+          "status",
+          "disposalDate",
+          "disposalProceeds",
+          "notes",
+          "accumulated",
+          "bookValue",
+          "lastDepreciatedMonth",
+          "isLocked"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AssetKind"
+          },
+          "acquisitionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "cost": {
+            "type": "number",
+            "format": "double"
+          },
+          "salvage": {
+            "type": "number",
+            "format": "double"
+          },
+          "usefulLifeMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "method": {
+            "$ref": "#/components/schemas/DepreciationMethod"
+          },
+          "annualRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "assetAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accumulatedAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expenseAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "openingAccumulated": {
+            "type": "number",
+            "format": "double"
+          },
+          "depreciatedThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          },
+          "disposalDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "disposalProceeds": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accumulated": {
+            "type": "number",
+            "format": "double"
+          },
+          "bookValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "lastDepreciatedMonth": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "isLocked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AssetInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn",
+          "kind",
+          "acquisitionDate",
+          "cost",
+          "salvage",
+          "usefulLifeMonths",
+          "method",
+          "annualRate",
+          "assetAccountId",
+          "accumulatedAccountId",
+          "expenseAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AssetKind"
+          },
+          "acquisitionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "cost": {
+            "type": "number",
+            "format": "double"
+          },
+          "salvage": {
+            "type": "number",
+            "format": "double"
+          },
+          "usefulLifeMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "method": {
+            "$ref": "#/components/schemas/DepreciationMethod"
+          },
+          "annualRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "assetAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "accumulatedAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "expenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "openingAccumulated": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "depreciatedThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AssetKind": {
+        "enum": [
+          "Tangible",
+          "Intangible"
+        ]
+      },
+      "AssetStatus": {
+        "enum": [
+          "Active",
+          "Disposed"
         ]
       },
       "BackupRequest": {
@@ -4521,6 +5057,96 @@
           "Friday",
           "Saturday"
         ]
+      },
+      "DepreciationMethod": {
+        "enum": [
+          "StraightLine",
+          "DecliningBalance"
+        ]
+      },
+      "DepreciationRunItem": {
+        "required": [
+          "month",
+          "voucherId",
+          "assets",
+          "amount",
+          "problemCode"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date"
+          },
+          "voucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assets": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "problemCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DepreciationRunResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationRunItem"
+            }
+          }
+        }
+      },
+      "DisposeInput": {
+        "required": [
+          "date",
+          "proceeds",
+          "proceedsAccountId",
+          "gainLossAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "proceeds": {
+            "type": "number",
+            "format": "double"
+          },
+          "proceedsAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "gainLossAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
       },
       "DocumentDto": {
         "required": [
@@ -6515,6 +7141,18 @@
         ],
         "default": "Normal"
       },
+      "RunDepreciationRequest": {
+        "required": [
+          "through"
+        ],
+        "type": "object",
+        "properties": {
+          "through": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
       "SaveDialogRequest": {
         "required": [
           "suggestedFileName"
@@ -7348,7 +7986,9 @@
           "PurchaseDebitNote",
           "FxSettlement",
           "StockCost",
-          "StockAdjustment"
+          "StockAdjustment",
+          "Depreciation",
+          "AssetDisposal"
         ]
       },
       "VoucherLineDto": {
@@ -7630,6 +8270,9 @@
     },
     {
       "name": "Stock"
+    },
+    {
+      "name": "Assets"
     },
     {
       "name": "Exchange rates"

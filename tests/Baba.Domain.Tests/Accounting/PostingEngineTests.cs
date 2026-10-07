@@ -447,7 +447,7 @@ public class PostingEngineTests
     [Fact]
     public void Voucher_numbers_have_a_prefix_for_every_kind()
     {
-        Assert.Equal(["PV", "RV", "JV", "TV", "OB", "CL", "SI", "SC", "PI", "PD", "FX", "CG", "SK"], Enum.GetValues<VoucherKind>().Select(VoucherNumber.Prefix));
+        Assert.Equal(["PV", "RV", "JV", "TV", "OB", "CL", "SI", "SC", "PI", "PD", "FX", "CG", "SK", "DP", "DS"], Enum.GetValues<VoucherKind>().Select(VoucherNumber.Prefix));
     }
 
     [Fact]

@@ -55,7 +55,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Trade.TaxService Tax,
         Baba.Application.Inventory.WarehouseService Warehouses,
         Baba.Application.Inventory.StockService Stock,
-        Baba.Application.Inventory.StockDocumentService StockDocs)
+        Baba.Application.Inventory.StockDocumentService StockDocs,
+        Baba.Application.Assets.AssetService FixedAssets)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -121,6 +122,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var warehouseService = new Baba.Application.Inventory.WarehouseService(stockStore, files);
         var stockService = new Baba.Application.Inventory.StockService(stockStore, productStore, accounts, documentStore, vouchers, files);
         var stockDocuments = new Baba.Application.Inventory.StockDocumentService(stockStore, productStore, accounts, stockService, files, Clock);
+        var assetService = new Baba.Application.Assets.AssetService(new Assets.AssetStore(files), accounts, costCenterStore, vouchers, files, Clock);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
         var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
 
@@ -132,7 +134,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         return new Env(
             files, chart, vouchers, periods, ledger, reports, byCode,
             new Baba.Application.Printing.BrandingService(brandingStore),
-            new Baba.Application.Reporting.ListingService(chart, vouchers, trade, new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore, stockStore), parties, tax, new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock), new ExchangeRateService(rateStore, files), stockService, warehouseService, stockDocuments, ledger, accounts, files),
+            new Baba.Application.Reporting.ListingService(chart, vouchers, trade, new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore, stockStore), parties, tax, new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock), new ExchangeRateService(rateStore, files), stockService, warehouseService, stockDocuments, assetService, ledger, accounts, files),
             new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
             documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id,
             new Baba.Application.Banking.BankService(accounts, reconciliationStore, ledger, new Baba.Infrastructure.Printing.TabularReader(), Clock),
@@ -148,7 +150,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
             tax,
             warehouseService,
             stockService,
-            stockDocuments);
+            stockDocuments,
+            assetService);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

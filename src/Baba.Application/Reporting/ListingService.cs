@@ -1,9 +1,11 @@
 using Baba.Application.Accounting;
+using Baba.Application.Assets;
 using Baba.Application.Companies;
 using Baba.Application.Inventory;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Assets;
 using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Baba.Localization;
@@ -27,6 +29,7 @@ public sealed class ListingService(
     StockService stock,
     WarehouseService warehouses,
     StockDocumentService stockDocuments,
+    AssetService assets,
     ILedgerQuery ledger,
     IAccountStore accounts,
     ICompanyFiles files)
@@ -159,6 +162,46 @@ public sealed class ListingService(
             [new(r.CurrencyCode), new(Date: r.Date), Number(r.Rate, 6)], 0, RowStyle.Normal)).ToList();
         return Table("exchange-rates", ("Exchange rates", "أسعار الصرف"), ($"{list.Count} rates", $"{list.Count} سعراً"),
             [Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("date", ColumnKind.Date, "From", "من"), Column("rate", ColumnKind.Text, "Worth in the company's currency", "تساوي بعملة الشركة")], rows);
+    }
+
+    // ---------------------------------------------------------------- Assets
+
+    /// <summary>
+    /// The fixed and intangible asset register on a date: cost, depreciation so far and book value of every asset still held, checked
+    /// against the ledger accounts the assets use.
+    /// </summary>
+    public async Task<ReportResult> AssetRegisterAsync(DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var everything = (await assets.PositionsAsync(asOf, cancellationToken)).ToList();
+        var positions = everything.Where(p => !p.Disposed).ToList();
+        var rows = positions.Select(p =>
+        {
+            var a = p.Asset;
+            var kind = a.Kind == AssetKind.Tangible ? ("Fixed asset", "أصل ثابت") : ("Intangible", "أصل غير ملموس");
+            var method = a.Method == DepreciationMethod.StraightLine ? ("Straight line", "قسط ثابت") : ("Declining balance", "قسط متناقص");
+            return new ReportRow(
+                [new(a.Code), new(a.NameEn, a.NameAr), new(kind.Item1, kind.Item2), new(Date: a.AcquisitionDate), new(method.Item1, method.Item2), new(Amount: a.Cost), new(Amount: p.Accumulated), new(Amount: a.Cost - p.Accumulated)],
+                0, RowStyle.Normal);
+        }).ToList();
+        var cost = positions.Sum(p => p.Asset.Cost);
+        var accumulated = positions.Sum(p => p.Accumulated);
+        rows.Add(new ReportRow([ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, new(Amount: cost), new(Amount: accumulated), new(Amount: cost - accumulated)], 0, RowStyle.Total));
+
+        // What the ledger says about the accounts the register uses (an account shared by assets is counted once).
+        var totals = (await ledger.TotalsAsync(null, asOf, cancellationToken)).ToDictionary(t => t.AccountId);
+        decimal Balance(IEnumerable<Guid> ids) => ids.Distinct().Sum(id => totals.TryGetValue(id, out var t) ? t.Debit - t.Credit : 0m);
+        var checks = new List<ReportCheck>
+        {
+            new("Cost agrees with the asset accounts in the ledger", "التكلفة تساوي حسابات الأصول في دفتر الأستاذ", Balance(everything.Select(p => p.Asset.AssetAccountId)) == everything.Where(p => !p.Disposed).Sum(p => p.Asset.Cost)),
+            new("Depreciation agrees with the accumulated depreciation accounts in the ledger", "الإهلاك يساوي حسابات مجمع الإهلاك في دفتر الأستاذ", -Balance(everything.Select(p => p.Asset.AccumulatedAccountId)) == accumulated),
+        };
+
+        return Table("asset-register", ("Fixed asset register", "سجل الأصول الثابتة"), ReportLabels.Range(null, asOf),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("kind", ColumnKind.Text, "Type", "النوع"),
+                Column("acquired", ColumnKind.Date, "Acquired", "تاريخ الاقتناء"), Column("method", ColumnKind.Text, "Method", "الطريقة"),
+                Column("cost", ColumnKind.Amount, "Cost", "التكلفة"), Column("accumulated", ColumnKind.Amount, "Depreciation", "الإهلاك المتراكم"), Column("book", ColumnKind.Amount, "Book value", "القيمة الدفترية"),
+            ], rows) with { Checks = checks };
     }
 
     // ---------------------------------------------------------------- Stock
