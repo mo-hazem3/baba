@@ -3,6 +3,7 @@ using Baba.Application.Accounting;
 using Baba.Application.Printing;
 using Baba.Application.Reporting;
 using Baba.Application.Trade;
+using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
@@ -13,7 +14,8 @@ namespace Baba.Api.Endpoints;
 public sealed record ReportQuery(
     DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None,
     VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null,
-    DocumentKind? DocumentKind = null, DocumentStatus? DocumentStatus = null, PartyKind? PartyKind = null);
+    DocumentKind? DocumentKind = null, DocumentStatus? DocumentStatus = null, PartyKind? PartyKind = null,
+    Guid? ProductId = null, Guid? WarehouseId = null, StockDocumentKind? StockDocumentKind = null);
 
 /// <summary>
 /// The reports (trial balance, profit and loss, balance sheet, statement of account, general ledger, journal) and the two
@@ -26,6 +28,7 @@ public static class ReportEndpoints
         "trial-balance", "profit-and-loss", "balance-sheet", "statement-of-account", "general-ledger", "journal", "chart-of-accounts", "vouchers",
         "party-statement", "aging-receivable", "aging-payable", "cost-centers", "tax-return",
         "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
+        "stock-valuation", "stock-movements", "stock-reorder", "warehouses", "stock-documents",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -78,6 +81,11 @@ public static class ReportEndpoints
             case "tax-codes": return await listings.TaxCodesAsync(ct);
             case "recurring": return await listings.RecurringAsync(ct);
             case "exchange-rates": return await listings.ExchangeRatesAsync(ct);
+            case "stock-valuation": return await listings.StockValuationAsync(q.AsOf ?? q.To ?? today, q.WarehouseId, ct);
+            case "stock-movements": return await listings.StockMovementsAsync(q.From, q.To, q.ProductId, q.WarehouseId, ct);
+            case "stock-reorder": return await listings.StockReorderAsync(ct);
+            case "warehouses": return await listings.WarehousesAsync(ct);
+            case "stock-documents": return await listings.StockDocumentsAsync(q.StockDocumentKind, q.From, q.To, ct);
             case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
             case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);
             case "tax-return": return await reports.TaxReturnAsync(q.From, q.To, ct);

@@ -1,8 +1,10 @@
 using Baba.Application.Accounting;
 using Baba.Application.Companies;
+using Baba.Application.Inventory;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Baba.Localization;
 
@@ -22,6 +24,11 @@ public sealed class ListingService(
     TaxService taxes,
     RecurringService recurring,
     ExchangeRateService rates,
+    StockService stock,
+    WarehouseService warehouses,
+    StockDocumentService stockDocuments,
+    ILedgerQuery ledger,
+    IAccountStore accounts,
     ICompanyFiles files)
 {
     private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
@@ -151,6 +158,139 @@ public sealed class ListingService(
         return Table("exchange-rates", ("Exchange rates", "أسعار الصرف"), ($"{list.Count} rates", $"{list.Count} سعراً"),
             [Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("date", ColumnKind.Date, "From", "من"), Column("rate", ColumnKind.Text, "Worth in the company's currency", "تساوي بعملة الشركة")], rows);
     }
+
+    // ---------------------------------------------------------------- Stock
+
+    /// <summary>
+    /// What is on hand on a date and what it is worth, product by product (brief sections 10.4 and 11). Without a warehouse chosen, the whole
+    /// company: then the report also checks that the value equals the stock accounts of the ledger.
+    /// </summary>
+    public async Task<ReportResult> StockValuationAsync(DateOnly asOf, Guid? warehouseId, CancellationToken cancellationToken = default)
+    {
+        var levels = (await stock.LevelsAsync(asOf, cancellationToken)).Where(l => warehouseId is null || l.WarehouseId == warehouseId).ToList();
+        var productList = (await products.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+
+        var rows = levels.GroupBy(l => l.ProductId)
+            .Where(g => productList.ContainsKey(g.Key))
+            .OrderBy(g => productList[g.Key].Code, StringComparer.OrdinalIgnoreCase)
+            .Select(g =>
+            {
+                var p = productList[g.Key];
+                var quantity = g.Sum(l => l.Quantity);
+                var value = g.Sum(l => l.Value);
+                return new ReportRow(
+                    [new(p.Code), new(p.NameEn, p.NameAr), new(p.Unit), new(Amount: quantity), quantity == 0 ? ReportCell.Blank : new(Amount: Math.Round(value / quantity, 4)), new(Amount: value)],
+                    0, RowStyle.Normal);
+            }).ToList();
+
+        var total = levels.Sum(l => l.Value);
+        rows.Add(new ReportRow([ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, new("Total", "الإجمالي"), new(Amount: total)], 0, RowStyle.Total));
+
+        var checks = new List<ReportCheck>();
+        if (warehouseId is null)
+        {
+            // The stock accounts of the ledger: the company's, and any a product has of its own.
+            var chart = await accounts.ListAsync(cancellationToken);
+            var stockAccounts = chart.Where(a => a.Role == AccountRole.Inventory).Select(a => a.Id).Concat(productList.Values.Select(p => p.InventoryAccountId).OfType<Guid>()).ToHashSet();
+            var ledgerValue = (await ledger.TotalsAsync(null, asOf, cancellationToken)).Where(t => stockAccounts.Contains(t.AccountId)).Sum(t => t.Debit - t.Credit);
+            checks.Add(new ReportCheck("Stock value equals the stock accounts in the ledger", "قيمة المخزون تساوي حسابات المخزون في دفتر الأستاذ", ledgerValue == total));
+        }
+
+        return Table("stock-valuation", ("Stock valuation", "تقييم المخزون"), ReportLabels.Range(null, asOf),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("unit", ColumnKind.Text, "Unit", "الوحدة"),
+                Column("quantity", ColumnKind.Amount, "Quantity", "الكمية"), Column("cost", ColumnKind.Amount, "Average cost", "متوسط التكلفة"), Column("value", ColumnKind.Amount, "Value", "القيمة"),
+            ], rows) with { Checks = checks };
+    }
+
+    /// <summary>Every movement of stock in a period, with the document that made it.</summary>
+    public async Task<ReportResult> StockMovementsAsync(DateOnly? from, DateOnly? to, Guid? productId, Guid? warehouseId, CancellationToken cancellationToken = default)
+    {
+        var productList = (await products.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+        var warehouseList = (await warehouses.ListAsync(cancellationToken)).ToDictionary(w => w.Id);
+        var numbers = (await documents.ListAsync(new DocumentSearch(Limit: 100_000), cancellationToken)).ToDictionary(d => d.Id, d => d.Number ?? "");
+        foreach (var d in await stockDocuments.ListAsync(null, cancellationToken))
+            numbers[d.Id] = d.Number;
+
+        var rows = (await stockMovementsSource(cancellationToken))
+            .Where(m => (from is null || m.Date >= from) && (to is null || m.Date <= to) && (productId is null || m.ProductId == productId) && (warehouseId is null || m.WarehouseId == warehouseId))
+            .OrderBy(m => m.Date).ThenBy(m => m.SourceCreatedAt).ThenBy(m => m.Id)
+            .Where(m => productList.ContainsKey(m.ProductId))
+            .Select(m =>
+            {
+                var p = productList[m.ProductId];
+                var w = warehouseList.GetValueOrDefault(m.WarehouseId);
+                var kind = MovementKindName(m.Kind);
+                return new ReportRow(
+                    [
+                        new(Date: m.Date), new(numbers.GetValueOrDefault(m.DocumentId ?? m.StockDocumentId ?? Guid.Empty) ?? ""), new(kind.En, kind.Ar), new(p.Code), new(p.NameEn, p.NameAr),
+                        w is null ? ReportCell.Blank : new(w.NameEn, w.NameAr),
+                        m.QuantityScaled > 0 ? new(Amount: m.Quantity) : ReportCell.Blank, m.QuantityScaled < 0 ? new(Amount: -m.Quantity) : ReportCell.Blank, new(Amount: m.Value),
+                    ],
+                    0, RowStyle.Normal);
+            }).ToList();
+
+        return Table("stock-movements", ("Stock movements", "حركة المخزون"), ReportLabels.Range(from, to),
+            [
+                Column("date", ColumnKind.Date, "Date", "التاريخ"), Column("document", ColumnKind.Text, "Document", "المستند"), Column("type", ColumnKind.Text, "Type", "النوع"),
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("product", ColumnKind.Text, "Product", "الصنف"), Column("warehouse", ColumnKind.Text, "Warehouse", "المستودع"),
+                Column("in", ColumnKind.Amount, "In", "وارد"), Column("out", ColumnKind.Amount, "Out", "صادر"), Column("value", ColumnKind.Amount, "Value", "القيمة"),
+            ], rows);
+    }
+
+    private Task<IReadOnlyList<StockMovement>> stockMovementsSource(CancellationToken cancellationToken) => stock.MovementsAsync(cancellationToken);
+
+    /// <summary>Products that have fallen to their reorder level.</summary>
+    public async Task<ReportResult> StockReorderAsync(CancellationToken cancellationToken = default)
+    {
+        var productList = (await products.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+        var low = await stock.LowStockAsync(cancellationToken);
+        var rows = low.Select(item =>
+        {
+            var p = productList[item.ProductId];
+            return new ReportRow([new(p.Code), new(p.NameEn, p.NameAr), new(p.Unit), new(Amount: item.OnHand), new(Amount: item.ReorderLevel), new(Amount: item.ReorderLevel - item.OnHand)], 0, RowStyle.Normal);
+        }).ToList();
+        return Table("stock-reorder", ("Products to reorder", "أصناف تحتاج إعادة طلب"), ($"{low.Count} products", $"{low.Count} صنفاً"),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("unit", ColumnKind.Text, "Unit", "الوحدة"),
+                Column("onhand", ColumnKind.Amount, "On hand", "المتوفر"), Column("level", ColumnKind.Amount, "Reorder level", "حد إعادة الطلب"), Column("short", ColumnKind.Amount, "Below the level by", "أقل من الحد بمقدار"),
+            ], rows);
+    }
+
+    public async Task<ReportResult> WarehousesAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await warehouses.ListAsync(cancellationToken);
+        var rows = list.Select(w => new ReportRow([new(w.Code), new(w.NameEn, w.NameAr), w.IsDefault ? new("Yes", "نعم") : ReportCell.Blank, Active(w.IsActive)], 0, RowStyle.Normal)).ToList();
+        return Table("warehouses", ("Warehouses", "المستودعات"), ($"{list.Count} warehouses", $"{list.Count} مستودعاً"),
+            [Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("default", ColumnKind.Text, "Default", "الافتراضي"), Column("status", ColumnKind.Text, "Status", "الحالة")], rows);
+    }
+
+    public async Task<ReportResult> StockDocumentsAsync(StockDocumentKind? kind, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
+    {
+        var list = (await stockDocuments.ListAsync(kind, cancellationToken)).Where(d => (from is null || d.Date >= from) && (to is null || d.Date <= to)).ToList();
+        var rows = list.Select(d =>
+        {
+            var name = d.Kind switch { StockDocumentKind.Opening => ("Opening stock", "مخزون افتتاحي"), StockDocumentKind.Adjustment => ("Adjustment", "تسوية مخزون"), _ => ("Transfer", "تحويل مخزون") };
+            return new ReportRow([new(d.Number), new(Date: d.Date), new(name.Item1, name.Item2), new(d.Memo), new(d.Lines.Count.ToString(Invariant)), new(Amount: d.Value)], 0, RowStyle.Normal);
+        }).ToList();
+        return Table("stock-documents", ("Stock documents", "مستندات المخزون"), ReportLabels.Range(from, to),
+            [
+                Column("number", ColumnKind.Text, "Number", "الرقم"), Column("date", ColumnKind.Date, "Date", "التاريخ"), Column("type", ColumnKind.Text, "Type", "النوع"),
+                Column("memo", ColumnKind.Text, "Notes", "ملاحظات"), Column("lines", ColumnKind.Text, "Lines", "الأسطر"), Column("value", ColumnKind.Amount, "Value", "القيمة"),
+            ], rows);
+    }
+
+    private static (string En, string Ar) MovementKindName(StockMovementKind kind) => kind switch
+    {
+        StockMovementKind.Purchase => ("Purchase", "شراء"),
+        StockMovementKind.PurchaseReturn => ("Purchase return", "مرتجع مشتريات"),
+        StockMovementKind.Sale => ("Sale", "بيع"),
+        StockMovementKind.SaleReturn => ("Sales return", "مرتجع مبيعات"),
+        StockMovementKind.Opening => ("Opening stock", "مخزون افتتاحي"),
+        StockMovementKind.Adjustment => ("Adjustment", "تسوية"),
+        StockMovementKind.TransferOut => ("Transfer out", "تحويل صادر"),
+        _ => ("Transfer in", "تحويل وارد"),
+    };
 
     private static (string En, string Ar) DocumentKindName(DocumentKind kind) => kind switch
     {

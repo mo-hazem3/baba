@@ -3419,6 +3419,29 @@
             "schema": {
               "$ref": "#/components/schemas/PartyKind"
             }
+          },
+          {
+            "name": "ProductId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "WarehouseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "StockDocumentKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StockDocumentKind"
+            }
           }
         ],
         "responses": {
@@ -3557,6 +3580,29 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/PartyKind"
+            }
+          },
+          {
+            "name": "ProductId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "WarehouseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "StockDocumentKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StockDocumentKind"
             }
           }
         ],
@@ -4593,6 +4639,13 @@
           "immutable": {
             "type": "boolean",
             "default": false
+          },
+          "warehouseId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -4663,6 +4716,13 @@
             "items": {
               "$ref": "#/components/schemas/DocumentLineInput"
             }
+          },
+          "warehouseId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

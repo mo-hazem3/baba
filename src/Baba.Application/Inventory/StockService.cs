@@ -24,6 +24,9 @@ public sealed record NewMovement(
 /// <summary>All the movements of one invoice, note or stock document, which replace what it made before.</summary>
 public sealed record StockChange(Guid OwnerId, bool IsDocument, DateTime OwnerCreatedAt, IReadOnlyList<NewMovement> Movements);
 
+/// <summary>A product that has fallen to its reorder level.</summary>
+public sealed record ReorderItem(Guid ProductId, decimal OnHand, decimal ReorderLevel);
+
 /// <summary>How much of a product is in a warehouse and what it is worth, in the company's currency.</summary>
 public sealed record StockLevelDto(Guid ProductId, Guid WarehouseId, decimal Quantity, decimal Value);
 
@@ -53,6 +56,20 @@ public sealed class StockService(
             .Select(g => new StockLevelDto(g.Key.ProductId, g.Key.WarehouseId, Scaled.ToDecimal(g.Sum(m => m.QuantityScaled)), Scaled.ToDecimal(g.Sum(m => m.ValueScaled))))
             .Where(l => l.Quantity != 0 || l.Value != 0)
             .ToList();
+
+    /// <summary>Every stock movement, oldest first (for the movement report).</summary>
+    public Task<IReadOnlyList<StockMovement>> MovementsAsync(CancellationToken cancellationToken = default) => store.ListMovementsAsync(cancellationToken);
+
+    /// <summary>Stock items whose quantity on hand is at or below their reorder level (products with no level are never listed).</summary>
+    public async Task<IReadOnlyList<ReorderItem>> LowStockAsync(CancellationToken cancellationToken = default)
+    {
+        var onHand = (await store.ListMovementsAsync(cancellationToken)).GroupBy(m => m.ProductId).ToDictionary(g => g.Key, g => g.Sum(m => m.QuantityScaled));
+        return (await products.ListAsync(cancellationToken))
+            .Where(p => p is { IsStockItem: true, IsActive: true } && p.ReorderLevelScaled > 0 && onHand.GetValueOrDefault(p.Id) <= p.ReorderLevelScaled)
+            .OrderBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
+            .Select(p => new ReorderItem(p.Id, Scaled.ToDecimal(onHand.GetValueOrDefault(p.Id)), p.ReorderLevel))
+            .ToList();
+    }
 
     // ---------------------------------------------------------------- Changing
 
