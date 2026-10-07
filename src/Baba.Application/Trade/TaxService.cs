@@ -56,6 +56,9 @@ public sealed record TaxCodeDto(
 /// </summary>
 public sealed class TaxService(ITaxCodeStore codes, IAccountStore accounts, CountryPackRegistry countryPacks, ICompanyFiles files)
 {
+    // Several screens ask for the codes at the same moment when a company is first shown; only one of them may create the missing ones.
+    private readonly SemaphoreSlim _seeding = new(1, 1);
+
     public async Task<IReadOnlyList<TaxCodeDto>> ListAsync(CancellationToken cancellationToken = default)
     {
         await EnsurePackCodesAsync(cancellationToken);
@@ -139,6 +142,19 @@ public sealed class TaxService(ITaxCodeStore codes, IAccountStore accounts, Coun
 
     /// <summary>Adds the tax codes of the company's country that the company does not have yet, and fills in tax accounts that were missing.</summary>
     private async Task EnsurePackCodesAsync(CancellationToken cancellationToken)
+    {
+        await _seeding.WaitAsync(cancellationToken);
+        try
+        {
+            await SeedAsync(cancellationToken);
+        }
+        finally
+        {
+            _seeding.Release();
+        }
+    }
+
+    private async Task SeedAsync(CancellationToken cancellationToken)
     {
         var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
         var pack = countryPacks.Find(company.CountryCode);

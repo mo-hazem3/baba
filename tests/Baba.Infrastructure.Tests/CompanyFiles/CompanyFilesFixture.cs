@@ -30,7 +30,7 @@ public abstract class CompanyFilesFixture : IDisposable
     /// <summary>A manager, like one running app window. Make two to simulate two windows on the same file.</summary>
     protected SqliteCompanyFiles NewManager(string userId = "tester")
     {
-        var manager = new SqliteCompanyFiles(new FakeUser(userId), Clock);
+        var manager = new SqliteCompanyFiles(new FakeUser(userId), Clock) { WarmsPool = false };
         _managers.Add(manager);
         return manager;
     }
@@ -47,7 +47,7 @@ public abstract class CompanyFilesFixture : IDisposable
                 BaseCurrencyCode: "KWD",
                 FiscalYearStartMonth: 1,
                 FirstFiscalYear: 2026,
-                TaxNumbers: new Dictionary<string, string> { ["tax-id"] = "12345" },
+                TaxNumbers: new Dictionary<string, string> { ["tax-id"] = "12345", ["vat-number"] = "300000000000003" },
                 Address: "Block 5",
                 ChartTemplateKey: "default",
                 EnabledModules: ["bank-cash", "sales"]),

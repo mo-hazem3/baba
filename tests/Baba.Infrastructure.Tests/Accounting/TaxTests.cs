@@ -38,6 +38,17 @@ public class TaxTests : AccountingFixture
     }
 
     [Fact]
+    public async Task Many_screens_asking_for_the_codes_at_once_make_them_only_once()
+    {
+        var e = await NewEnvAsync(countryCode: Country);
+
+        var lists = await Task.WhenAll(Enumerable.Range(0, 12).Select(_ => e.Tax.ListAsync()));
+
+        Assert.All(lists, l => Assert.Equal(4, l.Count));
+        Assert.Equal(4, (await e.Tax.ListAsync()).Count);
+    }
+
+    [Fact]
     public async Task A_country_without_tax_has_no_codes()
     {
         var e = await NewEnvAsync();

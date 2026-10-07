@@ -18,6 +18,23 @@ public sealed class CompanyDbContext(
     TimeProvider clock,
     CompanyScope scope) : DbContext(options)
 {
+    private Action? _onDisposed;
+
+    /// <summary>Called once when the context is disposed. The company file manager uses it to give back the place this context held.</summary>
+    public void OnDisposed(Action callback) => _onDisposed = callback;
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        Interlocked.Exchange(ref _onDisposed, null)?.Invoke();
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        Interlocked.Exchange(ref _onDisposed, null)?.Invoke();
+    }
+
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<StoredFile> Files => Set<StoredFile>();

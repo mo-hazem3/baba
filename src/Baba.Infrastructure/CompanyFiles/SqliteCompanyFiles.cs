@@ -182,13 +182,35 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         return BackupFileAsync(path, password, Path.GetFullPath(destinationPath), cancellationToken);
     }
 
+    /// <summary>
+    /// How many contexts (and so open connections) may be in use at once. A new encrypted connection costs about a second of key
+    /// derivation that cannot run in parallel, so a burst of requests on a cold pool used to cost a second for each of them; with a limit
+    /// the burst shares a few connections that stay open in the pool and everything after it is instant.
+    /// </summary>
+    private const int MaxOpenContexts = 4;
+
+    private readonly SemaphoreSlim _slots = new(MaxOpenContexts);
+
     public CompanyDbContext Create()
     {
-        lock (_gate)
+        _slots.Wait();
+        try
         {
-            if (_path is null || _password is null)
-                throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
-            return NewContext(_path, _password, createIfMissing: false, _scope);
+            CompanyDbContext context;
+            lock (_gate)
+            {
+                if (_path is null || _password is null)
+                    throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
+                context = NewContext(_path, _password, createIfMissing: false, _scope);
+            }
+
+            context.OnDisposed(() => _slots.Release());
+            return context;
+        }
+        catch
+        {
+            _slots.Release();
+            throw;
         }
     }
 
@@ -215,12 +237,61 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
             _path = path;
             _password = password;
             _lock = fileLock;
+            WarmPool(path, password);
             _current = new CompanyInfo(
                 company.Id, company.NameAr, company.NameEn, company.CountryCode, company.BaseCurrencyCode,
                 company.FiscalYearStartMonth, company.FirstFiscalYear, company.EnabledModules.ToList(), path,
                 new Dictionary<string, string>(company.TaxNumbers), company.Address);
             return _current;
         }
+    }
+
+    /// <summary>
+    /// Opens a few connections in the background right after a company is opened, so they are already in the pool (each costs about a second
+    /// of key derivation) when the first screens ask for several things at once. Failures do not matter: it is only a head start.
+    /// </summary>
+    /// <summary>Warm the pool when a company is opened. On in the app; unit tests that open many companies switch it off.</summary>
+    public bool WarmsPool { get; init; } = true;
+
+    private void WarmPool(string path, string password)
+    {
+        if (!WarmsPool)
+            return;
+
+        bool StillOpen()
+        {
+            lock (_gate)
+                return string.Equals(_path, path, StringComparison.Ordinal);
+        }
+
+        _ = Task.Run(async () =>
+        {
+            var open = new List<SqliteConnection>();
+            try
+            {
+                SqliteBootstrap.Ensure();
+                var connectionString = new SqliteConnectionStringBuilder { DataSource = path, Password = password, Mode = SqliteOpenMode.ReadWrite }.ToString();
+                for (var i = 0; i < MaxOpenContexts - 1 && StillOpen(); i++)
+                {
+                    var connection = new SqliteConnection(connectionString);
+                    open.Add(connection);
+                    await connection.OpenAsync();
+                }
+            }
+            catch
+            {
+                // the company was closed meanwhile, or the file moved: nothing to warm
+            }
+            finally
+            {
+                foreach (var connection in open)
+                    await connection.DisposeAsync(); // back into the pool, still open
+
+                // Closed while this was opening: what it opened must not keep the file locked.
+                if (!StillOpen())
+                    ReleasePools(path, password);
+            }
+        });
     }
 
     private void EnsureNothingOpen()
