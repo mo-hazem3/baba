@@ -35,6 +35,12 @@ public sealed class SaudiArabiaPack : CountryPackBase
         new("commercial-registration", "Commercial registration (CR) number", "رقم السجل التجاري", @"^\d{10}$", RequiredForCompany: false),
     ];
 
+    /// <summary>Defaults to verify with GOSI and the labour law (articles 84 and 85): Saudis pay annuities and SANED, foreigners only the employer's occupational hazards share; the gratuity is half a month's wage a year for five years, then a month a year.</summary>
+    public override IPayrollRules? Payroll { get; } = new PayrollRules(
+        InsuranceForNationals: new SocialInsuranceScheme("GOSI social insurance", "التأمينات الاجتماعية (GOSI)", 9.75m, 11.75m, 1500m, 45000m),
+        InsuranceForForeigners: new SocialInsuranceScheme("GOSI occupational hazards", "التأمينات الاجتماعية: أخطار العمل (GOSI)", 0m, 2m, 1500m, 45000m),
+        EndOfService: new DaysPerYearGratuity("End-of-service award", "مكافأة نهاية الخدمة", 15m, 30m, 30m, null));
+
     public override IEInvoicingProvider? EInvoicing { get; } = new ZatcaEInvoicing();
 
     public override DocumentRules DocumentRules { get; } = new(

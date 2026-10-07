@@ -14,6 +14,12 @@ public sealed class EgyptPack : CountryPackBase
         MinorNameEn: "Piastre",
         MinorNameAr: "قرش");
 
+    /// <summary>Defaults to verify with the National Organization for Social Insurance: employees pay 11% and employers 18.75%. The insurable wage limits change every year, so they are left empty here: enter the current ones in the payroll settings. Egyptian law has no end-of-service gratuity.</summary>
+    public override IPayrollRules? Payroll { get; } = new PayrollRules(
+        InsuranceForNationals: new SocialInsuranceScheme("Social insurance", "التأمينات الاجتماعية", 11m, 18.75m, null, null),
+        InsuranceForForeigners: null,
+        EndOfService: null);
+
     public override CalendarRules Calendar { get; } = new(
         Calendars: [CalendarKind.Gregorian],
         DefaultWeekend: [DayOfWeek.Friday, DayOfWeek.Saturday],

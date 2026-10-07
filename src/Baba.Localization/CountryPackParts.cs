@@ -132,7 +132,69 @@ public interface IEInvoicingProvider
 
 public interface IWithholdingRules { }
 
-public interface IPayrollRules { }
+/// <summary>
+/// A social insurance scheme: what the employee and the employer each pay as a percentage of the insurable wage, within optional
+/// limits (a wage under the floor is charged as the floor, a wage over the ceiling as the ceiling). These are defaults copied into the
+/// company's payroll settings, where the accountant can correct them: rates and limits change and must be checked with the authority.
+/// </summary>
+public sealed record SocialInsuranceScheme(
+    string NameEn,
+    string NameAr,
+    decimal EmployeePercent,
+    decimal EmployerPercent,
+    decimal? MonthlyFloor,
+    decimal? MonthlyCeiling);
+
+/// <summary>The end-of-service gratuity a country's labour law gives an employee, as a function of the wage and the years served.</summary>
+public interface IEndOfServiceRules
+{
+    string NameEn { get; }
+    string NameAr { get; }
+
+    /// <summary>What the employee would be owed if the employer ended the contract today (the amount to keep as a provision).</summary>
+    decimal Gratuity(decimal monthlyWage, decimal yearsOfService);
+}
+
+/// <summary>
+/// What a country decides about payroll (brief section 10.4): social insurance for nationals and for foreigners, and end-of-service.
+/// Null for a part means the country has none of it.
+/// </summary>
+public interface IPayrollRules
+{
+    SocialInsuranceScheme? InsuranceForNationals { get; }
+    SocialInsuranceScheme? InsuranceForForeigners { get; }
+    IEndOfServiceRules? EndOfService { get; }
+}
+
+public sealed record PayrollRules(
+    SocialInsuranceScheme? InsuranceForNationals,
+    SocialInsuranceScheme? InsuranceForForeigners,
+    IEndOfServiceRules? EndOfService) : IPayrollRules;
+
+/// <summary>
+/// Gratuity worked out from days of wage per year of service: some days for each of the first five years and some for each year after,
+/// with an optional cap in months of wage. Used by the packs that pay a gratuity (the day counts are each country's own).
+/// </summary>
+public sealed record DaysPerYearGratuity(
+    string NameEn,
+    string NameAr,
+    decimal DaysFirstFiveYears,
+    decimal DaysAfterFiveYears,
+    decimal DaysInMonth,
+    decimal? CapInMonths) : IEndOfServiceRules
+{
+    public decimal Gratuity(decimal monthlyWage, decimal yearsOfService)
+    {
+        if (monthlyWage <= 0 || yearsOfService <= 0)
+            return 0;
+
+        var dayWage = monthlyWage / DaysInMonth;
+        var first = Math.Min(yearsOfService, 5m);
+        var after = Math.Max(yearsOfService - 5m, 0m);
+        var amount = dayWage * (first * DaysFirstFiveYears + after * DaysAfterFiveYears);
+        return CapInMonths is { } cap ? Math.Min(amount, monthlyWage * cap) : amount;
+    }
+}
 
 public interface IStatutoryReports { }
 

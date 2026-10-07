@@ -3174,6 +3174,986 @@
         }
       }
     },
+    "/api/employees": {
+      "get": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "ListEmployees",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmployeeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "CreateEmployee",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/employees/{id}": {
+      "put": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "UpdateEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "DeleteEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/employees/{id}/active": {
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "SetEmployeeActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/salary-components": {
+      "get": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "ListSalaryComponents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalaryComponentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "CreateSalaryComponent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryComponentInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryComponentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/salary-components/{id}": {
+      "put": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "UpdateSalaryComponent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryComponentInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryComponentDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "DeleteSalaryComponent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/salary-components/{id}/active": {
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "SetSalaryComponentActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryComponentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leave": {
+      "get": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "ListLeave",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LeaveDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "AddLeave",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaveInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaveDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leave/balances": {
+      "get": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "GetLeaveBalances",
+        "parameters": [
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LeaveBalanceDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leave/{id}": {
+      "put": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "UpdateLeave",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaveInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaveDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Employees"
+        ],
+        "operationId": "DeleteLeave",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/payroll/settings": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "GetPayrollSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "SavePayrollSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayrollSettingsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "ListPayrollRuns",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PayrollRunSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "CreatePayrollRun",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePayrollRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "GetPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "DeletePayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/run-due": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "RunDuePayroll",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollAutoResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/refresh": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "RefreshPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/payslips/{payslipId}": {
+      "put": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "SavePayslip",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "payslipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavePayslipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "RemovePayslip",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "payslipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/post": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "PostPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/unpost": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "UnpostPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/pay": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "PayPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/unpay": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "UnpayPayrollRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRunDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/end-of-service": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "GetEndOfServicePosition",
+        "parameters": [
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndOfServicePosition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/end-of-service/accrue": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "AccrueEndOfService",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrueEndOfServiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndOfServiceResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/end-of-service/run-due": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "RunDueEndOfService",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndOfServiceResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payroll/end-of-service/undo": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "UndoEndOfService",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exchange-rates": {
       "get": {
         "tags": [
@@ -4165,7 +5145,13 @@
           "InventoryAdjustment",
           "AccumulatedDepreciation",
           "DepreciationExpense",
-          "AssetDisposal"
+          "AssetDisposal",
+          "SalaryExpense",
+          "SalariesPayable",
+          "SocialInsuranceExpense",
+          "SocialInsurancePayable",
+          "EndOfServiceExpense",
+          "EndOfServiceProvision"
         ]
       },
       "AccountType": {
@@ -4176,6 +5162,18 @@
           "Revenue",
           "Expense"
         ]
+      },
+      "AccrueEndOfServiceRequest": {
+        "required": [
+          "month"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date"
+          }
+        }
       },
       "AssetDto": {
         "required": [
@@ -4745,6 +5743,12 @@
           }
         }
       },
+      "ComponentCalculation": {
+        "enum": [
+          "Fixed",
+          "PercentOfBasic"
+        ]
+      },
       "ConvertDocumentRequest": {
         "required": [
           "target"
@@ -4894,6 +5898,18 @@
           },
           "company": {
             "$ref": "#/components/schemas/NewCompanyRequest"
+          }
+        }
+      },
+      "CreatePayrollRunRequest": {
+        "required": [
+          "month"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -5620,6 +6636,339 @@
           }
         }
       },
+      "EmployeeComponentInput": {
+        "required": [
+          "componentId",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "EmployeeDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "jobTitle",
+          "nationalId",
+          "isNational",
+          "joinDate",
+          "leaveDate",
+          "basicSalary",
+          "bankName",
+          "bankAccount",
+          "costCenterId",
+          "annualLeaveDays",
+          "leaveBalanceDays",
+          "leaveBalanceDate",
+          "isActive",
+          "notes",
+          "components",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nationalId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isNational": {
+            "type": "boolean"
+          },
+          "joinDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "leaveDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "basicSalary": {
+            "type": "number",
+            "format": "double"
+          },
+          "bankName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bankAccount": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "annualLeaveDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "leaveBalanceDays": {
+            "type": "number",
+            "format": "double"
+          },
+          "leaveBalanceDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmployeeComponentInput"
+            }
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EmployeeInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn",
+          "jobTitle",
+          "nationalId",
+          "isNational",
+          "joinDate",
+          "leaveDate",
+          "basicSalary",
+          "bankName",
+          "bankAccount",
+          "costCenterId",
+          "annualLeaveDays",
+          "leaveBalanceDays",
+          "leaveBalanceDate",
+          "notes",
+          "components"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nationalId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isNational": {
+            "type": "boolean"
+          },
+          "joinDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "leaveDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "basicSalary": {
+            "type": "number",
+            "format": "double"
+          },
+          "bankName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bankAccount": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "annualLeaveDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "leaveBalanceDays": {
+            "type": "number",
+            "format": "double"
+          },
+          "leaveBalanceDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmployeeComponentInput"
+            }
+          }
+        }
+      },
+      "EndOfServiceLine": {
+        "required": [
+          "employeeId",
+          "wage",
+          "yearsOfService",
+          "gratuity"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "wage": {
+            "type": "number",
+            "format": "double"
+          },
+          "yearsOfService": {
+            "type": "number",
+            "format": "double"
+          },
+          "gratuity": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "EndOfServicePosition": {
+        "required": [
+          "asOf",
+          "applicable",
+          "lines",
+          "required",
+          "provision",
+          "difference"
+        ],
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "format": "date"
+          },
+          "applicable": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EndOfServiceLine"
+            }
+          },
+          "required": {
+            "type": "number",
+            "format": "double"
+          },
+          "provision": {
+            "type": "number",
+            "format": "double"
+          },
+          "difference": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "EndOfServiceResult": {
+        "required": [
+          "voucherId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "voucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "ExportFormat": {
         "enum": [
           "Pdf",
@@ -5733,6 +7082,125 @@
             }
           }
         }
+      },
+      "LeaveBalanceDto": {
+        "required": [
+          "employeeId",
+          "earned",
+          "taken",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "earned": {
+            "type": "number",
+            "format": "double"
+          },
+          "taken": {
+            "type": "number",
+            "format": "double"
+          },
+          "balance": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "LeaveDto": {
+        "required": [
+          "id",
+          "employeeId",
+          "kind",
+          "from",
+          "to",
+          "days",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LeaveKind"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LeaveInput": {
+        "required": [
+          "employeeId",
+          "kind",
+          "from",
+          "to",
+          "days",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LeaveKind"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LeaveKind": {
+        "enum": [
+          "Annual",
+          "Sick",
+          "Unpaid",
+          "Other"
+        ]
       },
       "LockPeriodRequest": {
         "required": [
@@ -6130,6 +7598,551 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PayInput": {
+        "required": [
+          "date",
+          "cashAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cashAccountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PayrollAutoResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PayrollRunItem"
+            }
+          }
+        }
+      },
+      "PayrollRunDto": {
+        "required": [
+          "summary",
+          "payslips"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/PayrollRunSummary"
+          },
+          "payslips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PayslipDto"
+            }
+          }
+        }
+      },
+      "PayrollRunItem": {
+        "required": [
+          "month",
+          "runId",
+          "posted",
+          "problemCode"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date"
+          },
+          "runId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "posted": {
+            "type": "boolean"
+          },
+          "problemCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PayrollRunSummary": {
+        "required": [
+          "id",
+          "month",
+          "status",
+          "employees",
+          "earnings",
+          "deductions",
+          "employeeInsurance",
+          "employerInsurance",
+          "net",
+          "voucherId",
+          "paidDate",
+          "memo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "month": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PayrollStatus"
+          },
+          "employees": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "earnings": {
+            "type": "number",
+            "format": "double"
+          },
+          "deductions": {
+            "type": "number",
+            "format": "double"
+          },
+          "employeeInsurance": {
+            "type": "number",
+            "format": "double"
+          },
+          "employerInsurance": {
+            "type": "number",
+            "format": "double"
+          },
+          "net": {
+            "type": "number",
+            "format": "double"
+          },
+          "voucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "paidDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PayrollSettingsDto": {
+        "required": [
+          "startMonth",
+          "autoPost",
+          "nationalEmployeePercent",
+          "nationalEmployerPercent",
+          "foreignEmployeePercent",
+          "foreignEmployerPercent",
+          "insuranceFloor",
+          "insuranceCeiling",
+          "salaryExpenseAccountId",
+          "salariesPayableAccountId",
+          "insuranceExpenseAccountId",
+          "insurancePayableAccountId",
+          "endOfServiceExpenseAccountId",
+          "endOfServiceProvisionAccountId",
+          "insuranceNameEn",
+          "insuranceNameAr",
+          "hasEndOfService",
+          "endOfServiceNameEn",
+          "endOfServiceNameAr"
+        ],
+        "type": "object",
+        "properties": {
+          "startMonth": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "autoPost": {
+            "type": "boolean"
+          },
+          "nationalEmployeePercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "nationalEmployerPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "foreignEmployeePercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "foreignEmployerPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "insuranceFloor": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "insuranceCeiling": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "salaryExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "salariesPayableAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "insuranceExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "insurancePayableAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "endOfServiceExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "endOfServiceProvisionAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "insuranceNameEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "insuranceNameAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasEndOfService": {
+            "type": "boolean"
+          },
+          "endOfServiceNameEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "endOfServiceNameAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PayrollSettingsInput": {
+        "required": [
+          "autoPost",
+          "nationalEmployeePercent",
+          "nationalEmployerPercent",
+          "foreignEmployeePercent",
+          "foreignEmployerPercent",
+          "insuranceFloor",
+          "insuranceCeiling",
+          "salaryExpenseAccountId",
+          "salariesPayableAccountId",
+          "insuranceExpenseAccountId",
+          "insurancePayableAccountId",
+          "endOfServiceExpenseAccountId",
+          "endOfServiceProvisionAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "autoPost": {
+            "type": "boolean"
+          },
+          "nationalEmployeePercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "nationalEmployerPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "foreignEmployeePercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "foreignEmployerPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "insuranceFloor": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "insuranceCeiling": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "salaryExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "salariesPayableAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "insuranceExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "insurancePayableAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "endOfServiceExpenseAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "endOfServiceProvisionAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PayrollStatus": {
+        "enum": [
+          "Draft",
+          "Posted"
+        ]
+      },
+      "PayslipDto": {
+        "required": [
+          "id",
+          "employeeId",
+          "items",
+          "earnings",
+          "deductions",
+          "employeeInsurance",
+          "employerInsurance",
+          "net"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PayslipItemDto"
+            }
+          },
+          "earnings": {
+            "type": "number",
+            "format": "double"
+          },
+          "deductions": {
+            "type": "number",
+            "format": "double"
+          },
+          "employeeInsurance": {
+            "type": "number",
+            "format": "double"
+          },
+          "employerInsurance": {
+            "type": "number",
+            "format": "double"
+          },
+          "net": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PayslipItemDto": {
+        "required": [
+          "kind",
+          "label",
+          "labelAr",
+          "amount",
+          "accountId",
+          "isInsurable",
+          "inEndOfService",
+          "componentId",
+          "isBasic"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SalaryComponentKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "labelAr": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isInsurable": {
+            "type": "boolean"
+          },
+          "inEndOfService": {
+            "type": "boolean"
+          },
+          "componentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isBasic": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PayslipItemInput": {
+        "required": [
+          "kind",
+          "label",
+          "labelAr",
+          "amount",
+          "accountId",
+          "isInsurable",
+          "inEndOfService"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SalaryComponentKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "labelAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isInsurable": {
+            "type": "boolean"
+          },
+          "inEndOfService": {
+            "type": "boolean"
+          },
+          "componentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isBasic": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -7173,6 +9186,121 @@
           }
         }
       },
+      "SalaryComponentDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "kind",
+          "calculation",
+          "defaultValue",
+          "accountId",
+          "isInsurable",
+          "inEndOfService",
+          "isActive",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SalaryComponentKind"
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/ComponentCalculation"
+          },
+          "defaultValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isInsurable": {
+            "type": "boolean"
+          },
+          "inEndOfService": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SalaryComponentInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn",
+          "kind",
+          "calculation",
+          "defaultValue",
+          "accountId",
+          "isInsurable",
+          "inEndOfService"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SalaryComponentKind"
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/ComponentCalculation"
+          },
+          "defaultValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isInsurable": {
+            "type": "boolean"
+          },
+          "inEndOfService": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SalaryComponentKind": {
+        "enum": [
+          "Earning",
+          "Deduction"
+        ]
+      },
       "SaveDialogRequest": {
         "required": [
           "suggestedFileName"
@@ -7200,6 +9328,20 @@
           },
           "input": {
             "$ref": "#/components/schemas/DocumentInput"
+          }
+        }
+      },
+      "SavePayslipRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PayslipItemInput"
+            }
           }
         }
       },
@@ -8008,7 +10150,10 @@
           "StockCost",
           "StockAdjustment",
           "Depreciation",
-          "AssetDisposal"
+          "AssetDisposal",
+          "Payroll",
+          "SalaryPayment",
+          "EndOfServiceAccrual"
         ]
       },
       "VoucherLineDto": {
@@ -8293,6 +10438,12 @@
     },
     {
       "name": "Assets"
+    },
+    {
+      "name": "Employees"
+    },
+    {
+      "name": "Payroll"
     },
     {
       "name": "Exchange rates"

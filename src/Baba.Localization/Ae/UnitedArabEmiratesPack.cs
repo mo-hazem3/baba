@@ -14,6 +14,12 @@ public sealed class UnitedArabEmiratesPack : CountryPackBase
         MinorNameEn: "Fils",
         MinorNameAr: "فلس");
 
+    /// <summary>Defaults to verify with GPSSA and the labour law: UAE nationals pay into GPSSA, others do not; the gratuity is 21 days' basic wage a year for five years, then 30, up to two years' wage.</summary>
+    public override IPayrollRules? Payroll { get; } = new PayrollRules(
+        InsuranceForNationals: new SocialInsuranceScheme("GPSSA pension contributions", "اشتراكات التقاعد (الهيئة العامة للمعاشات)", 5m, 12.5m, null, 50000m),
+        InsuranceForForeigners: null,
+        EndOfService: new DaysPerYearGratuity("End-of-service gratuity", "مكافأة نهاية الخدمة", 21m, 30m, 30m, 24m));
+
     public override CalendarRules Calendar { get; } = new(
         Calendars: [CalendarKind.Gregorian, CalendarKind.HijriUmmAlQura],
         DefaultWeekend: [DayOfWeek.Saturday, DayOfWeek.Sunday],

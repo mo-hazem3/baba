@@ -60,6 +60,9 @@ public static class VoucherNumber
         VoucherKind.StockAdjustment => "SK",
         VoucherKind.Depreciation => "DP",
         VoucherKind.AssetDisposal => "DS",
+        VoucherKind.Payroll => "PR",
+        VoucherKind.SalaryPayment => "SP",
+        VoucherKind.EndOfServiceAccrual => "EA",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 

@@ -56,7 +56,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Inventory.WarehouseService Warehouses,
         Baba.Application.Inventory.StockService Stock,
         Baba.Application.Inventory.StockDocumentService StockDocs,
-        Baba.Application.Assets.AssetService FixedAssets)
+        Baba.Application.Assets.AssetService FixedAssets,
+        Baba.Application.Payroll.EmployeeService Employees,
+        Baba.Application.Payroll.PayrollService Payroll)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -123,6 +125,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var stockService = new Baba.Application.Inventory.StockService(stockStore, productStore, accounts, documentStore, vouchers, files);
         var stockDocuments = new Baba.Application.Inventory.StockDocumentService(stockStore, productStore, accounts, stockService, files, Clock);
         var assetService = new Baba.Application.Assets.AssetService(new Assets.AssetStore(files), accounts, costCenterStore, vouchers, files, Clock);
+        var payrollStore = new Payroll.PayrollStore(files);
+        var employeeService = new Baba.Application.Payroll.EmployeeService(payrollStore, accounts, costCenterStore, files);
+        var payrollService = new Baba.Application.Payroll.PayrollService(payrollStore, accounts, ledger, vouchers, Baba.Localization.CountryPackRegistry.Discover(), files, Clock);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
         var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
 
@@ -151,7 +156,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
             warehouseService,
             stockService,
             stockDocuments,
-            assetService);
+            assetService,
+            employeeService,
+            payrollService);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

@@ -25,6 +25,17 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         used.UnionWith(await context.TaxCodes.Where(t => t.InputAccountId != null).Select(t => t.InputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.InventoryAccountId != null).Select(p => p.InventoryAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.CostOfSalesAccountId != null).Select(p => p.CostOfSalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.SalaryComponents.Where(c => c.AccountId != null).Select(c => c.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.PayslipItems.Where(i => i.AccountId != null).Select(i => i.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        foreach (var settings in await context.PayrollSettings.ToListAsync(cancellationToken))
+        {
+            foreach (var id in new[] { settings.SalaryExpenseAccountId, settings.SalariesPayableAccountId, settings.InsuranceExpenseAccountId, settings.InsurancePayableAccountId, settings.EndOfServiceExpenseAccountId, settings.EndOfServiceProvisionAccountId })
+            {
+                if (id is { } value)
+                    used.Add(value);
+            }
+        }
+
         foreach (var asset in await context.FixedAssets.Select(a => new { a.AssetAccountId, a.AccumulatedAccountId, a.ExpenseAccountId }).ToListAsync(cancellationToken))
             used.UnionWith([asset.AssetAccountId, asset.AccumulatedAccountId, asset.ExpenseAccountId]);
         used.UnionWith(await context.StockDocuments.Where(d => d.CounterAccountId != null).Select(d => d.CounterAccountId!.Value).Distinct().ToListAsync(cancellationToken));

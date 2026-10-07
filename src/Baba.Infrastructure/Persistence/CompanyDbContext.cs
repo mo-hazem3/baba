@@ -4,6 +4,7 @@ using Baba.Domain;
 using Baba.Domain.Accounting;
 using Baba.Domain.Assets;
 using Baba.Domain.Inventory;
+using Baba.Domain.Payroll;
 using Baba.Domain.Trade;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -59,6 +60,15 @@ public sealed class CompanyDbContext(
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
     public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<EmployeeComponent> EmployeeComponents => Set<EmployeeComponent>();
+    public DbSet<SalaryComponent> SalaryComponents => Set<SalaryComponent>();
+    public DbSet<PayrollSettings> PayrollSettings => Set<PayrollSettings>();
+    public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+    public DbSet<Payslip> Payslips => Set<Payslip>();
+    public DbSet<PayslipItem> PayslipItems => Set<PayslipItem>();
+    public DbSet<LeaveRecord> LeaveRecords => Set<LeaveRecord>();
+    public DbSet<EndOfServiceAccrual> EndOfServiceAccruals => Set<EndOfServiceAccrual>();
     public DbSet<FixedAsset> FixedAssets => Set<FixedAsset>();
     public DbSet<AssetDepreciation> AssetDepreciations => Set<AssetDepreciation>();
     public DbSet<RecurringSchedule> RecurringSchedules => Set<RecurringSchedule>();
@@ -87,6 +97,10 @@ public sealed class CompanyDbContext(
         configuration.Properties<TaxTreatment>().HaveConversion<string>();
         configuration.Properties<StockMovementKind>().HaveConversion<string>();
         configuration.Properties<StockDocumentKind>().HaveConversion<string>();
+        configuration.Properties<SalaryComponentKind>().HaveConversion<string>();
+        configuration.Properties<ComponentCalculation>().HaveConversion<string>();
+        configuration.Properties<PayrollStatus>().HaveConversion<string>();
+        configuration.Properties<LeaveKind>().HaveConversion<string>();
         configuration.Properties<AssetKind>().HaveConversion<string>();
         configuration.Properties<DepreciationMethod>().HaveConversion<string>();
         configuration.Properties<AssetStatus>().HaveConversion<string>();
@@ -253,6 +267,79 @@ public sealed class CompanyDbContext(
         model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.CostOfSalesAccountId).OnDelete(DeleteBehavior.Restrict);
         model.Entity<Product>().HasIndex(p => p.Barcode);
         model.Entity<Document>().HasOne<Warehouse>().WithMany().HasForeignKey(d => d.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<Employee>(employee =>
+        {
+            employee.Ignore(e => e.BasicSalary).Ignore(e => e.LeaveBalanceDays);
+            employee.HasMany(e => e.Components).WithOne().HasForeignKey(c => c.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            employee.HasOne<CostCenter>().WithMany().HasForeignKey(e => e.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            employee.HasIndex(e => new { e.CompanyId, e.Code }).IsUnique();
+            employee.HasQueryFilter(e => e.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<SalaryComponent>(component =>
+        {
+            component.Ignore(c => c.DefaultValue);
+            component.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
+            component.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
+            component.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<EmployeeComponent>(row =>
+        {
+            row.Ignore(c => c.Value);
+            row.HasOne<SalaryComponent>().WithMany().HasForeignKey(c => c.ComponentId).OnDelete(DeleteBehavior.Restrict);
+            row.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PayrollSettings>(settings =>
+        {
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.SalaryExpenseAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.SalariesPayableAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.InsuranceExpenseAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.InsurancePayableAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.EndOfServiceExpenseAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasOne<Account>().WithMany().HasForeignKey(s => s.EndOfServiceProvisionAccountId).OnDelete(DeleteBehavior.Restrict);
+            settings.HasQueryFilter(s => s.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PayrollRun>(run =>
+        {
+            run.HasMany(r => r.Payslips).WithOne().HasForeignKey(p => p.RunId).OnDelete(DeleteBehavior.Cascade);
+            run.HasIndex(r => new { r.CompanyId, r.Month }).IsUnique();
+            run.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<Payslip>(payslip =>
+        {
+            payslip.Ignore(p => p.EmployeeInsurance).Ignore(p => p.EmployerInsurance).Ignore(p => p.Earnings).Ignore(p => p.Deductions).Ignore(p => p.Net);
+            payslip.HasMany(p => p.Items).WithOne().HasForeignKey(i => i.PayslipId).OnDelete(DeleteBehavior.Cascade);
+            payslip.HasOne<Employee>().WithMany().HasForeignKey(p => p.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+            payslip.HasQueryFilter(p => p.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PayslipItem>(item =>
+        {
+            item.Ignore(i => i.Amount);
+            item.HasOne<Account>().WithMany().HasForeignKey(i => i.AccountId).OnDelete(DeleteBehavior.Restrict);
+            item.HasOne<SalaryComponent>().WithMany().HasForeignKey(i => i.ComponentId).OnDelete(DeleteBehavior.Restrict);
+            item.HasQueryFilter(i => i.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<LeaveRecord>(leave =>
+        {
+            leave.Ignore(l => l.Days);
+            leave.HasOne<Employee>().WithMany().HasForeignKey(l => l.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+            leave.HasIndex(l => l.EmployeeId);
+            leave.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<EndOfServiceAccrual>(accrual =>
+        {
+            accrual.Ignore(a => a.Amount);
+            accrual.HasIndex(a => new { a.CompanyId, a.Month }).IsUnique();
+            accrual.HasQueryFilter(a => a.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<FixedAsset>(asset =>
         {

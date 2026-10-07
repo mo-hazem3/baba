@@ -37,6 +37,24 @@ public enum AccountRole
 
     /// <summary>Where the gain or loss on selling or scrapping an asset is posted. The default of a disposal.</summary>
     AssetDisposal,
+
+    /// <summary>The expense salaries are charged to (the default for basic salary and allowances).</summary>
+    SalaryExpense,
+
+    /// <summary>What the company owes its employees for pay not yet paid out (a liability).</summary>
+    SalariesPayable,
+
+    /// <summary>The employer's share of social insurance, an expense.</summary>
+    SocialInsuranceExpense,
+
+    /// <summary>Social insurance owed to the authority: the employees' and the employer's shares (a liability).</summary>
+    SocialInsurancePayable,
+
+    /// <summary>The expense of building up the end-of-service provision.</summary>
+    EndOfServiceExpense,
+
+    /// <summary>What is set aside for the end-of-service gratuity owed to employees (a liability).</summary>
+    EndOfServiceProvision,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

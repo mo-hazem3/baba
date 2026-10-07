@@ -36,10 +36,12 @@ public static class DefaultChartOfAccounts
             new("21", "Current liabilities", "الخصوم المتداولة", AccountType.Liability, "2", false),
             new("211", "Accounts payable", "الموردون (الذمم الدائنة)", AccountType.Liability, "21", true, AccountRole.Payable),
             new("212", "Accrued expenses", "مصروفات مستحقة", AccountType.Liability, "21", true),
-            new("213", "Salaries payable", "رواتب مستحقة", AccountType.Liability, "21", true),
+            new("213", "Salaries payable", "رواتب مستحقة", AccountType.Liability, "21", true, AccountRole.SalariesPayable),
+            new("215", "Social insurance payable", "التأمينات الاجتماعية المستحقة", AccountType.Liability, "21", true, AccountRole.SocialInsurancePayable),
             new("214", "Taxes payable", "ضرائب مستحقة", AccountType.Liability, "21", true, AccountRole.TaxPayable),
             new("22", "Long-term liabilities", "الخصوم طويلة الأجل", AccountType.Liability, "2", false),
             new("221", "Long-term loans", "قروض طويلة الأجل", AccountType.Liability, "22", true),
+            new("222", "End-of-service provision", "مخصص مكافأة نهاية الخدمة", AccountType.Liability, "22", true, AccountRole.EndOfServiceProvision),
 
             // Owners' equity
             new("3", "Owners' equity", "حقوق الملكية", AccountType.Equity, null, false),
@@ -54,7 +56,7 @@ public static class DefaultChartOfAccounts
             new("41", "Cost of sales", "تكلفة المبيعات", AccountType.Expense, "4", false),
             new("411", "Cost of goods sold", "تكلفة البضاعة المباعة", AccountType.Expense, "41", true, AccountRole.CostOfSales),
             new("42", "General expenses", "المصروفات العمومية", AccountType.Expense, "4", false),
-            new("421", "Salaries and wages", "الرواتب والأجور", AccountType.Expense, "42", true),
+            new("421", "Salaries and wages", "الرواتب والأجور", AccountType.Expense, "42", true, AccountRole.SalaryExpense),
             new("422", "Rent", "الإيجار", AccountType.Expense, "42", true),
             new("423", "Utilities", "المرافق (كهرباء ومياه واتصالات)", AccountType.Expense, "42", true),
             new("424", "Office supplies", "أدوات مكتبية", AccountType.Expense, "42", true),
@@ -63,6 +65,8 @@ public static class DefaultChartOfAccounts
             new("427", "Other expenses", "مصروفات أخرى", AccountType.Expense, "42", true),
             new("429", "Inventory gains and losses", "فروقات جرد المخزون", AccountType.Expense, "42", true, AccountRole.InventoryAdjustment),
             new("430", "Gain or loss on disposal of assets", "أرباح وخسائر بيع الأصول", AccountType.Expense, "42", true, AccountRole.AssetDisposal),
+            new("431", "Employer social insurance", "حصة صاحب العمل في التأمينات الاجتماعية", AccountType.Expense, "42", true, AccountRole.SocialInsuranceExpense),
+            new("432", "End-of-service expense", "مصروف مكافأة نهاية الخدمة", AccountType.Expense, "42", true, AccountRole.EndOfServiceExpense),
             new("428", "Exchange differences", "فروق العملة", AccountType.Expense, "42", true, AccountRole.ExchangeDifference),
 
             // Revenues
