@@ -20,4 +20,6 @@ export interface ProductDto {
   purchaseAccountId: string | null;
   isActive: boolean;
   inUse: boolean;
+  /** @nullable */
+  taxCodeId?: string | null;
 }

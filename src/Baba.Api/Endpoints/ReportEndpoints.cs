@@ -2,6 +2,8 @@ using Baba.Application;
 using Baba.Application.Accounting;
 using Baba.Application.Printing;
 using Baba.Application.Reporting;
+using Baba.Application.Trade;
+using Baba.Domain.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
 
@@ -10,7 +12,8 @@ namespace Baba.Api.Endpoints;
 /// <summary>The inputs a report may take. Each report uses the ones it needs: date range, "as of" date, account, comparison.</summary>
 public sealed record ReportQuery(
     DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None,
-    VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null);
+    VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null,
+    DocumentKind? DocumentKind = null, DocumentStatus? DocumentStatus = null, PartyKind? PartyKind = null);
 
 /// <summary>
 /// The reports (trial balance, profit and loss, balance sheet, statement of account, general ledger, journal) and the two
@@ -21,7 +24,8 @@ public static class ReportEndpoints
     public static readonly string[] Keys =
     [
         "trial-balance", "profit-and-loss", "balance-sheet", "statement-of-account", "general-ledger", "journal", "chart-of-accounts", "vouchers",
-        "party-statement", "aging-receivable", "aging-payable", "cost-centers",
+        "party-statement", "aging-receivable", "aging-payable", "cost-centers", "tax-return",
+        "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -68,8 +72,15 @@ public static class ReportEndpoints
             case "journal": return await reports.JournalAsync(q.From, q.To, ct);
             case "chart-of-accounts": return await listings.ChartOfAccountsAsync(ct);
             case "vouchers": return await listings.VouchersAsync(new VoucherSearch(q.Kind, q.Status, q.From, q.To), ct);
+            case "documents": return await listings.DocumentsAsync(new DocumentSearch(q.DocumentKind, q.DocumentStatus, q.PartyId, q.From, q.To), ct);
+            case "products": return await listings.ProductsAsync(ct);
+            case "parties": return await listings.PartiesAsync(q.PartyKind, ct);
+            case "tax-codes": return await listings.TaxCodesAsync(ct);
+            case "recurring": return await listings.RecurringAsync(ct);
+            case "exchange-rates": return await listings.ExchangeRatesAsync(ct);
             case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
             case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);
+            case "tax-return": return await reports.TaxReturnAsync(q.From, q.To, ct);
             case "cost-centers": return await reports.CostCenterSummaryAsync(q.From, q.To, ct);
             case "party-statement":
                 if (q.PartyId is not { } partyId)

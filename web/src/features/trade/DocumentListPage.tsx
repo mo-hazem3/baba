@@ -10,7 +10,9 @@ import { useCurrencies, useCurrentCompany, useParties } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
 import { Button } from 'antd'
+import { ExportControls } from '../../layout/ExportControls'
 import { ListPage } from '../../layout/ListPage'
+import { exportAndShow } from '../reports/exportReport'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
 import { matchesSearch } from '../../utils/arabic'
@@ -133,9 +135,16 @@ export function DocumentListPage({ side }: { side: Side }) {
       newLabel={t(`trade.new.${kind}`)}
       onNew={create}
       actions={
-        <Button onClick={() => navigate(side === 'sales' ? '/settlements/receive' : '/settlements/pay')}>
-          {t(side === 'sales' ? 'trade.receivePayment' : 'trade.payInvoices')}
-        </Button>
+        <>
+          <ExportControls
+            run={(format, layout) =>
+              exportAndShow('documents', { From: range.from, To: range.to, DocumentKind: kind, DocumentStatus: status === 'All' ? undefined : status }, format, layout)
+            }
+          />
+          <Button onClick={() => navigate(side === 'sales' ? '/settlements/receive' : '/settlements/pay')}>
+            {t(side === 'sales' ? 'trade.receivePayment' : 'trade.payInvoices')}
+          </Button>
+        </>
       }
       filters={
         <>

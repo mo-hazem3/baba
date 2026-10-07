@@ -21,6 +21,8 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         used.UnionWith(await context.LedgerEntries.Select(e => e.AccountId).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Vouchers.Where(v => v.CashAccountId != null).Select(v => v.CashAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.DocumentLines.Where(l => l.AccountId != null).Select(l => l.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.TaxCodes.Where(t => t.OutputAccountId != null).Select(t => t.OutputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.TaxCodes.Where(t => t.InputAccountId != null).Select(t => t.InputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.SalesAccountId != null).Select(p => p.SalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.PurchaseAccountId != null).Select(p => p.PurchaseAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         return used;

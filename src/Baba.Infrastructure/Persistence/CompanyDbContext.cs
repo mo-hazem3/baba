@@ -35,6 +35,7 @@ public sealed class CompanyDbContext(
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
     public DbSet<Allocation> Allocations => Set<Allocation>();
+    public DbSet<TaxCode> TaxCodes => Set<TaxCode>();
     public DbSet<RecurringSchedule> RecurringSchedules => Set<RecurringSchedule>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
@@ -58,6 +59,7 @@ public sealed class CompanyDbContext(
         configuration.Properties<DocumentKind>().HaveConversion<string>();
         configuration.Properties<DocumentStatus>().HaveConversion<string>();
         configuration.Properties<RecurrenceFrequency>().HaveConversion<string>();
+        configuration.Properties<TaxTreatment>().HaveConversion<string>();
         configuration.Properties<RecurringTemplate>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
@@ -156,7 +158,7 @@ public sealed class CompanyDbContext(
 
         model.Entity<DocumentLine>(line =>
         {
-            line.Ignore(l => l.Quantity).Ignore(l => l.UnitPrice).Ignore(l => l.DiscountPercent);
+            line.Ignore(l => l.Quantity).Ignore(l => l.UnitPrice).Ignore(l => l.DiscountPercent).Ignore(l => l.TaxRate);
             line.HasOne<Product>().WithMany().HasForeignKey(l => l.ProductId).OnDelete(DeleteBehavior.Restrict);
             line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
             line.HasOne<CostCenter>().WithMany().HasForeignKey(l => l.CostCenterId).OnDelete(DeleteBehavior.Restrict);
@@ -166,6 +168,18 @@ public sealed class CompanyDbContext(
         });
 
         model.Entity<Voucher>().HasIndex(v => v.DocumentId);
+
+        model.Entity<TaxCode>(code =>
+        {
+            code.Ignore(c => c.Rate);
+            code.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
+            code.HasOne<Account>().WithMany().HasForeignKey(c => c.OutputAccountId).OnDelete(DeleteBehavior.Restrict);
+            code.HasOne<Account>().WithMany().HasForeignKey(c => c.InputAccountId).OnDelete(DeleteBehavior.Restrict);
+            code.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<DocumentLine>().HasOne<TaxCode>().WithMany().HasForeignKey(l => l.TaxCodeId).OnDelete(DeleteBehavior.Restrict);
+        model.Entity<Product>().HasOne<TaxCode>().WithMany().HasForeignKey(p => p.TaxCodeId).OnDelete(DeleteBehavior.Restrict);
 
         model.Entity<RecurringSchedule>(schedule =>
         {

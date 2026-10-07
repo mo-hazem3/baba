@@ -166,8 +166,7 @@ export function ChartOfAccountsPage() {
         intro={t('import.accountsIntro')}
         columns="Code, Name, Name (Arabic), Parent code, Type, Kind, Special use"
         url="/api/import/accounts"
-        template={'Code,Name,Name (Arabic),Parent code,Type,Kind,Special use\n9,Other assets,أصول أخرى,,Asset,group,\n91,Petty cash,صندوق المصروفات,9,,posting,Cash\n'}
-        templateName="accounts-template.csv"
+        templateKey="accounts"
       />
       <MoveEntriesModal account={moving} accounts={accounts.filter((a) => a.isPosting && a.isActive)} onClose={() => setMoving(undefined)} />
     </ListPage>

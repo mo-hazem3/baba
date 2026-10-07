@@ -270,3 +270,119 @@ test('English: an invoice is repeated monthly and what is due is made as drafts'
   await page.goto('/reports/trial-balance')
   await expect(page.getByRole('row', { name: /Accounts receivable/ })).toContainText('300.000')
 })
+
+// ---------------------------------------------------------------- Tax (a country whose pack has VAT)
+
+async function createVatCompany(request: import('@playwright/test').APIRequestContext, name: string) {
+  const response = await request.post('/api/company/create', {
+    data: {
+      path: companyFile(name),
+      password: 'correct-horse-battery',
+      company: {
+        nameAr: 'شركة الضريبة', nameEn: 'Vat Trading', countryCode: 'SA', baseCurrencyCode: 'SAR', fiscalYearStartMonth: 1, firstFiscalYear: new Date().getFullYear(),
+        taxNumbers: { 'vat-number': '300000000000003' }, address: null, chartTemplateKey: 'default', enabledModules: ['bank-cash', 'customers-suppliers', 'sales', 'purchases'],
+      },
+    },
+  })
+  expect(response.status()).toBe(200)
+}
+
+test('English: VAT is added to an invoice, posted, and shows up in the tax return', async ({ page, request }) => {
+  await createVatCompany(request, 'p3-vat')
+  await request.post('/api/parties', { data: { kind: 'Customer', code: 'C100', nameAr: '', nameEn: 'Riyadh Stores', phone: null, email: null, address: null, taxNumber: '300111111111113', creditLimit: 0, paymentTermsDays: 30, notes: null, priceListId: null } })
+  await page.goto('/')
+  await setLanguage(page, 'en')
+
+  // The codes of the country are there, with the standard one as the default.
+  await menu(page, 'Tax codes').click()
+  await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('Default')
+  await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('15.00')
+  await expect(page.getByRole('row', { name: /SA-VAT-EXEMPT/ })).toContainText('Exempt')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/en-tax-codes.png' })
+
+  // A new invoice line starts with the default code; the totals show the tax.
+  await menu(page, 'Sales').click()
+  await page.getByRole('button', { name: 'New invoice' }).click()
+  await pick(page, 'Customer', 'Riyadh')
+  await pick(page, 'Account 1', '511')
+  await page.getByLabel('Quantity 1').fill('1')
+  await page.getByLabel('Price 1').fill('1000')
+  await expect(page.locator('.ant-select', { has: page.getByLabel('Tax 1') })).toContainText('SA-VAT-STD')
+  await expect(page.locator('.doc-totals')).toContainText('150.00')
+  await expect(page.locator('.doc-totals')).toContainText('1,150.00')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/en-invoice-vat.png' })
+  await page.getByRole('button', { name: 'Issue and post' }).click()
+  await expect(page.getByText(/Issued as SI-\d{4}-0001/)).toBeVisible()
+  await expect(page.getByRole('row', { name: /SI-/ })).toContainText('1,150.00')
+
+  // The books: customers owe 1,150, revenue 1,000, tax payable 150.
+  await page.goto('/reports/trial-balance')
+  await expect(page.getByRole('row', { name: /Accounts receivable/ })).toContainText('1,150.00')
+  await expect(page.getByRole('row', { name: /Taxes payable/ })).toContainText('150.00')
+
+  // Excel exports of the lists and of the return are real .xlsx files.
+  for (const key of ['documents', 'products', 'parties', 'tax-codes', 'tax-return']) {
+    const response = await request.get(`/api/reports/${key}/export?format=Xlsx&layout=Both`)
+    expect(response.status(), key).toBe(200)
+    expect((await response.body()).subarray(0, 2).toString(), key).toBe('PK')
+  }
+
+  // The return agrees with the ledger.
+  await menu(page, 'Reports').click()
+  await page.getByRole('button', { name: 'Open Tax return' }).click()
+  await expect(page.getByRole('row', { name: /Tax on sales/ })).toContainText('150.00')
+  await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('1,000.00')
+  await expect(page.locator('.check-bad')).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/en-tax-return.png' })
+})
+
+test('Arabic: the tax codes page and the tax return read right-to-left', async ({ page, request }) => {
+  await createVatCompany(request, 'p3-vat-ar')
+  await page.goto('/')
+  await setLanguage(page, 'ar')
+
+  await menu(page, 'رموز الضريبة').click()
+  await expect(page.getByRole('heading', { name: 'رموز الضريبة' })).toBeVisible()
+  await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('الافتراضي')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-tax-codes.png' })
+
+  await page.goto('/reports/tax-return')
+  await expect(page.getByRole('heading', { name: 'الإقرار الضريبي' })).toBeVisible()
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-tax-return.png' })
+})
+
+// ---------------------------------------------------------------- Excel/CSV import of products and journal entries
+
+test('English: products and journal entries are imported from files, and a template can be downloaded', async ({ page, request }) => {
+  await createVatCompany(request, 'p3-import')
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  const csv = (text: string, name: string) => ({ name, mimeType: 'text/csv', buffer: Buffer.from(text, 'utf8') })
+
+  await menu(page, 'Products and prices').click()
+  await page.getByRole('button', { name: 'Import…' }).click()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download a template' }).click()
+  expect((await download).suggestedFilename()).toBe('products-template.xlsx')
+
+  // A wrong file imports nothing and names the row; the corrected file goes in.
+  await page.getByTestId('import-file').setInputFiles(csv('Code,Name,Sale price,Revenue account,Tax code\nA1,Widget,10,511,SA-VAT-STD\nA2,Gadget,abc,511,\n', 'products.csv'))
+  await expect(page.getByText('Row 3: The price is not a number.')).toBeVisible()
+  await page.getByTestId('import-file').setInputFiles(csv('Code,Name,Sale price,Revenue account,Tax code\nA1,Widget,10,511,SA-VAT-STD\nA2,Gadget,25.5,511,\n', 'products.csv'))
+  await expect(page.getByText('2 imported.').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).last().click()
+  await expect(page.getByRole('row', { name: /Gadget/ })).toContainText('25.50')
+
+  // Journal entries: two entries, each balanced.
+  await menu(page, 'Journal vouchers').click()
+  await page.getByRole('button', { name: 'Import…' }).click()
+  await page.getByTestId('import-file').setInputFiles(csv('Entry,Date,Account,Debit,Credit\n1,2026-10-02,111,500,\n1,,31,,500\n2,2026-10-03,111,50,\n2,,31,,50\n', 'journal.csv'))
+  await expect(page.getByText('2 imported.').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).last().click()
+  await expect(page.getByRole('link', { name: /JV-/ })).toHaveCount(2)
+  await page.screenshot({ path: 'test-results/en-journal-import.png' })
+})

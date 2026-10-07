@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next'
 import type { ImportResult } from '../api/generated/model'
 import { refreshBooks } from '../api/hooks'
 import { errorMessage } from './errors'
-import { downloadText, uploadFile } from '../utils/upload'
+import { downloadBlob } from '../utils/download'
+import { uploadFile } from '../utils/upload'
 
 /**
  * Importing from a CSV or Excel file (brief section 10.2): choose the file and it is read at once. If any row is wrong nothing is
@@ -18,8 +19,7 @@ export function ImportModal({
   intro,
   columns,
   url,
-  template,
-  templateName,
+  templateKey,
 }: {
   open: boolean
   onClose: () => void
@@ -28,9 +28,8 @@ export function ImportModal({
   /** The columns the file may have, one line of text. */
   columns: string
   url: string
-  /** A CSV with only the header row (and maybe one example row) to download and fill in. */
-  template?: string
-  templateName?: string
+  /** Which Excel template to offer for download (a header row and one example row to fill in). */
+  templateKey?: string
 }) {
   const { t } = useTranslation()
   const { message } = App.useApp()
@@ -56,8 +55,28 @@ export function ImportModal({
     onClose()
   }
 
+  // Problems found while importing use the codes of the screens they belong to (an account, a party, a product, a rate, a voucher line).
   const issueText = (code: string) =>
-    t(`import.issues.${code}`, { defaultValue: t(`accounts.issues.${code}`, { defaultValue: t(`parties.issues.${code}`, { defaultValue: code }) }) })
+    t(
+      [
+        `import.issues.${code}`,
+        `accounts.issues.${code}`,
+        `parties.issues.${code}`,
+        `trade.issues.${code}`,
+        `rates.issues.${code}`,
+        `voucher.issues.${code}`,
+      ],
+      { defaultValue: code },
+    )
+
+  const downloadTemplate = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/import/templates/${templateKey}`, { credentials: 'same-origin' })
+      if (!response.ok) throw new Error('template')
+      downloadBlob(await response.blob(), `${templateKey}-template.xlsx`)
+    },
+    onError: (error) => void message.error(errorMessage(error, t)),
+  })
 
   const done = result !== undefined && result.issues.length === 0
 
@@ -97,7 +116,11 @@ export function ImportModal({
         <Button type="primary" onClick={() => input.current?.click()} loading={upload.isPending}>
           {t('import.choose')}
         </Button>
-        {template && templateName && <Button onClick={() => downloadText(template, templateName)}>{t('import.template')}</Button>}
+        {templateKey && (
+          <Button onClick={() => downloadTemplate.mutate()} loading={downloadTemplate.isPending}>
+            {t('import.template')}
+          </Button>
+        )}
       </div>
 
       {done && (

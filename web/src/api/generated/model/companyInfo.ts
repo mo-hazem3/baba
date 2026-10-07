@@ -4,6 +4,7 @@
  * Baba.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { CompanyInfoTaxNumbers } from './companyInfoTaxNumbers';
 
 export interface CompanyInfo {
   id: string;
@@ -15,4 +16,8 @@ export interface CompanyInfo {
   firstFiscalYear: number;
   enabledModules: string[];
   filePath: string;
+  /** @nullable */
+  taxNumbers?: CompanyInfoTaxNumbers;
+  /** @nullable */
+  address?: string | null;
 }

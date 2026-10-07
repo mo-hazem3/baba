@@ -38,11 +38,12 @@ public abstract class CompanyFilesFixture : IDisposable
     protected static NewCompanyData NewCompany(
         string nameEn = "Al Noor Trading",
         string nameAr = "شركة النور للتجارة",
-        IReadOnlyList<AccountSeed>? accounts = null) =>
+        IReadOnlyList<AccountSeed>? accounts = null,
+        string countryCode = "XX") =>
         new(new NewCompanyRequest(
                 NameAr: nameAr,
                 NameEn: nameEn,
-                CountryCode: "XX",
+                CountryCode: countryCode,
                 BaseCurrencyCode: "KWD",
                 FiscalYearStartMonth: 1,
                 FirstFiscalYear: 2026,

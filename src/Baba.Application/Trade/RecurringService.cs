@@ -62,7 +62,7 @@ public sealed class RecurringService(
         var document = await documents.GetAsync(documentId, cancellationToken) ?? throw new NotFoundException("document");
         var template = new DocumentInput(
             document.Kind, document.Date, null, document.PartyId, document.CurrencyCode, null, document.Reference, document.Memo, document.DiscountPercent,
-            document.Lines.Select(l => new DocumentLineInput(null, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId)).ToList());
+            document.Lines.Select(l => new DocumentLineInput(null, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, l.TaxCodeId)).ToList());
         return await AddAsync(RecurringTemplate.Document, document.Kind.ToString(), JsonSerializer.Serialize(template, Json), input, cancellationToken);
     }
 

@@ -22,6 +22,32 @@ public static class ImportEndpoints
                 await service.ImportPartiesAsync(kind, request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
             .Produces<ImportResult>()
             .WithName("ImportParties");
+
+        import.MapGet("/templates/{key}", (string key, IImportTemplates templates) =>
+                templates.Build(key) is { } file ? Results.File(file.Content, file.ContentType, file.FileName) : Results.NotFound())
+            .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
+            .Produces(StatusCodes.Status404NotFound)
+            .WithName("GetImportTemplate");
+
+        import.MapPut("/products", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportProductsAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportProducts");
+
+        import.MapPut("/exchange-rates", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportExchangeRatesAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportExchangeRates");
+
+        import.MapPut("/journal", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportJournalAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportJournal");
+
+        import.MapPut("/opening-balances", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportOpeningBalancesAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportOpeningBalances");
     }
 
     private static async Task<byte[]> ReadBodyAsync(HttpRequest request, CancellationToken ct)

@@ -7,11 +7,14 @@ import { useSearchParams } from 'react-router'
 import { createPriceList, createProduct, deletePriceList, deleteProduct, setPriceListActive, setProductActive, updatePriceList, updateProduct } from '../../api/generated/baba'
 import type { PriceListDto, PriceListInput, ProductDto, ProductInput } from '../../api/generated/model'
 import { ApiError } from '../../api/http'
-import { refreshBooks, useAccounts, useCurrencies, useCurrentCompany, usePriceLists, useProducts } from '../../api/hooks'
+import { refreshBooks, useAccounts, useCurrencies, useCurrentCompany, usePriceLists, useProducts, useTaxCodes } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
 import { errorMessage } from '../../layout/errors'
+import { ExportControls } from '../../layout/ExportControls'
+import { ImportModal } from '../../layout/ImportModal'
 import { ListPage } from '../../layout/ListPage'
+import { exportAndShow } from '../reports/exportReport'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
 import { matchesSearch } from '../../utils/arabic'
@@ -27,6 +30,7 @@ export function ProductsPage() {
   const tab: Tab = params.get('tab') === 'price-lists' ? 'price-lists' : 'products'
   const [productForm, setProductForm] = useState<{ open: boolean; editing?: ProductDto }>({ open: false })
   const [listForm, setListForm] = useState<{ open: boolean; editing?: PriceListDto }>({ open: false })
+  const [importing, setImporting] = useState(false)
 
   const tabs = (
     <Segmented
@@ -48,10 +52,27 @@ export function ProductsPage() {
       help="products"
       newLabel={tab === 'products' ? t('trade.newProduct') : t('trade.newPriceList')}
       onNew={() => (tab === 'products' ? setProductForm({ open: true }) : setListForm({ open: true }))}
+      actions={
+        tab === 'products' ? (
+          <>
+            <ExportControls run={(format, layout) => exportAndShow('products', {}, format, layout)} />
+            <Button onClick={() => setImporting(true)}>{t('import.productsButton')}</Button>
+          </>
+        ) : undefined
+      }
       filters={tabs}
     >
       {tab === 'products' ? <ProductsTable onEdit={(p) => setProductForm({ open: true, editing: p })} /> : <PriceListsTable onEdit={(l) => setListForm({ open: true, editing: l })} />}
       <ProductFormModal open={productForm.open} editing={productForm.editing} onClose={() => setProductForm({ open: false })} />
+      <ImportModal
+        open={importing}
+        onClose={() => setImporting(false)}
+        title={t('import.productsTitle')}
+        intro={t('import.productsIntro')}
+        columns="Code, Name, Name (Arabic), Unit, Sale price, Purchase price, Revenue account, Expense account, Tax code"
+        url="/api/import/products"
+        templateKey="products"
+      />
       <PriceListFormModal open={listForm.open} editing={listForm.editing} onClose={() => setListForm({ open: false })} />
     </ListPage>
   )
@@ -219,6 +240,7 @@ interface ProductValues {
   purchasePrice: number
   salesAccountId?: string
   purchaseAccountId?: string
+  taxCodeId?: string
 }
 
 const productFieldOf: Record<string, keyof ProductValues> = {
@@ -228,6 +250,7 @@ const productFieldOf: Record<string, keyof ProductValues> = {
   purchasePrice: 'purchasePrice',
   salesAccount: 'salesAccountId',
   purchaseAccount: 'purchaseAccountId',
+  taxCode: 'taxCodeId',
 }
 
 function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?: ProductDto; onClose: () => void }) {
@@ -236,6 +259,7 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
   const [form] = Form.useForm<ProductValues>()
   const accounts = useAccounts().data ?? []
   const products = useProducts().data ?? []
+  const taxCodes = useTaxCodes().data ?? []
   const company = useCurrentCompany()
   const currencies = useCurrencies()
   const minorUnits = currencies.data?.find((c) => c.code === company.data?.baseCurrencyCode)?.minorUnits ?? 2
@@ -255,6 +279,7 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
             purchasePrice: editing.purchasePrice,
             salesAccountId: editing.salesAccountId ?? undefined,
             purchaseAccountId: editing.purchaseAccountId ?? undefined,
+            taxCodeId: editing.taxCodeId ?? undefined,
           }
         : { code: `P${String(next).padStart(3, '0')}`, nameEn: '', nameAr: '', unit: '', salePrice: 0, purchasePrice: 0 },
     )
@@ -272,6 +297,7 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
         purchasePrice: values.purchasePrice ?? 0,
         salesAccountId: values.salesAccountId ?? null,
         purchaseAccountId: values.purchaseAccountId ?? null,
+        taxCodeId: values.taxCodeId ?? null,
       }
       return editing ? updateProduct(editing.id, input) : createProduct(input)
     },
@@ -323,6 +349,11 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
         <Form.Item name="salesAccountId" label={t('trade.revenueAccount')} extra={t('trade.productAccountHelp')}>
           <AccountSelect value={undefined} onChange={() => undefined} accounts={accounts.filter((a) => a.type === 'Revenue')} ariaLabel={t('trade.revenueAccount')} />
         </Form.Item>
+        {taxCodes.length > 0 && (
+          <Form.Item name="taxCodeId" label={t('trade.taxCode')} extra={t('trade.productTaxHelp')}>
+            <Select allowClear options={taxCodes.filter((c) => c.isActive || c.id === editing?.taxCodeId).map((c) => ({ value: c.id, label: `${c.code} (${c.rate}%)` }))} />
+          </Form.Item>
+        )}
         <Form.Item name="purchaseAccountId" label={t('trade.expenseAccount')}>
           <AccountSelect value={undefined} onChange={() => undefined} accounts={accounts.filter((a) => a.type === 'Expense' || a.type === 'Asset')} ariaLabel={t('trade.expenseAccount')} />
         </Form.Item>

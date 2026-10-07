@@ -23,7 +23,9 @@ public sealed record CompanyInfo(
     int FiscalYearStartMonth,
     int FirstFiscalYear,
     IReadOnlyList<string> EnabledModules,
-    string FilePath);
+    string FilePath,
+    IReadOnlyDictionary<string, string>? TaxNumbers = null,
+    string? Address = null);
 
 /// <summary>Why a company file could not be created or opened. The UI turns each into a plain-language message.</summary>
 public enum CompanyFileProblem

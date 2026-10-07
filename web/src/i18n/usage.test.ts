@@ -56,6 +56,8 @@ describe('translation keys used in the code', () => {
       'import.unreadable', 'import.empty', 'statement.date-column-missing', 'statement.amount-column-missing', 'statement.empty', 'statement.date-invalid',
       'statement.amount-invalid', 'accounts.code-column-missing', 'parties.name-column-missing', 'account.type-required', 'account.type-unknown',
       'account.role-unknown', 'party.kind-unknown', 'party.credit-limit-invalid',
+      'products.name-column-missing', 'rates.currency-column-missing', 'journal.account-column-missing', 'journal.entry-column-missing', 'date.invalid',
+      'product.price-invalid', 'product.account-unknown', 'product.tax-code-unknown',
     ]
     const rateCodes = ['rate.currency-unknown', 'rate.currency-is-base', 'rate.date-required', 'rate.rate-invalid']
     const restoreCodes = ['restore.backup-missing', 'restore.destination-exists', 'restore.same-file', 'restore.backup-is-open']
@@ -68,11 +70,16 @@ describe('translation keys used in the code', () => {
       'line.cost-center-unknown', 'line.account-invalid', 'line.account-required', 'product.code-required', 'product.code-duplicate',
       'product.name-required', 'product.price-negative', 'product.account-invalid', 'product.in-use', 'price-list.name-required',
       'price-list.currency-unknown', 'price-list.product-unknown', 'price-list.product-twice', 'price-list.price-negative', 'price-list.in-use',
+      'line.tax-code-unknown', 'line.tax-code-inactive', 'line.tax-code-not-effective', 'line.tax-account-missing', 'product.tax-code-unknown',
       'document.has-payments', 'document.has-notes', 'settlement.amount-invalid', 'settlement.document-unavailable', 'settlement.amount-too-high',
       'settlement.nothing-to-settle', 'settlement.mixed-currencies', 'settlement.currency-mismatch', 'fx.account-required',
     ]
     const recurringCodes = ['recurring.name-required', 'recurring.next-date-required', 'recurring.end-before-next', 'recurring.template-unavailable', 'recurring.failed']
+    const taxCodeCodes = ['tax.code-required', 'tax.code-duplicate', 'tax.name-required', 'tax.rate-invalid', 'tax.dates-invalid', 'tax.account-invalid', 'tax.in-use', 'tax.pack-code', 'tax.inactive']
     const missing = [
+      ...taxCodeCodes.map((code) => `tax.issues.${code}`),
+      ...['Standard', 'Zero', 'Exempt', 'OutOfScope'].map((x) => `tax.treatments.${x}`),
+      'accounts.roles.TaxPayable', 'accounts.roles.TaxReceivable',
       ...recurringCodes.map((code) => `recurring.issues.${code}`),
       ...['Weekly', 'Monthly', 'Quarterly', 'Yearly'].map((f) => `recurring.frequencies.${f}`),
       ...tradeCodes.map((code) => `trade.issues.${code}`),
@@ -95,11 +102,11 @@ describe('translation keys used in the code', () => {
 
   it('name every report, voucher kind, account type and special use', () => {
     const missing = [
-      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
+      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers', 'tax-return'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes'].map((h) => `help.${h}`),
       ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])

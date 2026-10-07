@@ -1,5 +1,5 @@
 import { exportReport } from '../../api/generated/baba'
-import type { ExportFormat, PrintLayout, VoucherKind } from '../../api/generated/model'
+import type { DocumentKind, DocumentStatus, ExportFormat, PartyKind, PrintLayout, VoucherKind } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
 import { downloadBlob, fileNameFrom, openPdf } from '../../utils/download'
 
@@ -13,6 +13,9 @@ export interface ReportParams {
   Status?: 'Draft' | 'Posted'
   PartyId?: string
   CostCenterId?: string
+  DocumentKind?: DocumentKind
+  DocumentStatus?: DocumentStatus
+  PartyKind?: PartyKind
 }
 
 /** Exports a report (or list) the way the format asks: PDF opens in the viewer, Excel and CSV are saved as files. */

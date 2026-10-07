@@ -20,6 +20,7 @@ import { AccountSearchDialog } from '../accounting/AccountSearchDialog'
 import { AccountSelect } from '../accounting/AccountSelect'
 import { CurrencyFields } from '../accounting/CurrencyFields'
 import { VoucherLinesGrid } from '../accounting/VoucherLinesGrid'
+import { ImportModal } from '../../layout/ImportModal'
 import { RecurringModal } from '../recurring/RecurringModal'
 import { TransferForm } from './TransferForm'
 import {
@@ -105,6 +106,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   const [issues, setIssues] = useState<MappedIssues>()
   const [find, setFind] = useState<{ open: boolean; target?: string }>({ open: false })
   const [repeating, setRepeating] = useState(false)
+  const [importing, setImporting] = useState(false)
 
   const current = () => fingerprint(date, cashAccountId, reference, memo, rows, currencyCode, rate)
   const [savedFingerprint, setSavedFingerprint] = useState(current)
@@ -304,6 +306,23 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
             {t('recurring.repeat')}
           </Button>
         </div>
+      )}
+      {kind === 'Opening' && !initial && (
+        <div className="doc-actions">
+          <span className="muted">{t('import.openingHelp')}</span>
+          <Button onClick={() => setImporting(true)}>{t('import.openingButton')}</Button>
+        </div>
+      )}
+      {importing && (
+        <ImportModal
+          open
+          onClose={() => navigate('/vouchers/opening')}
+          title={t('import.openingTitle')}
+          intro={t('import.openingIntro')}
+          columns="Account, Debit, Credit, Customer, Cost center"
+          url="/api/import/opening-balances"
+          templateKey="opening-balances"
+        />
       )}
       {repeating && initial && (
         <RecurringModal

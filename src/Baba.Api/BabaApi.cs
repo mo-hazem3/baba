@@ -55,8 +55,10 @@ public static class BabaApi
         services.AddSingleton<Baba.Application.Trade.PricingService>();
         services.AddSingleton<Baba.Application.Trade.SettlementService>();
         services.AddSingleton<Baba.Application.Trade.RecurringService>();
+        services.AddSingleton<Baba.Application.Trade.TaxService>();
         services.AddSingleton<ExchangeRateService>();
         services.AddSingleton<Baba.Application.Importing.ImportService>();
+        services.AddSingleton<Baba.Application.Importing.ListImportService>();
         services.AddSingleton<FiscalYearService>();
         services.AddSingleton<Baba.Application.Banking.BankService>();
         services.AddSingleton<CostCenterService>();
@@ -74,7 +76,7 @@ public static class BabaApi
 
         services.AddSingleton(sp => new TradePrintService(
             sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(),
-            sp.GetRequiredService<IBrandingStore>(), sp.GetRequiredService<Baba.Application.Trade.DocumentService>(), sp.GetRequiredService<PartyService>()));
+            sp.GetRequiredService<IBrandingStore>(), sp.GetRequiredService<Baba.Application.Trade.DocumentService>(), sp.GetRequiredService<PartyService>(), sp.GetRequiredService<CountryPackRegistry>()));
 
         // The PDF renderer is optional: only hosts that can make PDFs (the desktop app) register one.
         services.AddSingleton(sp => new PrintService(

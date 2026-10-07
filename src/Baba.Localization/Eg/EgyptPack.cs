@@ -26,6 +26,8 @@ public sealed class EgyptPack : CountryPackBase
         new("EG-VAT-EXEMPT", "VAT exempt", "معفى من ضريبة القيمة المضافة", 0m, TaxCategory.Exempt),
     ];
 
+    public override ITaxReturnDefinition? TaxReturn { get; } = new TaxReturnDefinition("VAT return", "إقرار ضريبة القيمة المضافة", TaxReturnFrequency.Monthly);
+
     public override IReadOnlyList<TaxRegistrationRule> TaxRegistration { get; } =
     [
         new("tax-registration-number", "Tax registration number", "رقم التسجيل الضريبي", @"^\d{9}$", RequiredForCompany: true),

@@ -27,6 +27,8 @@ public sealed class UnitedArabEmiratesPack : CountryPackBase
         new("AE-VAT-OUT", "Out of scope", "خارج نطاق الضريبة", 0m, TaxCategory.OutOfScope),
     ];
 
+    public override ITaxReturnDefinition? TaxReturn { get; } = new TaxReturnDefinition("VAT return", "الإقرار الضريبي لضريبة القيمة المضافة", TaxReturnFrequency.Quarterly);
+
     public override IReadOnlyList<TaxRegistrationRule> TaxRegistration { get; } =
     [
         new("trn", "Tax registration number (TRN)", "رقم التسجيل الضريبي", @"^\d{15}$", RequiredForCompany: true),

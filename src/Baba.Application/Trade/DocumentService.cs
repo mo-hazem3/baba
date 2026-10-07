@@ -15,7 +15,8 @@ public sealed record DocumentLineInput(
     decimal Quantity,
     decimal UnitPrice,
     decimal DiscountPercent = 0,
-    Guid? CostCenterId = null);
+    Guid? CostCenterId = null,
+    Guid? TaxCodeId = null);
 
 /// <summary>What the document form sends. The currency and rate may be left out: they default to the company's currency, and to the latest rate on the date.</summary>
 public sealed record DocumentInput(
@@ -31,7 +32,8 @@ public sealed record DocumentInput(
     IReadOnlyList<DocumentLineInput> Lines);
 
 public sealed record DocumentLineDto(
-    Guid Id, Guid? ProductId, Guid? AccountId, string? Description, decimal Quantity, decimal UnitPrice, decimal DiscountPercent, Guid? CostCenterId, decimal Amount);
+    Guid Id, Guid? ProductId, Guid? AccountId, string? Description, decimal Quantity, decimal UnitPrice, decimal DiscountPercent, Guid? CostCenterId, decimal Amount,
+    Guid? TaxCodeId = null, decimal TaxRate = 0, decimal TaxAmount = 0);
 
 public sealed record DocumentDto(
     Guid Id,
@@ -52,7 +54,9 @@ public sealed record DocumentDto(
     decimal Total,
     Guid? SourceDocumentId,
     Guid? ConvertedToId,
-    Guid? VoucherId);
+    Guid? VoucherId,
+    decimal Net = 0,
+    decimal TaxTotal = 0);
 
 /// <summary>One row of a document list.</summary>
 public sealed record DocumentSummary(
@@ -69,6 +73,7 @@ public sealed class DocumentService(
     IPartyStore parties,
     IAccountStore accounts,
     IProductStore products,
+    ITaxCodeStore taxCodes,
     ICostCenterStore costCenters,
     ICurrencyRateStore currencyRates,
     IAllocationStore allocations,
@@ -127,7 +132,7 @@ public sealed class DocumentService(
 
         var input = new DocumentInput(
             stored.Kind, stored.Date, stored.DueDate, stored.PartyId, stored.CurrencyCode, stored.ExchangeRate, stored.Reference, stored.Memo, stored.DiscountPercent,
-            stored.Lines.Select(l => new DocumentLineInput(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId)).ToList());
+            stored.Lines.Select(l => new DocumentLineInput(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, l.TaxCodeId)).ToList());
         return await IssueAsync(id, input, cancellationToken);
     }
 
@@ -152,9 +157,24 @@ public sealed class DocumentService(
             var control = await ControlAccountAsync(document.Kind, cancellationToken);
             if (control is null)
                 issues.Add(new("controlAccount", "document.control-account-missing"));
+
+            // Tax goes to the tax code's output account on sales and its input account on purchases.
+            var taxAccounts = new Dictionary<Guid, Guid>();
+            var codes = (await taxCodes.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
+            for (var i = 0; i < document.Lines.Count; i++)
+            {
+                if (totals.TaxAmounts[i] == 0 || document.Lines[i].TaxCodeId is not { } codeId || !codes.TryGetValue(codeId, out var code))
+                    continue;
+                var account = document.Kind.IsSales() ? code.OutputAccountId : code.InputAccountId;
+                if (account is null)
+                    issues.Add(new($"lines[{i}].taxCode", "line.tax-account-missing"));
+                else
+                    taxAccounts[codeId] = account.Value;
+            }
+
             Throw(issues);
 
-            var (input, included) = ToVoucherInput(document, totals, control!.Id);
+            var (input, included) = ToVoucherInput(document, totals, control!.Id, taxAccounts);
             try
             {
                 var voucher = await vouchers.SaveAndPostSystemAsync(input, document.VoucherId, document.Id, cancellationToken);
@@ -179,7 +199,8 @@ public sealed class DocumentService(
     /// The voucher an invoice or note posts through. Line one is the customer's or supplier's account for the whole document; the others
     /// are the document's lines, each at its posted amount (after the document discount). Lines of zero are left out.
     /// </summary>
-    private static (VoucherInput Input, IReadOnlyList<int> Included) ToVoucherInput(Document document, DocumentTotals totals, Guid controlAccountId)
+    private static (VoucherInput Input, IReadOnlyList<int> Included) ToVoucherInput(
+        Document document, DocumentTotals totals, Guid controlAccountId, IReadOnlyDictionary<Guid, Guid> taxAccounts)
     {
         var controlIsDebit = document.Kind is DocumentKind.SalesInvoice or DocumentKind.PurchaseDebitNote;
         var lines = new List<VoucherLineInput>
@@ -199,6 +220,20 @@ public sealed class DocumentService(
             lines.Add(new VoucherLineInput(
                 null, line.AccountId!.Value, line.Description, onDebitSide ? Math.Abs(amount) : 0, onDebitSide ? 0 : Math.Abs(amount), null, line.CostCenterId));
             included.Add(i);
+        }
+
+        // The tax, one line for each tax account, on the same side as the lines it was charged on.
+        var taxByAccount = new Dictionary<Guid, decimal>();
+        for (var i = 0; i < document.Lines.Count; i++)
+        {
+            if (totals.TaxAmounts[i] != 0 && document.Lines[i].TaxCodeId is { } codeId && taxAccounts.TryGetValue(codeId, out var account))
+                taxByAccount[account] = taxByAccount.GetValueOrDefault(account) + totals.TaxAmounts[i];
+        }
+
+        foreach (var (account, tax) in taxByAccount.Where(t => t.Value != 0))
+        {
+            var onDebitSide = controlIsDebit ? tax < 0 : tax > 0;
+            lines.Add(new VoucherLineInput(null, account, null, onDebitSide ? Math.Abs(tax) : 0, onDebitSide ? 0 : Math.Abs(tax)));
         }
 
         var input = new VoucherInput(
@@ -265,6 +300,8 @@ public sealed class DocumentService(
             UnitPriceScaled = l.UnitPriceScaled,
             DiscountPercentScaled = l.DiscountPercentScaled,
             CostCenterId = l.CostCenterId,
+            TaxCodeId = l.TaxCodeId,
+            TaxRateScaled = l.TaxRateScaled,
         }).ToList();
 
         var changed = new List<Document> { copy };
@@ -373,6 +410,7 @@ public sealed class DocumentService(
         var allProducts = (await products.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
         var allCostCenters = (await costCenters.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
         var chart = (await accounts.ListAsync(cancellationToken)).ToDictionary(a => a.Id);
+        var allTaxCodes = (await taxCodes.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
         var oldLines = existing?.Lines.ToDictionary(l => l.Id) ?? [];
 
         var document = existing ?? new Document { CompanyId = company.Id, Kind = input.Kind };
@@ -394,6 +432,19 @@ public sealed class DocumentService(
             if (line.CostCenterId is { } costCenterId && costCenterId != Guid.Empty && !allCostCenters.ContainsKey(costCenterId))
                 issues.Add(new(Field("costCenter"), "line.cost-center-unknown"));
 
+            // The tax code must exist, be on (unless the line already had it) and apply on the document's date; the line keeps its rate.
+            TaxCode? taxCode = null;
+            if (line.TaxCodeId is { } taxCodeId && taxCodeId != Guid.Empty)
+            {
+                var hadIt = line.Id is { } oldId && oldLines.TryGetValue(oldId, out var old) && old.TaxCodeId == taxCodeId;
+                if (!allTaxCodes.TryGetValue(taxCodeId, out taxCode))
+                    issues.Add(new(Field("taxCode"), "line.tax-code-unknown"));
+                else if (!taxCode.IsActive && !hadIt)
+                    issues.Add(new(Field("taxCode"), "line.tax-code-inactive"));
+                else if (input.Date != default && !taxCode.AppliesOn(input.Date))
+                    issues.Add(new(Field("taxCode"), "line.tax-code-not-effective"));
+            }
+
             // The account the line posts to, or the product's own account for this direction of trade.
             var accountId = line.AccountId == Guid.Empty ? null : line.AccountId;
             accountId ??= input.Kind.IsSales() ? product?.SalesAccountId : product?.PurchaseAccountId;
@@ -414,6 +465,8 @@ public sealed class DocumentService(
                 UnitPrice = line.UnitPrice,
                 DiscountPercent = line.DiscountPercent,
                 CostCenterId = line.CostCenterId == Guid.Empty ? null : line.CostCenterId,
+                TaxCodeId = taxCode?.Id,
+                TaxRate = taxCode?.Rate ?? 0m,
             });
         }
 
@@ -450,8 +503,8 @@ public sealed class DocumentService(
         var ordered = d.Lines.OrderBy(l => l.LineNumber).ToList();
         return new DocumentDto(
             d.Id, d.Kind, d.Number, d.Date, d.DueDate, d.Status, d.PartyId, d.CurrencyCode, d.ExchangeRate, d.Reference, d.Memo, d.DiscountPercent,
-            ordered.Select((l, i) => new DocumentLineDto(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, totals.LineAmounts[i])).ToList(),
-            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId);
+            ordered.Select((l, i) => new DocumentLineDto(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, totals.LineAmounts[i], l.TaxCodeId, l.TaxRate, totals.TaxAmounts[i])).ToList(),
+            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId, totals.Net, totals.TaxTotal);
     }
 
     private CompanyInfo Company() => files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");

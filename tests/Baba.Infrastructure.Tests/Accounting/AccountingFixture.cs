@@ -51,7 +51,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Trade.PricingService Pricing,
         Baba.Application.Trade.SettlementService Settlements,
         Baba.Application.Trade.RecurringService Recurring,
-        Baba.Application.Printing.TradePrintService TradePrint)
+        Baba.Application.Printing.TradePrintService TradePrint,
+        Baba.Application.Trade.TaxService Tax)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -88,10 +89,10 @@ public abstract class AccountingFixture : CompanyFilesFixture
         return e;
     }
 
-    protected async Task<Env> NewEnvAsync(string user = "accountant")
+    protected async Task<Env> NewEnvAsync(string user = "accountant", string countryCode = "XX")
     {
         var files = NewManager(user);
-        await files.CreateAsync(NewPath(), Password, NewCompany());
+        await files.CreateAsync(NewPath(), Password, NewCompany(countryCode: countryCode));
 
         var accounts = new AccountStore(files);
         var chart = new ChartOfAccountsService(accounts);
@@ -104,7 +105,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var periods = new PeriodService(new PeriodStore(files), files);
         var byCode = (await chart.ListAsync()).ToDictionary(a => a.Code);
         var ledger = new LedgerQuery(files);
-        var reports = new Baba.Application.Reporting.ReportService(accounts, partyStore, costCenterStore, ledger, allocationStore, files);
+        var reports = new Baba.Application.Reporting.ReportService(accounts, partyStore, costCenterStore, ledger, allocationStore, new Trade.DocumentStore(files), new Trade.TaxCodeStore(files), files);
         var parties = new PartyService(partyStore, ledger);
         var customer = await parties.CreateAsync(new PartyInput(PartyKind.Customer, "C001", "العميل الأول", "First Customer", null, null, null, null, 0, 30, null, null));
         var supplier = await parties.CreateAsync(new PartyInput(PartyKind.Supplier, "S001", "المورد الأول", "First Supplier", null, null, null, null, 0, 30, null, null));
@@ -112,7 +113,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var documentStore = new Trade.DocumentStore(files);
         var productStore = new Trade.ProductStore(files);
         var priceListStore = new Trade.PriceListStore(files);
-        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, costCenterStore, rateStore, allocationStore, vouchers, files, Clock);
+        var taxStore = new Trade.TaxCodeStore(files);
+        var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
+        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, files, Clock);
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();
@@ -122,19 +125,20 @@ public abstract class AccountingFixture : CompanyFilesFixture
         return new Env(
             files, chart, vouchers, periods, ledger, reports, byCode,
             new Baba.Application.Printing.BrandingService(brandingStore),
-            new Baba.Application.Reporting.ListingService(chart, vouchers, files),
+            new Baba.Application.Reporting.ListingService(chart, vouchers, trade, new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore), parties, tax, new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock), new ExchangeRateService(rateStore, files), files),
             new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
             documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id,
             new Baba.Application.Banking.BankService(accounts, reconciliationStore, ledger, new Baba.Infrastructure.Printing.TabularReader(), Clock),
             new FiscalYearService(accounts, ledger, new VoucherStore(files), new PeriodStore(files), vouchers, files, Clock),
             new ExchangeRateService(rateStore, files),
             trade,
-            new Baba.Application.Trade.ProductService(productStore, documentStore, accounts),
+            new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore),
             new Baba.Application.Trade.PriceListService(priceListStore, productStore, files),
             new Baba.Application.Trade.PricingService(productStore, priceListStore, partyStore, files),
             new Baba.Application.Trade.SettlementService(documentStore, partyStore, accounts, allocationStore, vouchers, ledger, rateStore, files),
             new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock),
-            new Baba.Application.Printing.TradePrintService(renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, trade, parties));
+            new Baba.Application.Printing.TradePrintService(renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, trade, parties, Baba.Localization.CountryPackRegistry.Discover()),
+            tax);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

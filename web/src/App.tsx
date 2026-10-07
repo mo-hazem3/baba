@@ -11,6 +11,7 @@ import { ReconcilePage } from './features/bank/ReconcilePage'
 import { DocumentFormPage, DocumentOpenPage } from './features/trade/DocumentFormPage'
 import { DocumentListPage } from './features/trade/DocumentListPage'
 import { ProductsPage } from './features/trade/ProductsPage'
+import { TaxCodesPage } from './features/trade/TaxCodesPage'
 import { SettlementPage } from './features/trade/SettlementPage'
 import { RecurringPage } from './features/recurring/RecurringPage'
 import { PartiesPage } from './features/parties/PartiesPage'
@@ -65,6 +66,7 @@ export function App() {
         <Route path="/sales" element={<DocumentListPage side="sales" />} />
         <Route path="/purchases" element={<DocumentListPage side="purchases" />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/tax-codes" element={<TaxCodesPage />} />
         <Route path="/recurring" element={<RecurringPage />} />
         <Route path="/settlements/receive" element={<SettlementPage side="customer" />} />
         <Route path="/settlements/pay" element={<SettlementPage side="supplier" />} />

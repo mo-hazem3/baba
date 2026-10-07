@@ -967,6 +967,12 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.Property<long>("QuantityScaled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("TaxCodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TaxRateScaled")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("UnitPriceScaled")
                         .HasColumnType("INTEGER");
 
@@ -977,6 +983,8 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.HasIndex("CostCenterId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("TaxCodeId");
 
                     b.HasIndex("DocumentId", "LineNumber");
 
@@ -1096,6 +1104,9 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("SalesAccountId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("TaxCodeId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Unit")
                         .HasColumnType("TEXT");
 
@@ -1110,6 +1121,8 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.HasIndex("PurchaseAccountId");
 
                     b.HasIndex("SalesAccountId");
+
+                    b.HasIndex("TaxCodeId");
 
                     b.HasIndex("CompanyId", "Code")
                         .IsUnique();
@@ -1185,6 +1198,80 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.HasIndex("NextRunDate");
 
                     b.ToTable("RecurringSchedules");
+                });
+
+            modelBuilder.Entity("Baba.Domain.Trade.TaxCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("FromPack")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("InputAccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OutputAccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RateScaled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Treatment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InputAccountId");
+
+                    b.HasIndex("OutputAccountId");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("TaxCodes");
                 });
 
             modelBuilder.Entity("Baba.Domain.Account", b =>
@@ -1345,6 +1432,11 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Baba.Domain.Trade.TaxCode", null)
+                        .WithMany()
+                        .HasForeignKey("TaxCodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Baba.Domain.Trade.PriceListLine", b =>
@@ -1372,6 +1464,24 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.HasOne("Baba.Domain.Account", null)
                         .WithMany()
                         .HasForeignKey("SalesAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Baba.Domain.Trade.TaxCode", null)
+                        .WithMany()
+                        .HasForeignKey("TaxCodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Baba.Domain.Trade.TaxCode", b =>
+                {
+                    b.HasOne("Baba.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("InputAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Baba.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("OutputAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

@@ -26,7 +26,8 @@
     "sales": "Sales",
     "purchases": "Purchases",
     "products": "Products and prices",
-    "recurring": "Recurring"
+    "recurring": "Recurring",
+    "taxCodes": "Tax codes"
   },
   "header": {
     "language": "Language",
@@ -89,7 +90,8 @@
     "rates": "For every foreign currency you use, enter how many units of your own currency it is worth, from a date on. A voucher or document in that currency starts from the latest rate on or before its date, and you can change it for that one document.",
     "documents": "Quotes, orders, delivery notes, invoices, and credit or debit notes. Quotes and orders post nothing. An invoice posts to the customer or supplier and to revenue or expenses when you issue it, and you can change or delete it later. Use \"Turn this into\" to move to the next document without typing it again.",
     "products": "Products and services you sell or buy, with their prices and accounts, and price lists that give chosen customers their own prices. Choosing a product on an invoice fills in its name, price and account.",
-    "recurring": "Invoices and entries that Baba makes again by itself, such as monthly rent. Open an invoice or a journal entry and choose Repeat to set one up. When the app is opened, whatever came due is made: as drafts to check, or issued straight away if you chose that."
+    "recurring": "Invoices and entries that Baba makes again by itself, such as monthly rent. Open an invoice or a journal entry and choose Repeat to set one up. When the app is opened, whatever came due is made: as drafts to check, or issued straight away if you chose that.",
+    "taxCodes": "The tax codes you can put on invoice lines. The codes of your country come ready made with their rates; you choose which accounts they post to, which one new lines start with, and you can add your own. A line keeps the rate it was written with, so changing a code never changes an old invoice."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -388,7 +390,9 @@
       "Receivable": "Money owed to you",
       "Payable": "Money you owe",
       "RetainedEarnings": "Retained earnings",
-      "ExchangeDifference": "Exchange differences"
+      "ExchangeDifference": "Exchange differences",
+      "TaxPayable": "Tax payable (collected on sales)",
+      "TaxReceivable": "Tax receivable (paid on purchases)"
     },
     "issues": {
       "account": {
@@ -577,7 +581,8 @@
       "party-statement": "Customer or supplier statement",
       "aging-receivable": "Customers aging",
       "aging-payable": "Suppliers aging",
-      "cost-centers": "Cost centers"
+      "cost-centers": "Cost centers",
+      "tax-return": "Tax return"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -589,7 +594,8 @@
       "party-statement": "Every entry of one customer or supplier with a running balance.",
       "aging-receivable": "Who owes you, and for how long it has been overdue.",
       "aging-payable": "Whom you owe, and for how long it has been overdue.",
-      "cost-centers": "Revenue, expenses and profit of each cost center."
+      "cost-centers": "Revenue, expenses and profit of each cost center.",
+      "tax-return": "What was sold and bought under each tax code in a period, and the tax to pay or claim back."
     },
     "presets": {
       "thisMonth": "This month",
@@ -940,8 +946,39 @@
       "party": {
         "kind-unknown": "The kind must be customer or supplier.",
         "credit-limit-invalid": "The credit limit is not a number."
+      },
+      "products": {
+        "name-column-missing": "There is no Name column."
+      },
+      "rates": {
+        "currency-column-missing": "There is no Currency column."
+      },
+      "journal": {
+        "account-column-missing": "There is no Account column.",
+        "entry-column-missing": "There is no Entry column to say which rows belong to one entry."
+      },
+      "date": {
+        "invalid": "The date is not valid."
+      },
+      "product": {
+        "price-invalid": "The price is not a number.",
+        "account-unknown": "That account code does not exist or does not take entries.",
+        "tax-code-unknown": "That tax code does not exist."
       }
-    }
+    },
+    "productsButton": "Import…",
+    "productsTitle": "Import products",
+    "productsIntro": "Add products and services from a CSV or Excel file. The first row names the columns. Only one name is needed; a missing code is filled in. Accounts and tax codes are written as their codes.",
+    "ratesButton": "Import…",
+    "ratesTitle": "Import exchange rates",
+    "ratesIntro": "Add rates from a CSV or Excel file: the currency, the date it applies from, and what one unit is worth in your currency. A rate for a date that already has one replaces it.",
+    "journalButton": "Import…",
+    "journalTitle": "Import journal entries",
+    "journalIntro": "Post journal entries from a CSV or Excel file. Rows with the same Entry number make one entry, which must balance. Accounts, customers, suppliers and cost centers are written as their codes. If anything is wrong nothing is posted.",
+    "openingButton": "Import from Excel…",
+    "openingTitle": "Import opening balances",
+    "openingIntro": "Add the opening balances from a CSV or Excel file with an account and a debit or a credit on each row. It becomes the one opening-balances entry, dated the day before your books start, and it must balance.",
+    "openingHelp": "Or fill in the balances from a file."
   },
   "rates": {
     "title": "Exchange rates",
@@ -1110,7 +1147,11 @@
         "discount-invalid": "The discount must be between 0 and 100.",
         "cost-center-unknown": "That cost center no longer exists.",
         "account-invalid": "Choose an account that is active and takes entries.",
-        "account-required": "Choose the account this line posts to."
+        "account-required": "Choose the account this line posts to.",
+        "tax-code-unknown": "That tax code no longer exists.",
+        "tax-code-inactive": "That tax code is switched off.",
+        "tax-code-not-effective": "That tax code does not apply on the date of this document.",
+        "tax-account-missing": "This tax code has no account to post its tax to. Choose one in Tax codes."
       },
       "product": {
         "code-required": "Enter a code.",
@@ -1118,7 +1159,8 @@
         "name-required": "Enter a name.",
         "price-negative": "A price cannot be negative.",
         "account-invalid": "Choose an account that is active and takes entries.",
-        "in-use": "This product is on a document, so it cannot be deleted. Switch it off instead."
+        "in-use": "This product is on a document, so it cannot be deleted. Switch it off instead.",
+        "tax-code-unknown": "That tax code no longer exists."
       },
       "price-list": {
         "name-required": "Enter a name.",
@@ -1158,7 +1200,11 @@
     "nothingOutstandingTitle": "Nothing to pay",
     "nothingOutstandingBody": "There are no unpaid invoices in {{currency}}. Choose another currency, or type an amount below to keep it on account.",
     "settledNote": "This invoice has been paid or credited, so it cannot be changed. Delete the receipt, payment or credit note first.",
-    "documentsCount": "{{count}} documents"
+    "documentsCount": "{{count}} documents",
+    "taxCode": "Tax",
+    "netTotal": "Total before tax",
+    "taxTotal": "Tax",
+    "productTaxHelp": "Lines of this product start with this tax code."
   },
   "recurring": {
     "title": "Recurring invoices and entries",
@@ -1207,5 +1253,48 @@
       }
     },
     "ends": "Ends"
+  },
+  "tax": {
+    "title": "Tax codes",
+    "new": "New tax code",
+    "edit": "Edit tax code",
+    "intro": "Tax is added to each invoice line from its tax code and posted to the accounts shown here.",
+    "default": "Default",
+    "rate": "Rate",
+    "rateHelp": "Only a standard code has a rate.",
+    "treatment": "Treatment",
+    "treatments": {
+      "Standard": "Standard rate",
+      "Zero": "Zero rate",
+      "Exempt": "Exempt",
+      "OutOfScope": "Out of scope"
+    },
+    "effective": "Applies",
+    "effectiveFrom": "From",
+    "effectiveTo": "Until",
+    "outputAccount": "Tax payable account (sales)",
+    "outputAccountHelp": "Tax collected on sales is posted here.",
+    "inputAccount": "Tax receivable account (purchases)",
+    "inputAccountHelp": "Tax paid on purchases is posted here and claimed back.",
+    "noAccount": "Not set",
+    "makeDefault": "Make default",
+    "deleteTitle": "Delete the tax code {{name}}?",
+    "deleted": "The tax code was deleted.",
+    "emptyTitle": "No tax codes",
+    "emptyBody": "Your country has no tax codes. You can add your own with New tax code.",
+    "packNote": "This code came with your country. Its rate, treatment and dates are fixed; you can change its name and accounts.",
+    "issues": {
+      "tax": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another tax code already uses this code.",
+        "name-required": "Enter a name.",
+        "rate-invalid": "The rate must be between 0 and 100.",
+        "dates-invalid": "The end date cannot be before the start date.",
+        "account-invalid": "Choose an active account of the right kind: a liability for tax payable, an asset for tax receivable.",
+        "in-use": "This tax code is used on a document or a product, so it cannot be deleted. Switch it off instead.",
+        "pack-code": "This code came with your country and cannot be deleted. Switch it off instead.",
+        "inactive": "Switch the code on before making it the default."
+      }
+    }
   }
 }

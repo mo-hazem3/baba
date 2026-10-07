@@ -8,6 +8,8 @@ import type { RecurringDto } from '../../api/generated/model'
 import { refreshBooks } from '../../api/hooks'
 import { useListRecurring } from '../../api/generated/baba'
 import { EmptyState } from '../../layout/EmptyState'
+import { ExportControls } from '../../layout/ExportControls'
+import { exportAndShow } from '../reports/exportReport'
 import { errorMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
@@ -102,9 +104,12 @@ export function RecurringPage() {
         title={t('recurring.title')}
         help="recurring"
         action={
-          <Button type="primary" onClick={() => run.mutate()} loading={run.isPending}>
-            {t('recurring.runNow')}
-          </Button>
+          <Space wrap>
+            <ExportControls run={(format, layout) => exportAndShow('recurring', {}, format, layout)} />
+            <Button type="primary" onClick={() => run.mutate()} loading={run.isPending}>
+              {t('recurring.runNow')}
+            </Button>
+          </Space>
         }
       />
       {query.isSuccess && schedules.length === 0 ? (

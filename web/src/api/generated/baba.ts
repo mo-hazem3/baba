@@ -98,6 +98,8 @@ import type {
   SettlementInput,
   SettlementResult,
   StartupInfo,
+  TaxCodeDto,
+  TaxCodeInput,
   TestPageRequest,
   VoucherDto,
   VoucherSummary
@@ -6035,6 +6037,557 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSettleInvoicesMutationOptions(options), queryClient);
+    }
+
+export type listTaxCodesResponse200 = {
+  data: TaxCodeDto[]
+  status: 200
+}
+
+export type listTaxCodesResponseSuccess = (listTaxCodesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listTaxCodesResponse = (listTaxCodesResponseSuccess)
+
+export const getListTaxCodesUrl = () => {
+
+
+
+
+  return `/api/tax-codes`
+}
+
+export const listTaxCodes = async ( options?: Parameters<typeof http>[1]): Promise<listTaxCodesResponse> => {
+
+  return http<listTaxCodesResponse>(getListTaxCodesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTaxCodesQueryKey = () => {
+    return [
+    `/api/tax-codes`
+    ] as const;
+    }
+
+
+export const getListTaxCodesQueryOptions = <TData = Awaited<ReturnType<typeof listTaxCodes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTaxCodesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTaxCodes>>> = ({ signal }) => listTaxCodes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTaxCodesQueryResult = NonNullable<Awaited<ReturnType<typeof listTaxCodes>>>
+export type ListTaxCodesQueryError = unknown
+
+
+export function useListTaxCodes<TData = Awaited<ReturnType<typeof listTaxCodes>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTaxCodes>>,
+          TError,
+          Awaited<ReturnType<typeof listTaxCodes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTaxCodes<TData = Awaited<ReturnType<typeof listTaxCodes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTaxCodes>>,
+          TError,
+          Awaited<ReturnType<typeof listTaxCodes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTaxCodes<TData = Awaited<ReturnType<typeof listTaxCodes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListTaxCodes<TData = Awaited<ReturnType<typeof listTaxCodes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTaxCodes>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListTaxCodesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createTaxCodeResponse200 = {
+  data: TaxCodeDto
+  status: 200
+}
+
+export type createTaxCodeResponseSuccess = (createTaxCodeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createTaxCodeResponse = (createTaxCodeResponseSuccess)
+
+export const getCreateTaxCodeUrl = () => {
+
+
+
+
+  return `/api/tax-codes`
+}
+
+export const createTaxCode = async (taxCodeInput: TaxCodeInput, options?: Parameters<typeof http>[1]): Promise<createTaxCodeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createTaxCodeResponse>(getCreateTaxCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(taxCodeInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTaxCodeMutationKey = () => ['createTaxCode'] as const;
+
+export const getCreateTaxCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTaxCode>>, TError,CreateTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTaxCode>>, TError,CreateTaxCodeMutationVariables, TContext> => {
+
+const mutationKey = getCreateTaxCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTaxCode>>, CreateTaxCodeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTaxCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTaxCodeMutationResult = NonNullable<Awaited<ReturnType<typeof createTaxCode>>>
+    export type CreateTaxCodeMutationBody = TaxCodeInput
+    export type CreateTaxCodeMutationError = unknown
+    export type CreateTaxCodeMutationVariables = {data: TaxCodeInput}
+
+    export const useCreateTaxCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTaxCode>>, TError,CreateTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createTaxCode>>,
+        TError,
+        CreateTaxCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTaxCodeMutationOptions(options), queryClient);
+    }
+
+export type updateTaxCodeResponse200 = {
+  data: TaxCodeDto
+  status: 200
+}
+
+export type updateTaxCodeResponseSuccess = (updateTaxCodeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateTaxCodeResponse = (updateTaxCodeResponseSuccess)
+
+export const getUpdateTaxCodeUrl = (id: string,) => {
+
+
+
+
+  return `/api/tax-codes/${id}`
+}
+
+export const updateTaxCode = async (id: string,
+    taxCodeInput: TaxCodeInput, options?: Parameters<typeof http>[1]): Promise<updateTaxCodeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateTaxCodeResponse>(getUpdateTaxCodeUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(taxCodeInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateTaxCodeMutationKey = () => ['updateTaxCode'] as const;
+
+export const getUpdateTaxCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTaxCode>>, TError,UpdateTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTaxCode>>, TError,UpdateTaxCodeMutationVariables, TContext> => {
+
+const mutationKey = getUpdateTaxCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTaxCode>>, UpdateTaxCodeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTaxCode(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTaxCodeMutationResult = NonNullable<Awaited<ReturnType<typeof updateTaxCode>>>
+    export type UpdateTaxCodeMutationBody = TaxCodeInput
+    export type UpdateTaxCodeMutationError = unknown
+    export type UpdateTaxCodeMutationVariables = {id: string;data: TaxCodeInput}
+
+    export const useUpdateTaxCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTaxCode>>, TError,UpdateTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateTaxCode>>,
+        TError,
+        UpdateTaxCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateTaxCodeMutationOptions(options), queryClient);
+    }
+
+export type deleteTaxCodeResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteTaxCodeResponseSuccess = (deleteTaxCodeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteTaxCodeResponse = (deleteTaxCodeResponseSuccess)
+
+export const getDeleteTaxCodeUrl = (id: string,) => {
+
+
+
+
+  return `/api/tax-codes/${id}`
+}
+
+export const deleteTaxCode = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteTaxCodeResponse> => {
+
+  return http<deleteTaxCodeResponse>(getDeleteTaxCodeUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteTaxCodeMutationKey = () => ['deleteTaxCode'] as const;
+
+export const getDeleteTaxCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTaxCode>>, TError,DeleteTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTaxCode>>, TError,DeleteTaxCodeMutationVariables, TContext> => {
+
+const mutationKey = getDeleteTaxCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTaxCode>>, DeleteTaxCodeMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTaxCode(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTaxCodeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTaxCode>>>
+
+    export type DeleteTaxCodeMutationError = unknown
+    export type DeleteTaxCodeMutationVariables = {id: string}
+
+    export const useDeleteTaxCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTaxCode>>, TError,DeleteTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTaxCode>>,
+        TError,
+        DeleteTaxCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteTaxCodeMutationOptions(options), queryClient);
+    }
+
+export type setTaxCodeActiveResponse200 = {
+  data: TaxCodeDto
+  status: 200
+}
+
+export type setTaxCodeActiveResponseSuccess = (setTaxCodeActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setTaxCodeActiveResponse = (setTaxCodeActiveResponseSuccess)
+
+export const getSetTaxCodeActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/tax-codes/${id}/active`
+}
+
+export const setTaxCodeActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setTaxCodeActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setTaxCodeActiveResponse>(getSetTaxCodeActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetTaxCodeActiveMutationKey = () => ['setTaxCodeActive'] as const;
+
+export const getSetTaxCodeActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setTaxCodeActive>>, TError,SetTaxCodeActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setTaxCodeActive>>, TError,SetTaxCodeActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetTaxCodeActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setTaxCodeActive>>, SetTaxCodeActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setTaxCodeActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetTaxCodeActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setTaxCodeActive>>>
+    export type SetTaxCodeActiveMutationBody = SetActiveRequest
+    export type SetTaxCodeActiveMutationError = unknown
+    export type SetTaxCodeActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetTaxCodeActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setTaxCodeActive>>, TError,SetTaxCodeActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setTaxCodeActive>>,
+        TError,
+        SetTaxCodeActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetTaxCodeActiveMutationOptions(options), queryClient);
+    }
+
+export type setDefaultTaxCodeResponse200 = {
+  data: TaxCodeDto
+  status: 200
+}
+
+export type setDefaultTaxCodeResponseSuccess = (setDefaultTaxCodeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setDefaultTaxCodeResponse = (setDefaultTaxCodeResponseSuccess)
+
+export const getSetDefaultTaxCodeUrl = (id: string,) => {
+
+
+
+
+  return `/api/tax-codes/${id}/default`
+}
+
+export const setDefaultTaxCode = async (id: string, options?: Parameters<typeof http>[1]): Promise<setDefaultTaxCodeResponse> => {
+
+  return http<setDefaultTaxCodeResponse>(getSetDefaultTaxCodeUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSetDefaultTaxCodeMutationKey = () => ['setDefaultTaxCode'] as const;
+
+export const getSetDefaultTaxCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultTaxCode>>, TError,SetDefaultTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDefaultTaxCode>>, TError,SetDefaultTaxCodeMutationVariables, TContext> => {
+
+const mutationKey = getSetDefaultTaxCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDefaultTaxCode>>, SetDefaultTaxCodeMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  setDefaultTaxCode(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDefaultTaxCodeMutationResult = NonNullable<Awaited<ReturnType<typeof setDefaultTaxCode>>>
+
+    export type SetDefaultTaxCodeMutationError = unknown
+    export type SetDefaultTaxCodeMutationVariables = {id: string}
+
+    export const useSetDefaultTaxCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultTaxCode>>, TError,SetDefaultTaxCodeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setDefaultTaxCode>>,
+        TError,
+        SetDefaultTaxCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetDefaultTaxCodeMutationOptions(options), queryClient);
     }
 
 export type listRecurringResponse200 = {

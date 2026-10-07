@@ -35,4 +35,6 @@ export interface DocumentDto {
   convertedToId: string | null;
   /** @nullable */
   voucherId: string | null;
+  net?: number;
+  taxTotal?: number;
 }

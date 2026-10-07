@@ -66,6 +66,9 @@ export interface DocRow {
   productId?: string
   accountId?: string
   costCenterId?: string
+  /** The tax code of the line and the rate it was written with (percent). */
+  taxCodeId?: string
+  taxRate: number
   description: string
   quantity: number | null
   unitPrice: number | null
@@ -73,7 +76,7 @@ export interface DocRow {
 }
 
 let counter = 0
-export const newDocRow = (): DocRow => ({ key: `doc-row-${++counter}`, description: '', quantity: null, unitPrice: null, discountPercent: null })
+export const newDocRow = (): DocRow => ({ key: `doc-row-${++counter}`, description: '', quantity: null, unitPrice: null, discountPercent: null, taxRate: 0 })
 
 export const rowsFromDocument = (document: DocumentDto): DocRow[] =>
   document.lines.map((l) => ({
@@ -82,6 +85,8 @@ export const rowsFromDocument = (document: DocumentDto): DocRow[] =>
     productId: l.productId ?? undefined,
     accountId: l.accountId ?? undefined,
     costCenterId: l.costCenterId ?? undefined,
+    taxCodeId: l.taxCodeId ?? undefined,
+    taxRate: l.taxRate ?? 0,
     description: l.description ?? '',
     quantity: l.quantity,
     unitPrice: l.unitPrice,
@@ -108,8 +113,14 @@ const round = (value: number, minorUnits: number): number => {
 
 export interface DocTotals {
   amounts: number[]
+  /** The tax on each line, worked out on the amount that is posted (after the document discount). */
+  taxes: number[]
   subtotal: number
   discount: number
+  /** What is left after the document discount, before tax. */
+  net: number
+  taxTotal: number
+  /** What is owed, tax included. */
   total: number
 }
 
@@ -118,7 +129,22 @@ export const computeTotals = (rows: readonly DocRow[], documentDiscountPercent: 
   const amounts = rows.map((r) => round((r.quantity ?? 0) * (r.unitPrice ?? 0) * (1 - (r.discountPercent ?? 0) / 100), minorUnits))
   const subtotal = round(amounts.reduce((sum, a) => sum + a, 0), minorUnits)
   const discount = round((subtotal * documentDiscountPercent) / 100, minorUnits)
-  return { amounts, subtotal, discount, total: round(subtotal - discount, minorUnits) }
+  const net = round(subtotal - discount, minorUnits)
+
+  // Each line's share after the discount, with the rounding left over put on the biggest line, so the shares add up to the net exactly.
+  const posted = amounts.map((a) => round(a * (1 - documentDiscountPercent / 100), minorUnits))
+  const leftover = round(net - posted.reduce((sum, p) => sum + p, 0), minorUnits)
+  if (leftover !== 0 && posted.length > 0) {
+    let biggest = 0
+    amounts.forEach((a, i) => {
+      if (Math.abs(a) > Math.abs(amounts[biggest]!)) biggest = i
+    })
+    posted[biggest] = round(posted[biggest]! + leftover, minorUnits)
+  }
+
+  const taxes = posted.map((p, i) => round((p * (rows[i]?.taxRate ?? 0)) / 100, minorUnits))
+  const taxTotal = round(taxes.reduce((sum, t) => sum + t, 0), minorUnits)
+  return { amounts, taxes, subtotal, discount, net, taxTotal, total: round(net + taxTotal, minorUnits) }
 }
 
 export interface DocHeader {
@@ -152,6 +178,7 @@ export const toDocumentInput = (kind: DocumentKind, header: DocHeader, rows: rea
       unitPrice: r.unitPrice ?? 0,
       discountPercent: r.discountPercent ?? 0,
       costCenterId: r.costCenterId ?? null,
+      taxCodeId: r.taxCodeId ?? null,
     }),
   ),
 })
@@ -190,5 +217,5 @@ export const fingerprintOf = (header: DocHeader, rows: readonly DocRow[]): strin
     header.reference.trim(),
     header.memo.trim(),
     header.discountPercent,
-    rowsToSend(rows).map((r) => [r.productId ?? '', r.accountId ?? '', r.costCenterId ?? '', r.description.trim(), r.quantity ?? 0, r.unitPrice ?? 0, r.discountPercent ?? 0]),
+    rowsToSend(rows).map((r) => [r.productId ?? '', r.accountId ?? '', r.costCenterId ?? '', r.taxCodeId ?? '', r.description.trim(), r.quantity ?? 0, r.unitPrice ?? 0, r.discountPercent ?? 0]),
   ])

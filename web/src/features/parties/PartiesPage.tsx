@@ -11,7 +11,9 @@ import { refreshBooks, useCurrencies, useCurrentCompany, useParties } from '../.
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
 import { errorMessage } from '../../layout/errors'
+import { ExportControls } from '../../layout/ExportControls'
 import { ListPage } from '../../layout/ListPage'
+import { exportAndShow } from '../reports/exportReport'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
 import { matchesSearch } from '../../utils/arabic'
@@ -143,7 +145,12 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
       help="parties"
       newLabel={t(customer ? 'parties.newCustomer' : 'parties.newSupplier')}
       onNew={() => setForm({ open: true })}
-      actions={<Button onClick={() => setImporting(true)}>{t('import.partiesButton')}</Button>}
+      actions={
+        <>
+          <ExportControls run={(format, layout) => exportAndShow('parties', { PartyKind: kind }, format, layout)} />
+          <Button onClick={() => setImporting(true)}>{t('import.partiesButton')}</Button>
+        </>
+      }
       filters={
         <Input.Search
           value={search}
@@ -168,8 +175,7 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
         intro={t('import.partiesIntro')}
         columns="Code, Name, Name (Arabic), Phone, Email, Address, Tax number, Credit limit, Payment terms"
         url={`/api/import/parties/${kind}`}
-        template={'Code,Name,Name (Arabic),Phone,Email,Address,Tax number,Credit limit,Payment terms\n,Gulf Traders,الخليج للتجارة,+965 5555 1111,,,,1500,30\n'}
-        templateName={customer ? 'customers-template.csv' : 'suppliers-template.csv'}
+        templateKey="parties"
       />
       <PartyFormModal
         open={form.open}

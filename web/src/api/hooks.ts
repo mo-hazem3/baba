@@ -16,6 +16,7 @@ import {
   useListCountries,
   useListCurrencies,
   useListParties,
+  useListTaxCodes,
   useListPriceLists,
   useListProducts,
   useListRecentFiles,
@@ -61,6 +62,15 @@ export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck 
 export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
 
 export const useParties = (params?: ListPartiesParams) => useListParties(params, { query: { select: (r) => r.data } })
+
+export const useTaxCodes = () => useListTaxCodes({ query: { select: (r) => r.data } })
+
+/** What the open company's country supports (tax codes, tax return ...). Screens follow these, never the country itself. */
+export const useCapabilities = () => {
+  const company = useCurrentCompany()
+  const countries = useCountries()
+  return countries.data?.find((c) => c.code === company.data?.countryCode)?.capabilities
+}
 
 export const useProducts = () => useListProducts({ query: { select: (r) => r.data } })
 

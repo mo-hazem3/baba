@@ -17,4 +17,6 @@ export interface ProductInput {
   salesAccountId: string | null;
   /** @nullable */
   purchaseAccountId: string | null;
+  /** @nullable */
+  taxCodeId?: string | null;
 }

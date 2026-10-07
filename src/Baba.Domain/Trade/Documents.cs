@@ -167,6 +167,18 @@ public sealed class DocumentLine : Entity, ICompanyScoped
 
     public Guid? CostCenterId { get; set; }
 
+    /// <summary>The tax code of the line, if it is taxed or reported.</summary>
+    public Guid? TaxCodeId { get; set; }
+
+    /// <summary>The rate the line was written with, in percent times 10,000. Kept on the line so a later change to the code never changes this document.</summary>
+    public long TaxRateScaled { get; set; }
+
+    public decimal TaxRate
+    {
+        get => Scaled.ToDecimal(TaxRateScaled);
+        set => TaxRateScaled = Scaled.ToScaled(value);
+    }
+
     public decimal Quantity
     {
         get => Scaled.ToDecimal(QuantityScaled);
@@ -202,13 +214,20 @@ public static class DocumentNumber
     public static string Format(DocumentKind kind, int fiscalYear, int sequence) => $"{Prefix(kind)}-{fiscalYear}-{sequence:0000}";
 }
 
-/// <summary>The money of a document: line amounts, the document discount, and the total, all rounded to the document currency's decimals.</summary>
+/// <summary>
+/// The money of a document, all rounded to the document currency's decimals. <c>Net</c> is what is left of the lines after the document
+/// discount, before tax; <c>Total</c> is what is owed, tax included. <c>PostedAmounts</c> are the lines' net amounts that are posted and
+/// <c>TaxAmounts</c> the tax on each of them.
+/// </summary>
 public sealed record DocumentTotals(
     IReadOnlyList<decimal> LineAmounts,
     decimal Subtotal,
     decimal DiscountAmount,
+    decimal Net,
+    decimal TaxTotal,
     decimal Total,
-    IReadOnlyList<decimal> PostedAmounts);
+    IReadOnlyList<decimal> PostedAmounts,
+    IReadOnlyList<decimal> TaxAmounts);
 
 public static class DocumentMath
 {
@@ -224,16 +243,19 @@ public static class DocumentMath
             .ToList();
         var subtotal = amounts.Sum();
         var discount = Money.Round(subtotal * documentDiscountPercent / 100m, currency);
-        var total = subtotal - discount;
+        var net = subtotal - discount;
 
         var posted = amounts.Select(a => Money.Round(a * (1 - documentDiscountPercent / 100m), currency)).ToList();
-        var leftover = total - posted.Sum();
+        var leftover = net - posted.Sum();
         if (leftover != 0 && posted.Count > 0)
         {
             var biggest = amounts.IndexOf(amounts.MaxBy(Math.Abs));
             posted[biggest] += leftover;
         }
 
-        return new DocumentTotals(amounts, subtotal, discount, total, posted);
+        // Tax is worked out line by line on the amount that is posted, so the tax lines of the voucher add up to the tax of the document.
+        var taxes = posted.Select((p, i) => Money.Round(p * lines[i].TaxRate / 100m, currency)).ToList();
+        var taxTotal = taxes.Sum();
+        return new DocumentTotals(amounts, subtotal, discount, net, taxTotal, net + taxTotal, posted, taxes);
     }
 }

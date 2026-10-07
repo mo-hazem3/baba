@@ -13,6 +13,12 @@ public enum AccountRole
 
     /// Where realised gains and losses from exchange-rate differences are posted when a foreign-currency invoice is paid.
     ExchangeDifference,
+
+    /// <summary>Where tax collected on sales is posted (a liability). The default account of the tax codes.</summary>
+    TaxPayable,
+
+    /// <summary>Where tax paid on purchases is posted (an asset, claimed back). The default account of the tax codes.</summary>
+    TaxReceivable,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

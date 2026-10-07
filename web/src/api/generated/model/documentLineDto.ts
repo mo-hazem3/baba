@@ -19,4 +19,8 @@ export interface DocumentLineDto {
   /** @nullable */
   costCenterId: string | null;
   amount: number;
+  /** @nullable */
+  taxCodeId?: string | null;
+  taxRate?: number;
+  taxAmount?: number;
 }

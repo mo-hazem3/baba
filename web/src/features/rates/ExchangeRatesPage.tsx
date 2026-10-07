@@ -1,4 +1,4 @@
-import { Alert, App, Button, Card, InputNumber, Select, Table } from 'antd'
+import { Alert, App, Button, Card, InputNumber, Select, Space, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -9,6 +9,9 @@ import { ApiError } from '../../api/http'
 import { refreshBooks, useCurrencies, useCurrentCompany, useExchangeRates } from '../../api/hooks'
 import { DateField } from '../../layout/DateField'
 import { EmptyState } from '../../layout/EmptyState'
+import { ExportControls } from '../../layout/ExportControls'
+import { ImportModal } from '../../layout/ImportModal'
+import { exportAndShow } from '../reports/exportReport'
 import { errorMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
@@ -32,6 +35,7 @@ export function ExchangeRatesPage() {
   const [date, setDate] = useState(toIsoDate(new Date()))
   const [rate, setRate] = useState<number | null>(null)
   const [problem, setProblem] = useState<string>()
+  const [importing, setImporting] = useState(false)
 
   const save = useMutation({
     mutationFn: () => setExchangeRate({ currencyCode: currency ?? '', date, rate: rate ?? 0 }),
@@ -84,7 +88,17 @@ export function ExchangeRatesPage() {
 
   return (
     <div>
-      <PageHeader title={t('rates.title')} help="rates" crumbs={[{ label: t('breadcrumb.home'), to: '/' }, { label: t('rates.title') }]} />
+      <PageHeader
+        title={t('rates.title')}
+        help="rates"
+        crumbs={[{ label: t('breadcrumb.home'), to: '/' }, { label: t('rates.title') }]}
+        action={
+          <Space wrap>
+            <ExportControls run={(format, layout) => exportAndShow('exchange-rates', {}, format, layout)} />
+            <Button onClick={() => setImporting(true)}>{t('import.ratesButton')}</Button>
+          </Space>
+        }
+      />
       <Alert type="info" showIcon className="form-alert" message={t('rates.intro', { currency: base })} />
 
       <Card title={t('rates.add')} className="reconcile-summary">
@@ -116,6 +130,15 @@ export function ExchangeRatesPage() {
       ) : (
         <Table<CurrencyRateDto> columns={columns} dataSource={rates.data ?? []} rowKey="id" loading={rates.isPending} pagination={false} size="middle" bordered />
       )}
+      <ImportModal
+        open={importing}
+        onClose={() => setImporting(false)}
+        title={t('import.ratesTitle')}
+        intro={t('import.ratesIntro')}
+        columns="Currency, Date, Rate"
+        url="/api/import/exchange-rates"
+        templateKey="exchange-rates"
+      />
     </div>
   )
 }

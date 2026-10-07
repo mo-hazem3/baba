@@ -27,6 +27,8 @@ public sealed class SaudiArabiaPack : CountryPackBase
         new("SA-VAT-OUT", "Out of scope", "خارج نطاق الضريبة", 0m, TaxCategory.OutOfScope),
     ];
 
+    public override ITaxReturnDefinition? TaxReturn { get; } = new TaxReturnDefinition("VAT return", "الإقرار الضريبي لضريبة القيمة المضافة", TaxReturnFrequency.Quarterly);
+
     public override IReadOnlyList<TaxRegistrationRule> TaxRegistration { get; } =
     [
         new("vat-number", "VAT registration number", "رقم التسجيل في ضريبة القيمة المضافة", @"^3\d{13}3$", RequiredForCompany: true),

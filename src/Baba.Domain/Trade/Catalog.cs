@@ -28,6 +28,9 @@ public sealed class Product : Entity, ICompanyScoped, IAuditable
     /// <summary>The expense or asset account purchases of it are posted to.</summary>
     public Guid? PurchaseAccountId { get; set; }
 
+    /// <summary>The tax code lines of this product start with (sales and purchases alike: the code knows both accounts).</summary>
+    public Guid? TaxCodeId { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; }

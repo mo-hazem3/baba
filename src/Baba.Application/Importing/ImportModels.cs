@@ -10,6 +10,12 @@ public interface ITabularReader
     IReadOnlyList<IReadOnlyList<string>> Read(string fileName, byte[] content);
 }
 
+/// <summary>Makes the Excel file to fill in for an import (the key says which import). Implemented by Infrastructure.</summary>
+public interface IImportTemplates
+{
+    Printing.ExportFile? Build(string key);
+}
+
 /// <summary>One thing wrong in an imported file. <see cref="Row"/> counts rows as the person sees them in the file (the first row is 1).</summary>
 public sealed record ImportIssue(int Row, string Code);
 

@@ -648,3 +648,7 @@ kbd {
   align-items: center;
   gap: 8px;
 }
+
+.tax-select {
+  min-inline-size: 11em;
+}

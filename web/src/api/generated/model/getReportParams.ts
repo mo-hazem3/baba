@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { Comparison } from './comparison';
+import type { DocumentKind } from './documentKind';
+import type { DocumentStatus } from './documentStatus';
+import type { PartyKind } from './partyKind';
 import type { VoucherKind } from './voucherKind';
 import type { VoucherStatus } from './voucherStatus';
 
@@ -18,4 +21,7 @@ Kind?: VoucherKind;
 Status?: VoucherStatus;
 PartyId?: string;
 CostCenterId?: string;
+DocumentKind?: DocumentKind;
+DocumentStatus?: DocumentStatus;
+PartyKind?: PartyKind;
 };

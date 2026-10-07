@@ -15,7 +15,8 @@ public sealed record TradePrintData(
     string CompanyNameAr,
     Currency Currency,
     string BaseCurrencyCode,
-    CurrencyWords Words);
+    CurrencyWords Words,
+    IReadOnlyList<(string En, string Ar, string Value)> CompanyTaxNumbers);
 
 /// <summary>
 /// The printed quote, order, delivery note, invoice, credit or debit note (brief section 10.3): logo, company name, number and date,
@@ -33,7 +34,7 @@ public static class TradePrintBuilder
         var minor = data.Currency.MinorUnits;
         string L(string en, string ar) => PrintHtml.Label(layout, en, ar);
 
-        var (titleEn, titleAr) = document.Kind switch
+        var (titleEn0, titleAr0) = document.Kind switch
         {
             DocumentKind.Quote => ("Quotation", "عرض سعر"),
             DocumentKind.SalesOrder => ("Sales order", "أمر بيع"),
@@ -46,6 +47,12 @@ public static class TradePrintBuilder
             _ => ("Debit note", "إشعار مدين"),
         };
         var sales = document.Kind.IsSales();
+        var taxed = document.Lines.Any(l => l.TaxCodeId is not null);
+        // A taxed sale or credit note is a tax invoice (bilingual where the law asks for it, as chosen in the print template).
+        var (titleEn, titleAr) = taxed && document.Kind == DocumentKind.SalesInvoice ? ("Tax invoice", "فاتورة ضريبية")
+            : taxed && document.Kind == DocumentKind.SalesCreditNote ? ("Tax credit note", "إشعار دائن ضريبي")
+            : taxed && document.Kind == DocumentKind.PurchaseDebitNote ? ("Tax debit note", "إشعار مدين ضريبي")
+            : (titleEn0, titleAr0);
         var numberText = document.Number is null ? L("Draft", "مسودة") : PrintHtml.E(PrintHtml.Digits(document.Number, layout, ai));
 
         var facts = new StringBuilder("<dl class=\"meta\">")
@@ -58,6 +65,8 @@ public static class TradePrintBuilder
         facts.Append($"<dt>{L("Currency", "العملة")}</dt><dd dir=\"ltr\">{PrintHtml.E(document.CurrencyCode)}</dd>");
         if (document.CurrencyCode != data.BaseCurrencyCode)
             facts.Append($"<dt>{L("Rate", "سعر الصرف")}</dt><dd dir=\"ltr\">1 {PrintHtml.E(document.CurrencyCode)} = {PrintHtml.Digits(document.ExchangeRate.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture), layout, ai)} {PrintHtml.E(data.BaseCurrencyCode)}</dd>");
+        foreach (var (en, ar, value) in data.CompanyTaxNumbers)
+            facts.Append($"<dt>{L(en, ar)}</dt><dd dir=\"ltr\">{PrintHtml.E(PrintHtml.Digits(value, layout, ai))}</dd>");
         facts.Append("</dl>");
 
         var html = new StringBuilder();
@@ -74,25 +83,44 @@ public static class TradePrintBuilder
             html.Append($"<div><bdi dir=\"ltr\">{PrintHtml.E(party.Phone)}</bdi></div>");
         html.Append("</div>");
 
+        var cols = taxed ? 8 : 6; // columns in the table, so the totals can span all but the last
+        var lastAmount = taxed ? 2 : 1;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
         html.Append("<table><thead><tr>")
             .Append($"<th>#</th><th>{L("Description", "البيان")}</th><th class=\"num\">{L("Qty", "الكمية")}</th><th class=\"num\">{L("Price", "السعر")}</th>")
-            .Append($"<th class=\"num\">{L("Disc. %", "الخصم %")}</th><th class=\"num\">{L("Amount", "المبلغ")}</th></tr></thead><tbody>");
+            .Append($"<th class=\"num\">{L("Disc. %", "الخصم %")}</th><th class=\"num\">{L("Amount", "المبلغ")}</th>");
+        if (taxed)
+            html.Append($"<th class=\"num\">{L("Tax %", "الضريبة %")}</th><th class=\"num\">{L("Tax", "الضريبة")}</th>");
+        html.Append("</tr></thead><tbody>");
 
         var number = 0;
         foreach (var line in document.Lines)
         {
             number++;
             html.Append($"<tr><td>{PrintHtml.Digits(number.ToString(), layout, ai)}</td><td>{PrintHtml.E(line.Description)}</td>")
-                .Append($"<td class=\"num\"><bdi dir=\"ltr\">{PrintHtml.Digits(line.Quantity.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture), layout, ai)}</bdi></td>")
+                .Append($"<td class=\"num\"><bdi dir=\"ltr\">{PrintHtml.Digits(line.Quantity.ToString("0.####", inv), layout, ai)}</bdi></td>")
                 .Append($"<td class=\"num\">{PrintHtml.Amount(line.UnitPrice, minor, layout, ai)}</td>")
-                .Append($"<td class=\"num\">{(line.DiscountPercent > 0 ? PrintHtml.Digits(line.DiscountPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture), layout, ai) : "")}</td>")
-                .Append($"<td class=\"num\">{PrintHtml.Amount(line.Amount, minor, layout, ai)}</td></tr>");
+                .Append($"<td class=\"num\">{(line.DiscountPercent > 0 ? PrintHtml.Digits(line.DiscountPercent.ToString("0.##", inv), layout, ai) : "")}</td>")
+                .Append($"<td class=\"num\">{PrintHtml.Amount(line.Amount, minor, layout, ai)}</td>");
+            if (taxed)
+                html.Append($"<td class=\"num\">{(line.TaxCodeId is null ? "" : PrintHtml.Digits(line.TaxRate.ToString("0.##", inv), layout, ai) + "%")}</td>")
+                    .Append($"<td class=\"num\">{(line.TaxCodeId is null ? "" : PrintHtml.Amount(line.TaxAmount, minor, layout, ai))}</td>");
+            html.Append("</tr>");
         }
 
-        html.Append($"<tr class=\"r-total\"><td colspan=\"5\">{L("Subtotal", "الإجمالي قبل الخصم")}</td><td class=\"num\">{PrintHtml.Amount(document.Subtotal, minor, layout, ai)}</td></tr>");
+        string Total(string en, string ar, decimal value, bool strong) =>
+            $"<tr{(strong ? " class=\"r-total\"" : "")}><td colspan=\"{cols - lastAmount}\">{L(en, ar)}</td><td class=\"num\"{(taxed ? " colspan=\"2\"" : "")}>{PrintHtml.Amount(value, minor, layout, ai)}</td></tr>";
+
+        html.Append(Total("Subtotal", "الإجمالي قبل الخصم", document.Subtotal, true));
         if (document.DiscountAmount != 0)
-            html.Append($"<tr><td colspan=\"5\">{L("Discount", "الخصم")} ({PrintHtml.Digits(document.DiscountPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture), layout, ai)}%)</td><td class=\"num\">{PrintHtml.Amount(-document.DiscountAmount, minor, layout, ai)}</td></tr>");
-        html.Append($"<tr class=\"r-total\"><td colspan=\"5\">{L("Total", "الإجمالي")} ({PrintHtml.E(document.CurrencyCode)})</td><td class=\"num\">{PrintHtml.Amount(document.Total, minor, layout, ai)}</td></tr>");
+            html.Append(Total($"Discount ({document.DiscountPercent.ToString("0.##", inv)}%)", $"الخصم ({PrintHtml.Digits(document.DiscountPercent.ToString("0.##", inv), layout, ai)}%)", -document.DiscountAmount, false));
+        if (taxed)
+        {
+            html.Append(Total("Total before tax", "الإجمالي قبل الضريبة", document.Net, false));
+            html.Append(Total("Tax", "الضريبة", document.TaxTotal, false));
+        }
+
+        html.Append(Total($"Total ({document.CurrencyCode})", $"الإجمالي ({document.CurrencyCode})", document.Total, true));
         html.Append("</tbody></table>");
 
         if (settings.ShowAmountInWords && document.Total > 0)
@@ -138,7 +166,8 @@ public sealed class TradePrintService(
     Companies.ICompanyFiles files,
     IBrandingStore branding,
     DocumentService documents,
-    PartyService parties)
+    PartyService parties,
+    CountryPackRegistry countryPacks)
 {
     public bool IsAvailable => renderer is not null;
 
@@ -153,8 +182,16 @@ public sealed class TradePrintService(
         var currency = CurrencyCatalog.Find(document.CurrencyCode)?.Currency ?? new Currency(document.CurrencyCode, 2);
         var words = CurrencyWordsCatalog.Find(document.CurrencyCode) ?? CurrencyWords.Generic(document.CurrencyCode, currency.MinorUnits);
 
+        // The company's tax numbers, each under the name its country gives it (VAT number, commercial registration ...).
+        var rules = countryPacks.Find(company.CountryCode)?.TaxRegistration ?? [];
+        var numbers = (company.TaxNumbers ?? new Dictionary<string, string>())
+            .Where(n => !string.IsNullOrWhiteSpace(n.Value))
+            .Select(n => (Rule: rules.FirstOrDefault(r => r.Key == n.Key), n.Key, n.Value))
+            .Select(n => (n.Rule?.NameEn ?? n.Key, n.Rule?.NameAr ?? n.Key, n.Value))
+            .ToList();
+
         var html = TradePrintBuilder.Build(
-            new TradePrintData(document, party, company.NameEn, company.NameAr, currency, company.BaseCurrencyCode, words),
+            new TradePrintData(document, party, company.NameEn, company.NameAr, currency, company.BaseCurrencyCode, words, numbers),
             layout ?? settings.DefaultLayout, settings, fonts.CssFontFaces(), fonts.FontFamily,
             await ImageAsync(BrandingImage.Logo, cancellationToken), await ImageAsync(BrandingImage.Stamp, cancellationToken));
 

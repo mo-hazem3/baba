@@ -86,6 +86,7 @@ export const reportKeys = [
   'aging-receivable',
   'aging-payable',
   'cost-centers',
+  'tax-return',
 ] as const
 export type ReportKey = (typeof reportKeys)[number]
 
@@ -104,6 +105,7 @@ export const reportInputs: Record<
   'aging-receivable': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
   'aging-payable': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
   'cost-centers': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+  'tax-return': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
 }
 
 /** The optional module a report belongs to. Reports of a module that is switched off are not offered on the Reports page. */
@@ -113,6 +115,9 @@ export const reportModule: Partial<Record<ReportKey, string>> = {
   'aging-payable': 'customers-suppliers',
   'cost-centers': 'cost-centers',
 }
+
+/** Reports that exist only where the country's pack supports them (the capability, never the country). */
+export const reportNeedsTaxReturn = (key: ReportKey): boolean => key === 'tax-return'
 
 export const isReportKey = (key: string | undefined): key is ReportKey => reportKeys.includes(key as ReportKey)
 

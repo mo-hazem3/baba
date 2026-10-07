@@ -23,6 +23,7 @@ public static class DefaultChartOfAccounts
             new("113", "Accounts receivable", "العملاء (الذمم المدينة)", AccountType.Asset, "11", true, AccountRole.Receivable),
             new("114", "Inventory", "المخزون", AccountType.Asset, "11", true),
             new("115", "Prepaid expenses and advances", "مصروفات مدفوعة مقدمًا وسلف", AccountType.Asset, "11", true),
+            new("116", "Taxes receivable", "ضرائب مدينة قابلة للاسترداد", AccountType.Asset, "11", true, AccountRole.TaxReceivable),
             new("12", "Fixed assets", "الأصول الثابتة", AccountType.Asset, "1", false),
             new("121", "Furniture and equipment", "الأثاث والمعدات", AccountType.Asset, "12", true),
             new("122", "Vehicles", "السيارات", AccountType.Asset, "12", true),
@@ -36,7 +37,7 @@ public static class DefaultChartOfAccounts
             new("211", "Accounts payable", "الموردون (الذمم الدائنة)", AccountType.Liability, "21", true, AccountRole.Payable),
             new("212", "Accrued expenses", "مصروفات مستحقة", AccountType.Liability, "21", true),
             new("213", "Salaries payable", "رواتب مستحقة", AccountType.Liability, "21", true),
-            new("214", "Taxes payable", "ضرائب مستحقة", AccountType.Liability, "21", true),
+            new("214", "Taxes payable", "ضرائب مستحقة", AccountType.Liability, "21", true, AccountRole.TaxPayable),
             new("22", "Long-term liabilities", "الخصوم طويلة الأجل", AccountType.Liability, "2", false),
             new("221", "Long-term loans", "قروض طويلة الأجل", AccountType.Liability, "22", true),
 

@@ -19,4 +19,6 @@ export interface DocumentLineInput {
   discountPercent?: number;
   /** @nullable */
   costCenterId?: string | null;
+  /** @nullable */
+  taxCodeId?: string | null;
 }

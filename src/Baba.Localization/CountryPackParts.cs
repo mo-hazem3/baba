@@ -84,7 +84,25 @@ public sealed record TermOverride(string Key, string En, string Ar);
 // Optional parts. A pack returns null for a part that does not apply.
 // Each is defined in full by the phase that needs it (tax return: Phase 4, e-invoicing: Phase 4,
 // payroll: Phase 6) and is deliberately small until then.
-public interface ITaxReturnDefinition { }
+/// <summary>How often a tax return is filed.</summary>
+public enum TaxReturnFrequency
+{
+    Monthly,
+    Quarterly,
+}
+
+/// <summary>
+/// The tax return of a country: its name and how often it is filed. The return itself is built from the company's documents and tax codes
+/// (a generic layout by tax code); the official box layout of each authority is not mapped yet.
+/// </summary>
+public interface ITaxReturnDefinition
+{
+    string NameEn { get; }
+    string NameAr { get; }
+    TaxReturnFrequency Frequency { get; }
+}
+
+public sealed record TaxReturnDefinition(string NameEn, string NameAr, TaxReturnFrequency Frequency) : ITaxReturnDefinition;
 
 public interface IEInvoicingProvider { }
 

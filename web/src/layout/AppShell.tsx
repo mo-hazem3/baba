@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
 import type { CompanyInfo } from '../api/generated/model'
+import { useCapabilities } from '../api/hooks'
 import { AppHeader } from './AppHeader'
 
 /**
@@ -16,6 +17,7 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
 
   // Without a company there is nothing to go to, so the menu only lists the modules of an open one.
   const modules = new Set(company?.enabledModules ?? [])
+  const capabilities = useCapabilities()
   const items = [
     { key: '/', label: t('nav.summary') },
     { key: '/accounts', label: t('nav.accounts') },
@@ -38,6 +40,7 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
     ...(modules.has('purchases') ? [{ key: '/purchases', label: t('nav.purchases') }] : []),
     ...(modules.has('sales') || modules.has('purchases') ? [{ key: '/products', label: t('nav.products') }] : []),
     ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
+    ...(capabilities?.hasTaxCodes && (modules.has('sales') || modules.has('purchases')) ? [{ key: '/tax-codes', label: t('nav.taxCodes') }] : []),
     { key: '/recurring', label: t('nav.recurring') },
     { key: '/reports', label: t('nav.reports') },
     { key: '/vouchers/opening', label: t('nav.opening') },

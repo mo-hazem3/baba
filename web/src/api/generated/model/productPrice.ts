@@ -15,4 +15,6 @@ export interface ProductPrice {
   accountId: string | null;
   nameAr: string;
   nameEn: string;
+  /** @nullable */
+  taxCodeId?: string | null;
 }

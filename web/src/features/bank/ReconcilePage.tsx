@@ -20,7 +20,6 @@ import { itemName } from '../accounting/LookupSelects'
 /** Money is compared in whole 1/10,000 units so that adding up never leaves a 0.0000001 difference on screen. */
 const scaled = (value: number) => Math.round(value * 10_000)
 
-const statementTemplate = 'Date,Description,Reference,Amount\n2026-01-31,Customer transfer,REF-1,1500.000\n2026-02-01,Rent,CHQ-77,-400.000\n'
 
 /**
  * Bank reconciliation (brief section 10.2). Enter the date and closing balance printed on the bank's statement, tick the entries that
@@ -299,8 +298,7 @@ function Reconcile({ accountId }: { accountId: string }) {
         intro={t('bank.importIntro')}
         columns="Date, Description, Reference, Amount  (or Debit, Credit)"
         url={`/api/bank/accounts/${accountId}/statement`}
-        template={statementTemplate}
-        templateName="bank-statement-template.csv"
+        templateKey="statement"
       />
     </div>
   )

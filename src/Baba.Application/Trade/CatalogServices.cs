@@ -8,17 +8,17 @@ using Baba.Localization;
 namespace Baba.Application.Trade;
 
 public sealed record ProductInput(
-    string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice, Guid? SalesAccountId, Guid? PurchaseAccountId);
+    string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice, Guid? SalesAccountId, Guid? PurchaseAccountId, Guid? TaxCodeId = null);
 
 public sealed record ProductDto(
     Guid Id, string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice,
-    Guid? SalesAccountId, Guid? PurchaseAccountId, bool IsActive, bool InUse);
+    Guid? SalesAccountId, Guid? PurchaseAccountId, bool IsActive, bool InUse, Guid? TaxCodeId = null);
 
 /// <summary>
 /// Products and services (brief section 10.3). A product that has been used on a document can be switched off but not deleted, so old
 /// documents still say what was sold.
 /// </summary>
-public sealed class ProductService(IProductStore products, IDocumentStore documents, IAccountStore accounts)
+public sealed class ProductService(IProductStore products, IDocumentStore documents, IAccountStore accounts, ITaxCodeStore taxCodes)
 {
     public async Task<IReadOnlyList<ProductDto>> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -54,6 +54,7 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
         product.PurchasePriceScaled = changed.PurchasePriceScaled;
         product.SalesAccountId = changed.SalesAccountId;
         product.PurchaseAccountId = changed.PurchaseAccountId;
+        product.TaxCodeId = changed.TaxCodeId;
         await products.UpdateAsync(product, cancellationToken);
         return ToDto(product, (await documents.ProductIdsInUseAsync(cancellationToken)).Contains(id));
     }
@@ -92,6 +93,8 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
             issues.Add(new("salesAccount", "product.account-invalid"));
         if (product.PurchaseAccountId is { } purchase && (!chart.TryGetValue(purchase, out var p2) || !p2.IsPosting))
             issues.Add(new("purchaseAccount", "product.account-invalid"));
+        if (product.TaxCodeId is { } taxCodeId && (await taxCodes.ListAsync(cancellationToken)).All(c => c.Id != taxCodeId))
+            issues.Add(new("taxCode", "product.tax-code-unknown"));
         return issues;
     }
 
@@ -105,12 +108,13 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
         product.PurchasePrice = input.PurchasePrice;
         product.SalesAccountId = input.SalesAccountId == Guid.Empty ? null : input.SalesAccountId;
         product.PurchaseAccountId = input.PurchaseAccountId == Guid.Empty ? null : input.PurchaseAccountId;
+        product.TaxCodeId = input.TaxCodeId == Guid.Empty ? null : input.TaxCodeId;
         if (product.NameAr.Length == 0) product.NameAr = product.NameEn;
         if (product.NameEn.Length == 0) product.NameEn = product.NameAr;
     }
 
     private static ProductDto ToDto(Product p, bool inUse) =>
-        new(p.Id, p.Code, p.NameAr, p.NameEn, p.Unit, p.SalePrice, p.PurchasePrice, p.SalesAccountId, p.PurchaseAccountId, p.IsActive, inUse);
+        new(p.Id, p.Code, p.NameAr, p.NameEn, p.Unit, p.SalePrice, p.PurchasePrice, p.SalesAccountId, p.PurchaseAccountId, p.IsActive, inUse, p.TaxCodeId);
 
     private static void Throw(IReadOnlyCollection<ValidationIssue> issues)
     {
@@ -210,7 +214,7 @@ public sealed class PriceListService(IPriceListStore priceLists, IProductStore p
 }
 
 /// <summary>The price and defaults to put on a document line when a product is chosen.</summary>
-public sealed record ProductPrice(Guid ProductId, decimal Price, string Source, string? Unit, Guid? AccountId, string NameAr, string NameEn);
+public sealed record ProductPrice(Guid ProductId, decimal Price, string Source, string? Unit, Guid? AccountId, string NameAr, string NameEn, Guid? TaxCodeId = null);
 
 /// <summary>
 /// Finds the price of a product for a document (brief section 10.3). A customer's price list wins when it is in the document's currency
@@ -242,5 +246,5 @@ public sealed class PricingService(IProductStore products, IPriceListStore price
     }
 
     private static ProductPrice Result(Product p, decimal price, string source, bool forSale) =>
-        new(p.Id, price, source, p.Unit, forSale ? p.SalesAccountId : p.PurchaseAccountId, p.NameAr, p.NameEn);
+        new(p.Id, price, source, p.Unit, forSale ? p.SalesAccountId : p.PurchaseAccountId, p.NameAr, p.NameEn, p.TaxCodeId);
 }

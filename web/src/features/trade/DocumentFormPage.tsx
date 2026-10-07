@@ -5,9 +5,9 @@ import { RecurringModal } from '../recurring/RecurringModal'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, printDocument, saveDocumentDraft } from '../../api/generated/baba'
-import type { DocumentDto, DocumentKind, ProductDto } from '../../api/generated/model'
+import type { DocumentDto, DocumentKind, ProductDto, TaxCodeDto } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
-import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts } from '../../api/hooks'
+import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts, useTaxCodes } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
@@ -25,6 +25,7 @@ import {
   convertibleTo,
   documentPath,
   fingerprintOf,
+  isBlankRow,
   kindFromSegment,
   listPathOfKind,
   mapDocumentIssues,
@@ -91,6 +92,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const parties = useParties().data ?? []
   const products = useProducts().data ?? []
   const costCenters = useCostCenters().data ?? []
+  const taxCodes = useTaxCodes().data ?? []
   const host = useHost()
   const printSettings = usePrintSettings()
 
@@ -143,12 +145,34 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
     setIssues(undefined)
   }
 
+  /** A tax code that can be put on a line dated on the document's date, or the one it already has. */
+  const usableCodes = (current?: string): TaxCodeDto[] =>
+    taxCodes.filter(
+      (c) => c.id === current || (c.isActive && (c.effectiveFrom === null || c.effectiveFrom <= date) && (c.effectiveTo === null || date <= c.effectiveTo)),
+    )
+  const defaultCode = usableCodes().find((c) => c.isDefault)
+
   const update = (key: string, patch: Partial<DocRow>) => {
-    setRows((all) => withTrailingBlankRow(all.map((r) => (r.key === key ? { ...r, ...patch } : r))))
+    // A line that is first touched starts with the company's default tax code.
+    setRows((all) =>
+      withTrailingBlankRow(
+        all.map((r) =>
+          r.key === key
+            ? { ...r, ...(isBlankRow(r) && !r.taxCodeId && defaultCode && !('taxCodeId' in patch) ? { taxCodeId: defaultCode.id, taxRate: defaultCode.rate } : {}), ...patch }
+            : r,
+        ),
+      ),
+    )
     setIssues(undefined)
   }
 
   /** Choosing a product fills in its price (the customer's price list when there is one), name and account. */
+  /** The product's tax code if it has a usable one, otherwise the company's default. */
+  const taxFor = (productCodeId: string | null | undefined) => {
+    const code = usableCodes().find((c) => c.id === productCodeId) ?? defaultCode
+    return code ? { taxCodeId: code.id, taxRate: code.rate } : {}
+  }
+
   const chooseProduct = async (row: DocRow, product: ProductDto | undefined) => {
     if (!product) return update(row.key, { productId: undefined })
     update(row.key, { productId: product.id })
@@ -171,6 +195,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
                 unitPrice: price.price,
                 quantity: r.quantity ?? 1,
                 accountId: r.accountId ?? price.accountId ?? undefined,
+                ...taxFor(price.taxCodeId),
                 description: r.description || itemName(price, settings.language),
               }
             : r,
@@ -274,6 +299,8 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const headerProblem = (field: string) => (issues?.header[field] ? issueText(issues.header[field]) : undefined)
   const accountChoices = accounts.filter((a) => (sales ? a.type === 'Revenue' : a.type === 'Expense' || a.type === 'Asset'))
   const showCostCenter = modules.has('cost-centers') || rows.some((r) => r.costCenterId)
+  // The tax column is offered when the country has tax codes, and always when a line already carries one.
+  const showTax = taxCodes.length > 0 || rows.some((r) => r.taxCodeId)
 
   const statusTag =
     initial &&
@@ -439,6 +466,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
               <th className="num">{t('trade.quantity')}</th>
               <th className="num">{t('trade.unitPrice')}</th>
               <th className="num">{t('trade.discountPercent')}</th>
+              {showTax && <th>{t('trade.taxCode')}</th>}
               <th className="num">{t('accounting.amount')}</th>
               <th className="col-actions">
                 <span className="visually-hidden">{t('voucher.rowActions')}</span>
@@ -503,6 +531,27 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
                   <td className="num">
                     <InputNumber value={row.discountPercent} min={0} max={100} precision={2} controls={false} className="amount-input" disabled={readOnly} status={rowProblem(row.key, 'discount') ? 'error' : undefined} aria-label={`${t('trade.discountPercent')} ${index + 1}`} onChange={(v) => update(row.key, { discountPercent: typeof v === 'number' ? v : null })} />
                   </td>
+                  {showTax && (
+                    <td>
+                      <Select
+                        value={row.taxCodeId}
+                        allowClear
+                        popupMatchSelectWidth={false}
+                        className="tax-select"
+                        disabled={readOnly}
+                        aria-label={`${t('trade.taxCode')} ${index + 1}`}
+                        status={rowProblem(row.key, 'taxCode') ? 'error' : undefined}
+                        options={usableCodes(row.taxCodeId).map((c) => ({ value: c.id, label: `${c.code} (${c.rate}%)` }))}
+                        onChange={(id: string | undefined) => update(row.key, { taxCodeId: id, taxRate: taxCodes.find((c) => c.id === id)?.rate ?? 0 })}
+                      />
+                      {rowProblem(row.key, 'taxCode') && <div className="cell-error">{rowProblem(row.key, 'taxCode')}</div>}
+                      {sentIndex >= 0 && row.taxCodeId && totals.taxes[sentIndex] !== undefined && (
+                        <div className="muted">
+                          <AmountText value={totals.taxes[sentIndex] ?? 0} minorUnits={minorUnits} />
+                        </div>
+                      )}
+                    </td>
+                  )}
                   <td className="num">{sentIndex >= 0 && <AmountText value={totals.amounts[sentIndex] ?? 0} minorUnits={minorUnits} />}</td>
                   <td className="col-actions">
                     {!readOnly && sent.some((r) => r.key === row.key) && (
@@ -529,6 +578,18 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
           <InputNumber id="doc-discount" value={discountPercent} min={0} max={100} precision={2} controls={false} className="amount-input" disabled={readOnly} addonAfter="%" onChange={(v) => setDiscountPercent(typeof v === 'number' ? v : 0)} />
           <AmountText value={-totals.discount} minorUnits={minorUnits} />
         </div>
+        {showTax && (
+          <>
+            <div>
+              <span>{t('trade.netTotal')}</span>
+              <AmountText value={totals.net} minorUnits={minorUnits} />
+            </div>
+            <div>
+              <span>{t('trade.taxTotal')}</span>
+              <AmountText value={totals.taxTotal} minorUnits={minorUnits} />
+            </div>
+          </>
+        )}
         <strong>
           {t('voucher.total')} ({currencyCode}): <AmountText value={totals.total} minorUnits={minorUnits} />
         </strong>

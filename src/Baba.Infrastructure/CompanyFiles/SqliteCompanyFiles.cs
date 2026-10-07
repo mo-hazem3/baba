@@ -217,7 +217,8 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
             _lock = fileLock;
             _current = new CompanyInfo(
                 company.Id, company.NameAr, company.NameEn, company.CountryCode, company.BaseCurrencyCode,
-                company.FiscalYearStartMonth, company.FirstFiscalYear, company.EnabledModules.ToList(), path);
+                company.FiscalYearStartMonth, company.FirstFiscalYear, company.EnabledModules.ToList(), path,
+                new Dictionary<string, string>(company.TaxNumbers), company.Address);
             return _current;
         }
     }

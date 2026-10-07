@@ -70,6 +70,20 @@ public static class TradeEndpoints
         settlements.MapPost("/", (SettlementInput input, SettlementService service, CancellationToken ct) => service.SettleAsync(input, ct))
             .WithName("SettleInvoices");
 
+        var taxes = api.MapGroup("/tax-codes").WithTags("Tax codes");
+
+        taxes.MapGet("/", (TaxService service, CancellationToken ct) => service.ListAsync(ct)).WithName("ListTaxCodes");
+        taxes.MapPost("/", (TaxCodeInput input, TaxService service, CancellationToken ct) => service.CreateAsync(input, ct)).WithName("CreateTaxCode");
+        taxes.MapPut("/{id:guid}", (Guid id, TaxCodeInput input, TaxService service, CancellationToken ct) => service.UpdateAsync(id, input, ct)).WithName("UpdateTaxCode");
+        taxes.MapPost("/{id:guid}/active", (Guid id, SetActiveRequest request, TaxService service, CancellationToken ct) => service.SetActiveAsync(id, request.Active, ct)).WithName("SetTaxCodeActive");
+        taxes.MapPost("/{id:guid}/default", (Guid id, TaxService service, CancellationToken ct) => service.SetDefaultAsync(id, ct)).WithName("SetDefaultTaxCode");
+        taxes.MapDelete("/{id:guid}", async (Guid id, TaxService service, CancellationToken ct) =>
+            {
+                await service.DeleteAsync(id, ct);
+                return Results.NoContent();
+            })
+            .WithName("DeleteTaxCode");
+
         var recurring = api.MapGroup("/recurring").WithTags("Recurring");
 
         recurring.MapGet("/", (RecurringService service, CancellationToken ct) => service.ListAsync(ct))

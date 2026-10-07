@@ -1855,6 +1855,192 @@
         }
       }
     },
+    "/api/tax-codes": {
+      "get": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "ListTaxCodes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxCodeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "CreateTaxCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxCodeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxCodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-codes/{id}": {
+      "put": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "UpdateTaxCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxCodeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxCodeDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "DeleteTaxCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tax-codes/{id}/active": {
+      "post": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "SetTaxCodeActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxCodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-codes/{id}/default": {
+      "post": {
+        "tags": [
+          "Tax codes"
+        ],
+        "operationId": "SetDefaultTaxCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxCodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recurring": {
       "get": {
         "tags": [
@@ -2545,6 +2731,112 @@
         }
       }
     },
+    "/api/import/templates/{key}": {
+      "get": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "GetImportTemplate",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/import/products": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportProducts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/exchange-rates": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportExchangeRates",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/journal": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportJournal",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/opening-balances": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportOpeningBalances",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/fiscal-years": {
       "get": {
         "tags": [
@@ -2771,6 +3063,27 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "DocumentKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DocumentKind"
+            }
+          },
+          {
+            "name": "DocumentStatus",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DocumentStatus"
+            }
+          },
+          {
+            "name": "PartyKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PartyKind"
+            }
           }
         ],
         "responses": {
@@ -2888,6 +3201,27 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "DocumentKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DocumentKind"
+            }
+          },
+          {
+            "name": "DocumentStatus",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DocumentStatus"
+            }
+          },
+          {
+            "name": "PartyKind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PartyKind"
             }
           }
         ],
@@ -3121,7 +3455,9 @@
           "Receivable",
           "Payable",
           "RetainedEarnings",
-          "ExchangeDifference"
+          "ExchangeDifference",
+          "TaxPayable",
+          "TaxReceivable"
         ]
       },
       "AccountType": {
@@ -3389,6 +3725,21 @@
           },
           "filePath": {
             "type": "string"
+          },
+          "taxNumbers": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3883,6 +4234,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "net": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "taxTotal": {
+            "type": "number",
+            "format": "double",
+            "default": 0
           }
         }
       },
@@ -4029,6 +4390,23 @@
           "amount": {
             "type": "number",
             "format": "double"
+          },
+          "taxCodeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "taxRate": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "taxAmount": {
+            "type": "number",
+            "format": "double",
+            "default": 0
           }
         }
       },
@@ -4084,6 +4462,13 @@
             "default": 0
           },
           "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "taxCodeId": {
             "type": [
               "null",
               "string"
@@ -4982,6 +5367,13 @@
           },
           "inUse": {
             "type": "boolean"
+          },
+          "taxCodeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -5034,6 +5426,13 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "taxCodeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -5078,6 +5477,13 @@
           },
           "nameEn": {
             "type": "string"
+          },
+          "taxCodeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -5871,6 +6277,147 @@
           }
         }
       },
+      "TaxCodeDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "rate",
+          "treatment",
+          "effectiveFrom",
+          "effectiveTo",
+          "outputAccountId",
+          "inputAccountId",
+          "isActive",
+          "isDefault",
+          "fromPack",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "treatment": {
+            "$ref": "#/components/schemas/TaxTreatment"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "effectiveTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "outputAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "inputAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "fromPack": {
+            "type": "boolean"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TaxCodeInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn",
+          "rate",
+          "treatment",
+          "effectiveFrom",
+          "effectiveTo",
+          "outputAccountId",
+          "inputAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "treatment": {
+            "$ref": "#/components/schemas/TaxTreatment"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "effectiveTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "outputAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "inputAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "TaxRegistrationRuleDto": {
         "required": [
           "key",
@@ -5900,6 +6447,14 @@
             "type": "boolean"
           }
         }
+      },
+      "TaxTreatment": {
+        "enum": [
+          "Standard",
+          "Zero",
+          "Exempt",
+          "OutOfScope"
+        ]
       },
       "TestPageRequest": {
         "required": [
@@ -6284,6 +6839,9 @@
     },
     {
       "name": "Settlements"
+    },
+    {
+      "name": "Tax codes"
     },
     {
       "name": "Recurring"

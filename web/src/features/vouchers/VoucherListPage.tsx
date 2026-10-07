@@ -1,4 +1,4 @@
-import { Input, Segmented, Select, Table, Tag } from 'antd'
+import { Button, Input, Segmented, Select, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
@@ -10,6 +10,7 @@ import { useCurrentCompany, useCurrencies } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
 import { ExportControls } from '../../layout/ExportControls'
+import { ImportModal } from '../../layout/ImportModal'
 import { ListPage } from '../../layout/ListPage'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
@@ -32,6 +33,7 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
   const [preset, setPreset] = useState<RangePreset>('thisYear')
   const [status, setStatus] = useState<VoucherStatus | 'All'>('All')
   const [search, setSearch] = useState('')
+  const [importing, setImporting] = useState(false)
 
   const range = useMemo(() => presetRange(preset, new Date(), company.data?.fiscalYearStartMonth ?? 1), [preset, company.data?.fiscalYearStartMonth])
   const statusFilter = status === 'All' ? undefined : status
@@ -98,9 +100,12 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
       newLabel={t(`voucher.new.${kind}`)}
       onNew={create}
       actions={
-        <ExportControls
-          run={(format, layout) => exportAndShow('vouchers', { From: range.from, To: range.to, Kind: kind, Status: statusFilter }, format, layout)}
-        />
+        <>
+          <ExportControls
+            run={(format, layout) => exportAndShow('vouchers', { From: range.from, To: range.to, Kind: kind, Status: statusFilter }, format, layout)}
+          />
+          {kind === 'Journal' && <Button onClick={() => setImporting(true)}>{t('import.journalButton')}</Button>}
+        </>
       }
       filters={
         <>
@@ -165,6 +170,28 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
           }
         />
       )}
+      {kind === 'Journal' && (
+
+        <ImportModal
+
+          open={importing}
+
+          onClose={() => setImporting(false)}
+
+          title={t('import.journalTitle')}
+
+          intro={t('import.journalIntro')}
+
+          columns="Entry, Date, Account, Debit, Credit, Description, Customer, Cost center"
+
+          url="/api/import/journal"
+
+          templateKey="journal"
+
+        />
+
+      )}
+
     </ListPage>
   )
 }
