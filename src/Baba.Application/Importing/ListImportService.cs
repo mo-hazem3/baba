@@ -1,6 +1,7 @@
 using Baba.Application.Accounting;
 using Baba.Application.Assets;
 using Baba.Application.Companies;
+using Baba.Application.Budgets;
 using Baba.Application.Inventory;
 using Baba.Application.Payroll;
 using Baba.Application.Trade;
@@ -30,6 +31,7 @@ public sealed class ListImportService(
     WarehouseService warehouses,
     AssetService assets,
     EmployeeService employees,
+    BudgetService budgets,
     ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Products
@@ -254,6 +256,97 @@ public sealed class ListImportService(
         }
 
         return new ImportResult(pending.Count, 0, []);
+    }
+
+    // ---------------------------------------------------------------- Budget
+
+    /// <summary>
+    /// Columns: account code, then either the twelve months of the fiscal year (headed 1 to 12, or Month 1 to Month 12) or one yearly
+    /// total that is spread evenly. The budget of that fiscal year (and cost center) is replaced by the file.
+    /// </summary>
+    public async Task<ImportResult> ImportBudgetAsync(int fiscalYear, Guid? costCenterId, string fileName, byte[] content, CancellationToken cancellationToken = default)
+    {
+        if (!TryRead(fileName, content, out var rows))
+            return Fail("import.unreadable");
+
+        var header = FindHeader(rows, out var headerIndex, "account code", "account", "رمز الحساب", "الحساب");
+        if (header is null)
+            return Fail("budget.account-column-missing");
+
+        int accountColumn = ImportParsing.FindColumn(header, "account code", "account", "رمز الحساب", "الحساب");
+        int totalColumn = ImportParsing.FindColumn(header, "yearly total", "annual", "year total", "الإجمالي السنوي");
+        var monthColumns = Enumerable.Range(1, 12).Select(m => ImportParsing.FindColumn(header, m.ToString(System.Globalization.CultureInfo.InvariantCulture), $"month {m}", $"الشهر {m}")).ToArray();
+        if (monthColumns.All(c => c < 0) && totalColumn < 0)
+            return Fail("budget.amounts-missing");
+
+        var chart = (await accounts.ListAsync(cancellationToken)).Where(a => a.IsPosting && a.Type is AccountType.Revenue or AccountType.Expense).ToDictionary(a => a.Code, StringComparer.OrdinalIgnoreCase);
+        var lines = new List<BudgetLineInput>();
+        var issues = new List<ImportIssue>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var i = headerIndex + 1; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.All(string.IsNullOrWhiteSpace))
+                continue;
+            var rowIssues = issues.Count;
+            var line = i + 1;
+            var codeText = ImportParsing.Cell(row, accountColumn);
+            if (codeText.Length == 0 || codeText.Equals("Total", StringComparison.OrdinalIgnoreCase) || codeText == "الإجمالي")
+                continue; // a total row from an export, or an empty line
+            if (!chart.TryGetValue(codeText, out var account))
+                issues.Add(new(line, "budget.account-unknown"));
+            else if (!seen.Add(codeText))
+                issues.Add(new(line, "budget.account-twice"));
+
+            var months = new decimal[12];
+            if (monthColumns.Any(c => c >= 0))
+            {
+                for (var m = 0; m < 12; m++)
+                {
+                    var text = monthColumns[m] < 0 ? "" : ImportParsing.Cell(row, monthColumns[m]);
+                    if (text.Length == 0)
+                        continue;
+                    if (ImportParsing.ParseAmount(text) is { } value && value >= 0)
+                        months[m] = value;
+                    else
+                        issues.Add(new(line, "budget.amount-invalid"));
+                }
+            }
+            else
+            {
+                var text = ImportParsing.Cell(row, totalColumn);
+                if (ImportParsing.ParseAmount(text) is { } total && total >= 0)
+                {
+                    var each = Math.Round(total / 12m, 3, MidpointRounding.AwayFromZero);
+                    for (var m = 0; m < 11; m++)
+                        months[m] = each;
+                    months[11] = total - each * 11;
+                }
+                else
+                {
+                    issues.Add(new(line, "budget.amount-invalid"));
+                }
+            }
+
+            if (issues.Count == rowIssues)
+                lines.Add(new BudgetLineInput(account!.Id, months));
+        }
+
+        if (issues.Count > 0)
+            return new ImportResult(0, 0, issues);
+        if (lines.Count == 0)
+            return Fail("import.empty");
+
+        try
+        {
+            await budgets.SaveAsync(new BudgetInput(fiscalYear, costCenterId, lines), cancellationToken);
+        }
+        catch (ValidationException e)
+        {
+            return new ImportResult(0, 0, [.. e.Issues.Select(x => new ImportIssue(0, x.Code))]);
+        }
+
+        return new ImportResult(lines.Count, 0, []);
     }
 
     // ---------------------------------------------------------------- Employees

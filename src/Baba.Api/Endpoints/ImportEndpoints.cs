@@ -49,6 +49,11 @@ public static class ImportEndpoints
             .Produces<ImportResult>()
             .WithName("ImportEmployees");
 
+        import.MapPut("/budget", async (int fiscalYear, Guid? costCenterId, HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportBudgetAsync(fiscalYear, costCenterId, request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportBudget");
+
         import.MapPut("/exchange-rates", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
                 await service.ImportExchangeRatesAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
             .Produces<ImportResult>()

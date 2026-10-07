@@ -4231,6 +4231,440 @@
         }
       }
     },
+    "/api/claims": {
+      "get": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "ListClaims",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "SaveClaim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}": {
+      "get": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "GetClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "DeleteClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/submit": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "SubmitClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/approve": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "ApproveClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/reject": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "RejectClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/unapprove": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "UnapproveClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/pay": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "PayClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayClaimInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/unpay": {
+      "post": {
+        "tags": [
+          "Expense claims"
+        ],
+        "operationId": "UnpayClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/budgets": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "GetBudget",
+        "parameters": [
+          {
+            "name": "fiscalYear",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "costCenterId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "SaveBudget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/budgets/years": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "ListBudgetYears",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/budgets/copy": {
+      "post": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "CopyBudget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyBudgetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/exchange-rates": {
       "get": {
         "tags": [
@@ -4496,6 +4930,45 @@
           "Import"
         ],
         "operationId": "ImportEmployees",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/budget": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportBudget",
+        "parameters": [
+          {
+            "name": "fiscalYear",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "costCenterId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -4819,6 +5292,14 @@
             }
           },
           {
+            "name": "FiscalYear",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "ProductId",
             "in": "query",
             "schema": {
@@ -4978,6 +5459,14 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/PartyKind"
+            }
+          },
+          {
+            "name": "FiscalYear",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -5248,7 +5737,8 @@
           "SocialInsuranceExpense",
           "SocialInsurancePayable",
           "EndOfServiceExpense",
-          "EndOfServiceProvision"
+          "EndOfServiceProvision",
+          "ExpenseClaimsPayable"
         ]
       },
       "AccountType": {
@@ -5635,6 +6125,90 @@
           }
         }
       },
+      "BudgetDto": {
+        "required": [
+          "fiscalYear",
+          "costCenterId",
+          "start",
+          "end",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "fiscalYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineInput"
+            }
+          }
+        }
+      },
+      "BudgetInput": {
+        "required": [
+          "fiscalYear",
+          "costCenterId",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "fiscalYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineInput"
+            }
+          }
+        }
+      },
+      "BudgetLineInput": {
+        "required": [
+          "accountId",
+          "amounts"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amounts": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      },
       "CalendarKind": {
         "enum": [
           "Gregorian",
@@ -5695,6 +6269,199 @@
             "format": "int32"
           }
         }
+      },
+      "ClaimDto": {
+        "required": [
+          "id",
+          "number",
+          "employeeId",
+          "date",
+          "memo",
+          "status",
+          "total",
+          "rejectionReason",
+          "voucherId",
+          "paymentVoucherId",
+          "paidDate",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "string"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ClaimStatus"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "rejectionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "voucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "paymentVoucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "paidDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimLineDto"
+            }
+          }
+        }
+      },
+      "ClaimInput": {
+        "required": [
+          "employeeId",
+          "date",
+          "memo",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "memo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimLineInput"
+            }
+          }
+        }
+      },
+      "ClaimLineDto": {
+        "required": [
+          "date",
+          "description",
+          "accountId",
+          "amount",
+          "costCenterId"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ClaimLineInput": {
+        "required": [
+          "date",
+          "description",
+          "accountId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ClaimStatus": {
+        "enum": [
+          "Draft",
+          "Submitted",
+          "Approved",
+          "Rejected",
+          "Paid"
+        ]
       },
       "ClearedStatement": {
         "required": [
@@ -5854,6 +6621,36 @@
         "properties": {
           "target": {
             "$ref": "#/components/schemas/DocumentKind"
+          }
+        }
+      },
+      "CopyBudgetInput": {
+        "required": [
+          "fromFiscalYear",
+          "toFiscalYear",
+          "costCenterId",
+          "percentChange"
+        ],
+        "type": "object",
+        "properties": {
+          "fromFiscalYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toFiscalYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "percentChange": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7698,6 +8495,23 @@
           }
         }
       },
+      "PayClaimInput": {
+        "required": [
+          "date",
+          "cashAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cashAccountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "PayInput": {
         "required": [
           "date",
@@ -9024,6 +9838,20 @@
           "Voucher"
         ]
       },
+      "RejectClaimRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RemoveRecentFileRequest": {
         "required": [
           "path"
@@ -9397,6 +10225,25 @@
           "Earning",
           "Deduction"
         ]
+      },
+      "SaveClaimRequest": {
+        "required": [
+          "id",
+          "input"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "input": {
+            "$ref": "#/components/schemas/ClaimInput"
+          }
+        }
       },
       "SaveDialogRequest": {
         "required": [
@@ -10250,7 +11097,9 @@
           "AssetDisposal",
           "Payroll",
           "SalaryPayment",
-          "EndOfServiceAccrual"
+          "EndOfServiceAccrual",
+          "ExpenseClaim",
+          "ClaimPayment"
         ]
       },
       "VoucherLineDto": {
@@ -10541,6 +11390,12 @@
     },
     {
       "name": "Payroll"
+    },
+    {
+      "name": "Expense claims"
+    },
+    {
+      "name": "Budgets"
     },
     {
       "name": "Exchange rates"

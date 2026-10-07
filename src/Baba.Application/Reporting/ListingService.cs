@@ -1,5 +1,7 @@
 using Baba.Application.Accounting;
 using Baba.Application.Assets;
+using Baba.Application.Budgets;
+using Baba.Application.Claims;
 using Baba.Application.Companies;
 using Baba.Application.Inventory;
 using Baba.Application.Payroll;
@@ -7,6 +9,7 @@ using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
 using Baba.Domain.Assets;
+using Baba.Domain.Claims;
 using Baba.Domain.Inventory;
 using Baba.Domain.Payroll;
 using Baba.Domain.Trade;
@@ -34,6 +37,9 @@ public sealed class ListingService(
     AssetService assets,
     EmployeeService employees,
     PayrollService payroll,
+    ClaimService claims,
+    BudgetService budgets,
+    ICostCenterStore costCenterStore,
     ILedgerQuery ledger,
     IAccountStore accounts,
     ICompanyFiles files)
@@ -166,6 +172,119 @@ public sealed class ListingService(
             [new(r.CurrencyCode), new(Date: r.Date), Number(r.Rate, 6)], 0, RowStyle.Normal)).ToList();
         return Table("exchange-rates", ("Exchange rates", "أسعار الصرف"), ($"{list.Count} rates", $"{list.Count} سعراً"),
             [Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("date", ColumnKind.Date, "From", "من"), Column("rate", ColumnKind.Text, "Worth in the company's currency", "تساوي بعملة الشركة")], rows);
+    }
+
+    // ---------------------------------------------------------------- Expense claims and budgets
+
+    public async Task<ReportResult> ClaimsAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await claims.ListAsync(cancellationToken);
+        var staff = (await employees.ListAsync(cancellationToken)).ToDictionary(e => e.Id);
+        var rows = list.Select(c =>
+        {
+            var e = staff.GetValueOrDefault(c.EmployeeId);
+            var status = c.Status switch
+            {
+                ClaimStatus.Draft => ("Draft", "مسودة"),
+                ClaimStatus.Submitted => ("Waiting for approval", "بانتظار الموافقة"),
+                ClaimStatus.Approved => ("Approved", "موافق عليه"),
+                ClaimStatus.Rejected => ("Rejected", "مرفوض"),
+                _ => ("Paid", "مدفوع"),
+            };
+            return new ReportRow([new(c.Number), new(Date: c.Date), e is null ? ReportCell.Blank : new(e.NameEn, e.NameAr), new(c.Memo), new(status.Item1, status.Item2), new(Amount: c.Total)], 0, RowStyle.Normal);
+        }).ToList();
+        return Table("expense-claims", ("Expense claims", "مطالبات المصروفات"), ($"{list.Count} claims", $"{list.Count} مطالبة"),
+            [
+                Column("number", ColumnKind.Text, "Number", "الرقم"), Column("date", ColumnKind.Date, "Date", "التاريخ"), Column("employee", ColumnKind.Text, "Employee", "الموظف"),
+                Column("memo", ColumnKind.Text, "Notes", "ملاحظات"), Column("status", ColumnKind.Text, "Status", "الحالة"), Column("total", ColumnKind.Amount, "Total", "الإجمالي"),
+            ], rows);
+    }
+
+    /// <summary>A budget as a table (one row per account, the twelve months of the fiscal year, the total), in the layout the budget import reads.</summary>
+    public async Task<ReportResult> BudgetAsync(int? fiscalYear, Guid? costCenterId, CancellationToken cancellationToken = default)
+    {
+        var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
+        var year = fiscalYear ?? FiscalYear.Of(DateOnly.FromDateTime(DateTime.Today), company.FiscalYearStartMonth);
+        var budget = await budgets.GetAsync(year, costCenterId, cancellationToken);
+        var chart = (await accounts.ListAsync(cancellationToken)).ToDictionary(a => a.Id);
+        var rows = budget.Lines.Select(l =>
+        {
+            var account = chart[l.AccountId];
+            var cells = new List<ReportCell> { new(account.Code), new(account.NameEn, account.NameAr) };
+            cells.AddRange(l.Amounts.Select(a => new ReportCell(Amount: a)));
+            cells.Add(new ReportCell(Amount: l.Amounts.Sum()));
+            return new ReportRow(cells, 0, RowStyle.Normal);
+        }).ToList();
+
+        var total = new List<ReportCell> { ReportCell.Blank, new("Total", "الإجمالي") };
+        total.AddRange(Enumerable.Range(0, 12).Select(m => new ReportCell(Amount: budget.Lines.Sum(l => l.Amounts[m]))));
+        total.Add(new ReportCell(Amount: budget.Lines.Sum(l => l.Amounts.Sum())));
+        rows.Add(new ReportRow(total, 0, RowStyle.Total));
+
+        var columns = new List<ReportColumn> { Column("code", ColumnKind.Text, "Account code", "رمز الحساب"), Column("name", ColumnKind.Text, "Account", "الحساب") };
+        columns.AddRange(Enumerable.Range(1, 12).Select(m => Column($"m{m}", ColumnKind.Amount, m.ToString(Invariant), m.ToString(Invariant))));
+        columns.Add(Column("total", ColumnKind.Amount, "Total", "الإجمالي"));
+        return Table("budget", ($"Budget {year}", $"موازنة {year}"), (budget.Start.ToString("dd/MM/yyyy", Invariant) + " – " + budget.End.ToString("dd/MM/yyyy", Invariant), budget.Start.ToString("dd/MM/yyyy", Invariant) + " – " + budget.End.ToString("dd/MM/yyyy", Invariant)), [.. columns], rows);
+    }
+
+    /// <summary>What was planned for each revenue and expense account over a period, what really happened, and the difference.</summary>
+    public async Task<ReportResult> BudgetVsActualAsync(DateOnly? from, DateOnly? to, Guid? costCenterId, CancellationToken cancellationToken = default)
+    {
+        var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var (yearStart, yearEnd) = FiscalYear.Range(FiscalYear.Of(today, company.FiscalYearStartMonth), company.FiscalYearStartMonth);
+        var start = from ?? yearStart;
+        var end = to ?? yearEnd;
+
+        var chart = (await accounts.ListAsync(cancellationToken)).Where(a => a.Type is AccountType.Revenue or AccountType.Expense).ToDictionary(a => a.Id);
+        var planned = (await budgets.PlannedAsync(start, end, costCenterId, cancellationToken)).ToDictionary(p => p.AccountId, p => p.Amount);
+        var totals = costCenterId is { } center
+            ? await ledger.TotalsForCostCenterAsync(center, start, end, cancellationToken)
+            : await ledger.OperatingTotalsAsync(start, end, cancellationToken);
+        decimal ActualOf(Account a, IEnumerable<AccountTotal> source) => source.Where(t => t.AccountId == a.Id).Sum(t => a.Type == AccountType.Revenue ? t.Credit - t.Debit : t.Debit - t.Credit);
+
+        var rows = new List<ReportRow>();
+        decimal budgetRevenue = 0, actualRevenue = 0, budgetExpense = 0, actualExpense = 0;
+        foreach (var type in new[] { AccountType.Revenue, AccountType.Expense })
+        {
+            decimal budgetTotal = 0, actualTotal = 0;
+            foreach (var account in chart.Values.Where(a => a.Type == type && a.IsPosting).OrderBy(a => a.Code, StringComparer.OrdinalIgnoreCase))
+            {
+                var budget = planned.GetValueOrDefault(account.Id);
+                var actual = ActualOf(account, totals);
+                if (budget == 0 && actual == 0)
+                    continue;
+                budgetTotal += budget;
+                actualTotal += actual;
+                rows.Add(new ReportRow(
+                    [new(account.Code), new(account.NameEn, account.NameAr), new(Amount: budget), new(Amount: actual), new(Amount: actual - budget), budget == 0 ? ReportCell.Blank : new(Amount: Math.Round(actual / budget * 100m, 1))],
+                    0, RowStyle.Normal, new ReportLink(ReportLink.Account, account.Id, start, end)));
+            }
+
+            var name = type == AccountType.Revenue ? ("Total revenue", "إجمالي الإيرادات") : ("Total expenses", "إجمالي المصروفات");
+            rows.Add(new ReportRow([ReportCell.Blank, new(name.Item1, name.Item2), new(Amount: budgetTotal), new(Amount: actualTotal), new(Amount: actualTotal - budgetTotal), ReportCell.Blank], 0, RowStyle.Subtotal));
+            if (type == AccountType.Revenue) { budgetRevenue = budgetTotal; actualRevenue = actualTotal; }
+            else { budgetExpense = budgetTotal; actualExpense = actualTotal; }
+        }
+
+        rows.Add(new ReportRow(
+            [ReportCell.Blank, new("Profit", "الربح"), new(Amount: budgetRevenue - budgetExpense), new(Amount: actualRevenue - actualExpense), new(Amount: actualRevenue - actualExpense - (budgetRevenue - budgetExpense)), ReportCell.Blank],
+            0, RowStyle.Total));
+
+        string? subtitleEn = null, subtitleAr = null;
+        if (costCenterId is { } cc && (await costCenterStore.ListAsync(cancellationToken)).FirstOrDefault(c => c.Id == cc) is { } found)
+        {
+            subtitleEn = found.NameEn;
+            subtitleAr = found.NameAr;
+        }
+
+        var range = ReportLabels.Range(start, end);
+        return Table("budget-vs-actual", ("Budget versus actual", "الموازنة مقابل الفعلي"),
+            subtitleEn is null ? range : (range.En + " · " + subtitleEn, range.Ar + " · " + subtitleAr),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Account", "الحساب"), Column("budget", ColumnKind.Amount, "Budget", "الموازنة"),
+                Column("actual", ColumnKind.Amount, "Actual", "الفعلي"), Column("difference", ColumnKind.Amount, "Actual less budget", "الفعلي ناقص الموازنة"), Column("percent", ColumnKind.Amount, "% of budget", "% من الموازنة"),
+            ], rows);
     }
 
     // ---------------------------------------------------------------- Payroll

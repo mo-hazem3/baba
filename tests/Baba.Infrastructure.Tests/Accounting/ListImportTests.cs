@@ -14,7 +14,7 @@ public class ListImportTests : AccountingFixture
 {
     private static ListImportService Importer(Env e) => new(
         new TabularReader(), new AccountStore(e.Files), new PartyStore(e.Files), new CostCenterStore(e.Files), e.Tax,
-        e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Files);
+        e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Budgets, e.Files);
 
     private static byte[] Csv(string text) => Encoding.UTF8.GetBytes(text);
 

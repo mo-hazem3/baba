@@ -3,6 +3,8 @@ using Baba.Application.Abstractions;
 using Baba.Domain;
 using Baba.Domain.Accounting;
 using Baba.Domain.Assets;
+using Baba.Domain.Budgets;
+using Baba.Domain.Claims;
 using Baba.Domain.Inventory;
 using Baba.Domain.Payroll;
 using Baba.Domain.Trade;
@@ -60,6 +62,9 @@ public sealed class CompanyDbContext(
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
     public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
+    public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
+    public DbSet<ExpenseClaimLine> ExpenseClaimLines => Set<ExpenseClaimLine>();
+    public DbSet<BudgetEntry> BudgetEntries => Set<BudgetEntry>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<EmployeeComponent> EmployeeComponents => Set<EmployeeComponent>();
     public DbSet<SalaryComponent> SalaryComponents => Set<SalaryComponent>();
@@ -97,6 +102,7 @@ public sealed class CompanyDbContext(
         configuration.Properties<TaxTreatment>().HaveConversion<string>();
         configuration.Properties<StockMovementKind>().HaveConversion<string>();
         configuration.Properties<StockDocumentKind>().HaveConversion<string>();
+        configuration.Properties<ClaimStatus>().HaveConversion<string>();
         configuration.Properties<SalaryComponentKind>().HaveConversion<string>();
         configuration.Properties<ComponentCalculation>().HaveConversion<string>();
         configuration.Properties<PayrollStatus>().HaveConversion<string>();
@@ -267,6 +273,32 @@ public sealed class CompanyDbContext(
         model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.CostOfSalesAccountId).OnDelete(DeleteBehavior.Restrict);
         model.Entity<Product>().HasIndex(p => p.Barcode);
         model.Entity<Document>().HasOne<Warehouse>().WithMany().HasForeignKey(d => d.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<ExpenseClaim>(claim =>
+        {
+            claim.Ignore(c => c.Total);
+            claim.HasMany(c => c.Lines).WithOne().HasForeignKey(l => l.ClaimId).OnDelete(DeleteBehavior.Cascade);
+            claim.HasOne<Employee>().WithMany().HasForeignKey(c => c.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+            claim.HasIndex(c => new { c.CompanyId, c.Number }).IsUnique();
+            claim.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<ExpenseClaimLine>(line =>
+        {
+            line.Ignore(l => l.Amount);
+            line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<CostCenter>().WithMany().HasForeignKey(l => l.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<BudgetEntry>(entry =>
+        {
+            entry.Ignore(e => e.Amount);
+            entry.HasOne<Account>().WithMany().HasForeignKey(e => e.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasOne<CostCenter>().WithMany().HasForeignKey(e => e.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasIndex(e => new { e.CompanyId, e.FiscalYear, e.AccountId, e.CostCenterId, e.Period }).IsUnique();
+            entry.HasQueryFilter(e => e.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<Employee>(employee =>
         {

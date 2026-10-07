@@ -55,6 +55,9 @@ public enum AccountRole
 
     /// <summary>What is set aside for the end-of-service gratuity owed to employees (a liability).</summary>
     EndOfServiceProvision,
+
+    /// <summary>What the company owes employees for approved expense claims (a liability).</summary>
+    ExpenseClaimsPayable,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

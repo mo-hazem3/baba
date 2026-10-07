@@ -372,7 +372,7 @@ public class PayrollTests : AccountingFixture
         var e = await new PayrollTests().NewEnvAsync(countryCode: "KW");
         var importer = new Baba.Application.Importing.ListImportService(
             new Baba.Infrastructure.Printing.TabularReader(), new Baba.Infrastructure.Accounting.AccountStore(e.Files), new Baba.Infrastructure.Accounting.PartyStore(e.Files),
-            new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Files);
+            new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Budgets, e.Files);
 
         var good = await importer.ImportEmployeesAsync("e.csv", System.Text.Encoding.UTF8.GetBytes("Code,Name,Job title,National,Join date,Basic salary,Account number\nE1,Sara,Accountant,yes,2025-03-01,750,KW81000\nE2,Omar,Driver,no,2025-04-15,400,\n"));
         Assert.Empty(good.Issues);

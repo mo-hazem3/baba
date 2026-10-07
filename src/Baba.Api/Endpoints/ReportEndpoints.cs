@@ -15,6 +15,7 @@ public sealed record ReportQuery(
     DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None,
     VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null,
     DocumentKind? DocumentKind = null, DocumentStatus? DocumentStatus = null, PartyKind? PartyKind = null,
+    int? FiscalYear = null,
     Guid? ProductId = null, Guid? WarehouseId = null, StockDocumentKind? StockDocumentKind = null);
 
 /// <summary>
@@ -30,6 +31,7 @@ public static class ReportEndpoints
         "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
         "stock-valuation", "stock-movements", "stock-reorder", "warehouses", "stock-documents",
         "asset-register", "assets", "employees", "salary-components", "payroll-summary", "leave-balances", "end-of-service",
+        "expense-claims", "budget", "budget-vs-actual",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -87,6 +89,9 @@ public static class ReportEndpoints
             case "stock-reorder": return await listings.StockReorderAsync(ct);
             case "warehouses": return await listings.WarehousesAsync(ct);
             case "assets": return await listings.AssetsAsync(ct);
+            case "expense-claims": return await listings.ClaimsAsync(ct);
+            case "budget": return await listings.BudgetAsync(q.FiscalYear, q.CostCenterId, ct);
+            case "budget-vs-actual": return await listings.BudgetVsActualAsync(q.From, q.To, q.CostCenterId, ct);
             case "employees": return await listings.EmployeesAsync(ct);
             case "salary-components": return await listings.SalaryComponentsAsync(ct);
             case "payroll-summary": return await listings.PayrollSummaryAsync(q.From, q.To, ct);

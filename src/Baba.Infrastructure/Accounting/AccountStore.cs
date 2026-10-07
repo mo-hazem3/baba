@@ -25,6 +25,8 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         used.UnionWith(await context.TaxCodes.Where(t => t.InputAccountId != null).Select(t => t.InputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.InventoryAccountId != null).Select(p => p.InventoryAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.CostOfSalesAccountId != null).Select(p => p.CostOfSalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.ExpenseClaimLines.Select(l => l.AccountId).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.BudgetEntries.Select(e => e.AccountId).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.SalaryComponents.Where(c => c.AccountId != null).Select(c => c.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.PayslipItems.Where(i => i.AccountId != null).Select(i => i.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
         foreach (var settings in await context.PayrollSettings.ToListAsync(cancellationToken))

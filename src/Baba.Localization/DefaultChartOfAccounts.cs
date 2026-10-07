@@ -37,6 +37,7 @@ public static class DefaultChartOfAccounts
             new("211", "Accounts payable", "الموردون (الذمم الدائنة)", AccountType.Liability, "21", true, AccountRole.Payable),
             new("212", "Accrued expenses", "مصروفات مستحقة", AccountType.Liability, "21", true),
             new("213", "Salaries payable", "رواتب مستحقة", AccountType.Liability, "21", true, AccountRole.SalariesPayable),
+            new("216", "Employee expense claims payable", "مطالبات مصروفات الموظفين المستحقة", AccountType.Liability, "21", true, AccountRole.ExpenseClaimsPayable),
             new("215", "Social insurance payable", "التأمينات الاجتماعية المستحقة", AccountType.Liability, "21", true, AccountRole.SocialInsurancePayable),
             new("214", "Taxes payable", "ضرائب مستحقة", AccountType.Liability, "21", true, AccountRole.TaxPayable),
             new("22", "Long-term liabilities", "الخصوم طويلة الأجل", AccountType.Liability, "2", false),

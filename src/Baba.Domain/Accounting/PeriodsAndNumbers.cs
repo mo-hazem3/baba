@@ -63,6 +63,8 @@ public static class VoucherNumber
         VoucherKind.Payroll => "PR",
         VoucherKind.SalaryPayment => "SP",
         VoucherKind.EndOfServiceAccrual => "EA",
+        VoucherKind.ExpenseClaim => "XC",
+        VoucherKind.ClaimPayment => "XP",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 

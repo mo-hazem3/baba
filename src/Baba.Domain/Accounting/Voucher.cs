@@ -55,6 +55,12 @@ public enum VoucherKind
 
     /// <summary>The monthly addition to (or release from) the end-of-service provision. Made by the provision run.</summary>
     EndOfServiceAccrual,
+
+    /// <summary>An approved expense claim: the expenses against what the company owes the employee. Made by the claim.</summary>
+    ExpenseClaim,
+
+    /// <summary>The payment of an approved expense claim to the employee. Made by the claim's Pay action.</summary>
+    ClaimPayment,
 }
 
 public enum VoucherStatus
@@ -166,11 +172,11 @@ public static class VoucherKindExtensions
 
     /// <summary>Lines are written as debits and credits that the user balances.</summary>
     public static bool HasFreeLines(this VoucherKind kind) =>
-        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment or VoucherKind.Depreciation or VoucherKind.AssetDisposal or VoucherKind.Payroll or VoucherKind.SalaryPayment or VoucherKind.EndOfServiceAccrual || kind.IsDocument();
+        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment or VoucherKind.Depreciation or VoucherKind.AssetDisposal or VoucherKind.Payroll or VoucherKind.SalaryPayment or VoucherKind.EndOfServiceAccrual or VoucherKind.ExpenseClaim or VoucherKind.ClaimPayment || kind.IsDocument();
 
     /// <summary>Made by Baba itself (closing a year, an invoice, an exchange difference) and never saved or deleted by hand.</summary>
     public static bool IsSystemMade(this VoucherKind kind) =>
-        kind is VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment or VoucherKind.Depreciation or VoucherKind.AssetDisposal or VoucherKind.Payroll or VoucherKind.SalaryPayment or VoucherKind.EndOfServiceAccrual || kind.IsDocument();
+        kind is VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment or VoucherKind.Depreciation or VoucherKind.AssetDisposal or VoucherKind.Payroll or VoucherKind.SalaryPayment or VoucherKind.EndOfServiceAccrual or VoucherKind.ExpenseClaim or VoucherKind.ClaimPayment || kind.IsDocument();
 
     /// <summary>
     /// The ledger side of an invoice or a credit or debit note. Its first line is the customer's or supplier's account for the whole
