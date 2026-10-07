@@ -17,5 +17,6 @@ export function VoucherOpenPage() {
   })
 
   if (query.isPending) return <Spin size="large" className="page-spinner" />
+  if (query.data?.documentId) return <Navigate to={`/documents/open/${query.data.documentId}`} replace />
   return query.data ? <Navigate to={voucherPath(query.data.kind, query.data.id)} replace /> : <Navigate to="/" replace />
 }

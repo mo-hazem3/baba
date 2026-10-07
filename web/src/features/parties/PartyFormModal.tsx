@@ -1,12 +1,14 @@
-import { Alert, Form, Input, InputNumber, Modal } from 'antd'
+import { Alert, Form, Input, InputNumber, Modal, Select } from 'antd'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createParty, updateParty } from '../../api/generated/baba'
 import type { PartyDto, PartyInput, PartyKind } from '../../api/generated/model'
 import { ApiError } from '../../api/http'
-import { refreshBooks } from '../../api/hooks'
+import { refreshBooks, usePriceLists } from '../../api/hooks'
 import { errorMessage } from '../../layout/errors'
+import { useSettings } from '../../settings/SettingsContext'
+import { itemName } from '../accounting/LookupSelects'
 
 interface Values {
   code: string
@@ -18,6 +20,7 @@ interface Values {
   taxNumber: string
   creditLimit: number
   paymentTermsDays: number
+  priceListId?: string
   notes: string
 }
 
@@ -59,6 +62,8 @@ export function PartyFormModal({
   const queryClient = useQueryClient()
   const [form] = Form.useForm<Values>()
   const customer = kind === 'Customer'
+  const priceLists = usePriceLists().data ?? []
+  const { settings } = useSettings()
 
   useEffect(() => {
     if (!open) return
@@ -75,6 +80,7 @@ export function PartyFormModal({
             taxNumber: editing.taxNumber ?? '',
             creditLimit: editing.creditLimit,
             paymentTermsDays: editing.paymentTermsDays,
+            priceListId: editing.priceListId ?? undefined,
             notes: editing.notes ?? '',
           }
         : { code: suggestPartyCode(parties, kind), nameEn: '', nameAr: '', phone: '', email: '', address: '', taxNumber: '', creditLimit: 0, paymentTermsDays: 30, notes: '' },
@@ -94,6 +100,7 @@ export function PartyFormModal({
         taxNumber: values.taxNumber || null,
         creditLimit: customer ? (values.creditLimit ?? 0) : 0,
         paymentTermsDays: values.paymentTermsDays ?? 0,
+        priceListId: customer ? (values.priceListId ?? null) : null,
         notes: values.notes || null,
       }
       return editing ? updateParty(editing.id, input) : createParty(input)
@@ -165,6 +172,14 @@ export function PartyFormModal({
             <InputNumber min={0} max={365} precision={0} controls={false} className="amount-input" />
           </Form.Item>
         </div>
+        {customer && priceLists.length > 0 && (
+          <Form.Item name="priceListId" label={t('trade.priceList')} extra={t('trade.priceListHelp')}>
+            <Select
+              allowClear
+              options={priceLists.filter((l) => l.isActive || l.id === editing?.priceListId).map((l) => ({ value: l.id, label: itemName(l, settings.language) }))}
+            />
+          </Form.Item>
+        )}
         <Form.Item name="notes" label={t('parties.notes')}>
           <Input.TextArea rows={2} />
         </Form.Item>

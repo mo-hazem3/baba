@@ -34,6 +34,9 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
           { key: '/suppliers', label: t('nav.suppliers') },
         ]
       : []),
+    ...(modules.has('sales') ? [{ key: '/sales', label: t('nav.sales') }] : []),
+    ...(modules.has('purchases') ? [{ key: '/purchases', label: t('nav.purchases') }] : []),
+    ...(modules.has('sales') || modules.has('purchases') ? [{ key: '/products', label: t('nav.products') }] : []),
     ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
     { key: '/reports', label: t('nav.reports') },
     { key: '/vouchers/opening', label: t('nav.opening') },

@@ -28,6 +28,9 @@ export const parseIsoDate = (value: string): Date => {
   return new Date(year, month - 1, day)
 }
 
+/** The date some days after (or before, when negative) another. */
+export const addDays = (date: Date, days: number): Date => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+
 /** A date as the API wants it (2026-10-06). */
 export const toIsoDate = (date: Date): string => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 

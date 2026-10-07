@@ -23,4 +23,6 @@ export interface PartyInput {
   paymentTermsDays: number;
   /** @nullable */
   notes: string | null;
+  /** @nullable */
+  priceListId?: string | null;
 }

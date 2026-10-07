@@ -33,6 +33,9 @@ public sealed class Party : Entity, ICompanyScoped, IAuditable
     /// <summary>Days after the date of an entry when it falls due. 0 means due at once. Used by the aging reports.</summary>
     public int PaymentTermsDays { get; set; }
 
+    /// <summary>The price list a customer's sales documents take their prices from (brief section 10.3). Empty means the products' own prices.</summary>
+    public Guid? PriceListId { get; set; }
+
     public bool IsActive { get; set; } = true;
     public string? Notes { get; set; }
 

@@ -15,4 +15,8 @@ export const VoucherKind = {
   Transfer: 'Transfer',
   Opening: 'Opening',
   Closing: 'Closing',
+  SalesInvoice: 'SalesInvoice',
+  SalesCreditNote: 'SalesCreditNote',
+  PurchaseInvoice: 'PurchaseInvoice',
+  PurchaseDebitNote: 'PurchaseDebitNote',
 } as const;

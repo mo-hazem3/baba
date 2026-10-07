@@ -109,7 +109,7 @@ describe('defaults', () => {
     const initial = initialValues(2031)
 
     expect(initial.firstFiscalYear).toBe(2031)
-    expect(initial.enabledModules).toEqual(['bank-cash', 'customers-suppliers'])
+    expect(initial.enabledModules).toEqual(['bank-cash', 'customers-suppliers', 'sales', 'purchases'])
   })
 })
 

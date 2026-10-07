@@ -20,6 +20,9 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         used.UnionWith(await context.VoucherLines.Select(l => l.AccountId).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.LedgerEntries.Select(e => e.AccountId).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Vouchers.Where(v => v.CashAccountId != null).Select(v => v.CashAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.DocumentLines.Where(l => l.AccountId != null).Select(l => l.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.Products.Where(p => p.SalesAccountId != null).Select(p => p.SalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.Products.Where(p => p.PurchaseAccountId != null).Select(p => p.PurchaseAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         return used;
     }
 
@@ -69,6 +72,14 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         var vouchers = await context.Vouchers.Where(v => v.CashAccountId == fromAccountId).ToListAsync(cancellationToken);
         foreach (var voucher in vouchers)
             voucher.CashAccountId = toAccountId;
+
+        foreach (var line in await context.DocumentLines.Where(l => l.AccountId == fromAccountId).ToListAsync(cancellationToken))
+            line.AccountId = toAccountId;
+        foreach (var product in await context.Products.Where(p => p.SalesAccountId == fromAccountId || p.PurchaseAccountId == fromAccountId).ToListAsync(cancellationToken))
+        {
+            if (product.SalesAccountId == fromAccountId) product.SalesAccountId = toAccountId;
+            if (product.PurchaseAccountId == fromAccountId) product.PurchaseAccountId = toAccountId;
+        }
 
         await context.SaveChangesAsync(cancellationToken);
 

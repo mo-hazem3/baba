@@ -7,6 +7,8 @@ using Baba.Api.Errors;
 using Baba.Application.Accounting;
 using Baba.Application.Printing;
 using Baba.Application.Reporting;
+using Baba.Application.Trade;
+using Baba.Domain.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
 
@@ -278,6 +280,38 @@ public class AccountingApiTests : ApiFixture
         Assert.Equal(-25m, dashboard.ProfitThisMonth);
     }
 
+    // ------------------------------------------------------------------ Sales and purchase documents
+
+    [Fact]
+    public async Task A_quote_is_converted_to_an_invoice_that_posts_and_problems_name_the_line_over_http()
+    {
+        await StartCompanyAsync();
+        var party = await ReadAsync<PartyDto>(await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "C200", "", "Nile Traders", null, null, null, null, 0, 30, null, null)));
+        var line = new DocumentLineInput(null, null, Id("511"), "Consulting", 2, 150m);
+        var quoteInput = new DocumentInput(DocumentKind.Quote, Oct6, null, party.Id, null, null, null, null, 0, [line]);
+
+        var quote = await ReadAsync<DocumentDto>(await PostAsync("/api/documents/issue", new SaveDocumentRequest(null, quoteInput)));
+        Assert.StartsWith("QT-2026-", quote.Number);
+
+        var draft = await ReadAsync<DocumentDto>(await PostAsync($"/api/documents/{quote.Id}/convert", new ConvertDocumentRequest(DocumentKind.SalesInvoice)));
+        Assert.Equal(DocumentStatus.Draft, draft.Status);
+        var invoice = await ReadAsync<DocumentDto>(await Http.PostAsync($"/api/documents/{draft.Id}/issue", null));
+        Assert.Equal(300m, invoice.Total);
+        Assert.NotNull(invoice.VoucherId);
+
+        var balance = (await ReadAsync<List<PartyDto>>(await Http.GetAsync("/api/parties"))).Single(p => p.Id == party.Id);
+        Assert.Equal(300m, balance.Balance);
+
+        var withoutAccount = new DocumentInput(DocumentKind.SalesInvoice, Oct6, null, party.Id, null, null, null, null, 0, [line with { AccountId = null }]);
+        var refused = await PostAsync("/api/documents/issue", new SaveDocumentRequest(null, withoutAccount));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains((await ReadAsync<ApiProblem>(refused)).Issues!, i => i is { Field: "lines[0].account", Code: "line.account-required" });
+
+        var product = await ReadAsync<ProductDto>(await PostAsync("/api/products", new ProductInput("P1", "", "Widget", null, 20m, 10m, null, null)));
+        var price = await ReadAsync<ProductPrice>(await Http.GetAsync($"/api/pricing/price?productId={product.Id}&partyId={party.Id}"));
+        Assert.Equal(20m, price.Price);
+    }
+
     // ------------------------------------------------------------------ Customers, suppliers and cost centers
 
     [Fact]
@@ -285,11 +319,11 @@ public class AccountingApiTests : ApiFixture
     {
         await StartCompanyAsync();
 
-        var created = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "C100", "", "Gulf Traders", null, null, null, null, 0, 30, null));
+        var created = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "C100", "", "Gulf Traders", null, null, null, null, 0, 30, null, null));
         Assert.Equal(HttpStatusCode.OK, created.StatusCode);
         var party = await ReadAsync<PartyDto>(created);
 
-        var duplicate = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "c100", "", "Other", null, null, null, null, 0, 30, null));
+        var duplicate = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "c100", "", "Other", null, null, null, null, 0, 30, null, null));
         Assert.Contains((await ReadAsync<ApiProblem>(duplicate)).Issues!, i => i is { Field: "code", Code: "party.code-duplicate" });
 
         // Without the customer, posting to receivables is refused with a problem the screen can show on that line.

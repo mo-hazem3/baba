@@ -17,6 +17,7 @@ public sealed class PartyStore(ICompanyDbContextFactory contexts) : IPartyStore
     {
         await using var context = contexts.Create();
         var used = await context.VoucherLines.Where(l => l.PartyId != null).Select(l => l.PartyId!.Value).Distinct().ToListAsync(cancellationToken);
+        used.AddRange(await context.Documents.Select(d => d.PartyId).Distinct().ToListAsync(cancellationToken));
         return used.ToHashSet();
     }
 

@@ -32,7 +32,7 @@ export const initialValues = (year = new Date().getFullYear()): Partial<WizardVa
   taxNumbers: {},
   address: '',
   chartTemplateKey: blankChart,
-  enabledModules: ['bank-cash', 'customers-suppliers'],
+  enabledModules: ['bank-cash', 'customers-suppliers', 'sales', 'purchases'],
 })
 
 /** The defaults a country brings: its currency, fiscal year start, first chart and no tax numbers yet. */

@@ -8,6 +8,9 @@ import { CostCentersPage } from './features/costcenters/CostCentersPage'
 import { BankPage } from './features/bank/BankPage'
 import { ExchangeRatesPage } from './features/rates/ExchangeRatesPage'
 import { ReconcilePage } from './features/bank/ReconcilePage'
+import { DocumentFormPage, DocumentOpenPage } from './features/trade/DocumentFormPage'
+import { DocumentListPage } from './features/trade/DocumentListPage'
+import { ProductsPage } from './features/trade/ProductsPage'
 import { PartiesPage } from './features/parties/PartiesPage'
 import { OpeningPage } from './features/vouchers/OpeningPage'
 import { YearEndPage } from './features/yearend/YearEndPage'
@@ -57,6 +60,11 @@ export function App() {
         <Route path="/accounts" element={<ChartOfAccountsPage />} />
         <Route path="/customers" element={<PartiesPage kind="Customer" />} />
         <Route path="/suppliers" element={<PartiesPage kind="Supplier" />} />
+        <Route path="/sales" element={<DocumentListPage side="sales" />} />
+        <Route path="/purchases" element={<DocumentListPage side="purchases" />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/documents/open/:id" element={<DocumentOpenPage />} />
+        <Route path="/documents/:segment/:id" element={<DocumentFormPage />} />
         <Route path="/cost-centers" element={<CostCentersPage />} />
         <Route path="/vouchers/payment" element={<VoucherListPage kind="Payment" />} />
         <Route path="/vouchers/receipt" element={<VoucherListPage kind="Receipt" />} />

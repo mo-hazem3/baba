@@ -92,7 +92,7 @@ public sealed class FiscalYearService(
         await files.BackupAsync(backup, cancellationToken);
 
         var closing = await voucherService.SaveAndPostSystemAsync(
-            new VoucherInput(VoucherKind.Closing, end, null, null, null, lines), cancellationToken);
+            new VoucherInput(VoucherKind.Closing, end, null, null, null, lines), cancellationToken: cancellationToken);
         for (var month = start; month <= end; month = month.AddMonths(1))
             await periods.SetLockedAsync(month, true, cancellationToken);
 

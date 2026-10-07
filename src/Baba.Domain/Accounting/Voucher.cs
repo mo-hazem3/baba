@@ -19,6 +19,18 @@ public enum VoucherKind
 
     /// <summary>قيد إقفال: made by closing a fiscal year, which moves the year's profit into retained earnings. Never edited by hand.</summary>
     Closing,
+
+    /// <summary>The ledger entries of a sales invoice, made and kept in step by the invoice itself. Never edited by hand.</summary>
+    SalesInvoice,
+
+    /// <summary>The ledger entries of a sales credit note. Made by the credit note itself.</summary>
+    SalesCreditNote,
+
+    /// <summary>The ledger entries of a purchase invoice. Made by the invoice itself.</summary>
+    PurchaseInvoice,
+
+    /// <summary>The ledger entries of a purchase debit note. Made by the debit note itself.</summary>
+    PurchaseDebitNote,
 }
 
 public enum VoucherStatus
@@ -55,6 +67,9 @@ public sealed class Voucher : Entity, ICompanyScoped, IAuditable
 
     /// <summary>The bank or cash account a payment is paid from, or a receipt is received into. Not used by journal vouchers.</summary>
     public Guid? CashAccountId { get; set; }
+
+    /// <summary>The sales or purchase document this voucher is the ledger side of. Such a voucher is changed only through its document.</summary>
+    public Guid? DocumentId { get; set; }
 
     /// <summary>A cheque number, bank reference or similar.</summary>
     public string? Reference { get; set; }
@@ -126,5 +141,13 @@ public static class VoucherKindExtensions
     public static bool PaysOut(this VoucherKind kind) => kind is VoucherKind.Payment or VoucherKind.Transfer;
 
     /// <summary>Lines are written as debits and credits that the user balances.</summary>
-    public static bool HasFreeLines(this VoucherKind kind) => kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing;
+    public static bool HasFreeLines(this VoucherKind kind) =>
+        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing || kind.IsDocument();
+
+    /// <summary>
+    /// The ledger side of an invoice or a credit or debit note. Its first line is the customer's or supplier's account for the whole
+    /// document, and that line absorbs the rounding when the other lines are converted to the company currency, so it balances exactly.
+    /// </summary>
+    public static bool IsDocument(this VoucherKind kind) =>
+        kind is VoucherKind.SalesInvoice or VoucherKind.SalesCreditNote or VoucherKind.PurchaseInvoice or VoucherKind.PurchaseDebitNote;
 }

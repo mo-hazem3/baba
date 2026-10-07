@@ -26,7 +26,8 @@ public sealed record PartyInput(
     string? TaxNumber,
     decimal CreditLimit,
     int PaymentTermsDays,
-    string? Notes);
+    string? Notes,
+    Guid? PriceListId = null);
 
 /// <summary>A party as the screens see it. <see cref="Balance"/> is what the party owes (customers) or is owed (suppliers), in the base currency.</summary>
 public sealed record PartyDto(
@@ -44,7 +45,8 @@ public sealed record PartyDto(
     bool IsActive,
     string? Notes,
     bool InUse,
-    decimal Balance);
+    decimal Balance,
+    Guid? PriceListId = null);
 
 /// <summary>
 /// Customers and suppliers (brief section 10.2). A party that has been used on a voucher can be switched off but not deleted, so
@@ -109,6 +111,7 @@ public sealed class PartyService(IPartyStore parties, ILedgerQuery ledger)
         party.CreditLimitScaled = changed.CreditLimitScaled;
         party.PaymentTermsDays = changed.PaymentTermsDays;
         party.Notes = changed.Notes;
+        party.PriceListId = changed.PriceListId;
         await parties.UpdateAsync(party, cancellationToken);
         return await GetAsync(id, cancellationToken);
     }
@@ -164,6 +167,7 @@ public sealed class PartyService(IPartyStore parties, ILedgerQuery ledger)
         party.CreditLimit = input.CreditLimit;
         party.PaymentTermsDays = input.PaymentTermsDays;
         party.Notes = Clean(input.Notes);
+        party.PriceListId = input.PriceListId == Guid.Empty ? null : input.PriceListId;
 
         if (party.NameAr.Length == 0) party.NameAr = party.NameEn;
         if (party.NameEn.Length == 0) party.NameEn = party.NameAr;
@@ -173,7 +177,7 @@ public sealed class PartyService(IPartyStore parties, ILedgerQuery ledger)
 
     private static PartyDto ToDto(Party p, bool inUse, decimal balance) => new(
         p.Id, p.Kind, p.Code, p.NameAr, p.NameEn, p.Phone, p.Email, p.Address, p.TaxNumber,
-        p.CreditLimit, p.PaymentTermsDays, p.IsActive, p.Notes, inUse, balance);
+        p.CreditLimit, p.PaymentTermsDays, p.IsActive, p.Notes, inUse, balance, p.PriceListId);
 
     private static void Throw(IReadOnlyCollection<PostingIssue> issues)
     {

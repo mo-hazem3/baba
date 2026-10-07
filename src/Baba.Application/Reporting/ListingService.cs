@@ -102,6 +102,10 @@ public sealed class ListingService(ChartOfAccountsService chart, VoucherService 
         VoucherKind.Transfer => ("Transfer voucher", "سند تحويل"),
         VoucherKind.Opening => ("Opening balances", "أرصدة افتتاحية"),
         VoucherKind.Closing => ("Closing entry", "قيد إقفال"),
+        VoucherKind.SalesInvoice => ("Sales invoice", "فاتورة مبيعات"),
+        VoucherKind.SalesCreditNote => ("Sales credit note", "إشعار دائن"),
+        VoucherKind.PurchaseInvoice => ("Purchase invoice", "فاتورة مشتريات"),
+        VoucherKind.PurchaseDebitNote => ("Purchase debit note", "إشعار مدين"),
         _ => ("Journal voucher", "قيد يومية"),
     };
 }

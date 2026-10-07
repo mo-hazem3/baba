@@ -26,6 +26,9 @@ public static class DependencyInjection
         services.AddSingleton<IPeriodStore, PeriodStore>();
         services.AddSingleton<IPartyStore, PartyStore>();
         services.AddSingleton<ICurrencyRateStore, CurrencyRateStore>();
+        services.AddSingleton<Baba.Application.Trade.IDocumentStore, Baba.Infrastructure.Trade.DocumentStore>();
+        services.AddSingleton<Baba.Application.Trade.IProductStore, Baba.Infrastructure.Trade.ProductStore>();
+        services.AddSingleton<Baba.Application.Trade.IPriceListStore, Baba.Infrastructure.Trade.PriceListStore>();
         services.AddSingleton<Baba.Application.Banking.IReconciliationStore, ReconciliationStore>();
         services.AddSingleton<Baba.Application.Importing.ITabularReader, TabularReader>();
         services.AddSingleton<ICostCenterStore, CostCenterStore>();

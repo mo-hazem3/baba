@@ -22,7 +22,10 @@
     "transfers": "Transfers",
     "opening": "Opening balances",
     "yearEnd": "Year-end",
-    "exchangeRates": "Exchange rates"
+    "exchangeRates": "Exchange rates",
+    "sales": "Sales",
+    "purchases": "Purchases",
+    "products": "Products and prices"
   },
   "header": {
     "language": "Language",
@@ -82,7 +85,9 @@
     "reconcile": "Type the date and the closing balance from the bank's statement, then tick every entry that appears on it. When the difference is zero, finish. Entries that are not on the statement yet stay unticked for next time. If you load the statement from a file, Baba suggests the matches.",
     "opening": "The opening balances are what the business had on the day you start using Baba: cash, bank, what customers owe, what you owe, and the owners' capital. Debits and credits must be equal. There is only one opening-balances entry, and you can correct it later.",
     "yearEnd": "At the end of a fiscal year you close it. Baba moves the year's profit or loss into retained earnings, locks the year's months, and saves a copy of your file first. If you made a mistake you can reopen the latest closed year.",
-    "rates": "For every foreign currency you use, enter how many units of your own currency it is worth, from a date on. A voucher or document in that currency starts from the latest rate on or before its date, and you can change it for that one document."
+    "rates": "For every foreign currency you use, enter how many units of your own currency it is worth, from a date on. A voucher or document in that currency starts from the latest rate on or before its date, and you can change it for that one document.",
+    "documents": "Quotes, orders, delivery notes, invoices, and credit or debit notes. Quotes and orders post nothing. An invoice posts to the customer or supplier and to revenue or expenses when you issue it, and you can change or delete it later. Use \"Turn this into\" to move to the next document without typing it again.",
+    "products": "Products and services you sell or buy, with their prices and accounts, and price lists that give chosen customers their own prices. Choosing a product on an invoice fills in its name, price and account."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -944,6 +949,171 @@
         "currency-is-base": "This is your own currency: its rate is always 1.",
         "date-required": "Choose a date.",
         "rate-invalid": "Enter a rate greater than zero."
+      }
+    }
+  },
+  "trade": {
+    "side": {
+      "sales": "Sales",
+      "purchases": "Purchases"
+    },
+    "title": {
+      "Quote": "Quote",
+      "SalesOrder": "Sales order",
+      "DeliveryNote": "Delivery note",
+      "SalesInvoice": "Sales invoice",
+      "SalesCreditNote": "Credit note",
+      "PurchaseOrder": "Purchase order",
+      "GoodsReceipt": "Goods receipt",
+      "PurchaseInvoice": "Purchase invoice",
+      "PurchaseDebitNote": "Debit note"
+    },
+    "plural": {
+      "Quote": "Quotes",
+      "SalesOrder": "Orders",
+      "DeliveryNote": "Delivery notes",
+      "SalesInvoice": "Invoices",
+      "SalesCreditNote": "Credit notes",
+      "PurchaseOrder": "Orders",
+      "GoodsReceipt": "Goods received",
+      "PurchaseInvoice": "Bills",
+      "PurchaseDebitNote": "Debit notes"
+    },
+    "new": {
+      "Quote": "New quote",
+      "SalesOrder": "New sales order",
+      "DeliveryNote": "New delivery note",
+      "SalesInvoice": "New invoice",
+      "SalesCreditNote": "New credit note",
+      "PurchaseOrder": "New purchase order",
+      "GoodsReceipt": "New goods receipt",
+      "PurchaseInvoice": "New bill",
+      "PurchaseDebitNote": "New debit note"
+    },
+    "emptyTitle": {
+      "Quote": "No quotes yet",
+      "SalesOrder": "No sales orders yet",
+      "DeliveryNote": "No delivery notes yet",
+      "SalesInvoice": "No invoices yet",
+      "SalesCreditNote": "No credit notes yet",
+      "PurchaseOrder": "No purchase orders yet",
+      "GoodsReceipt": "No goods receipts yet",
+      "PurchaseInvoice": "No bills yet",
+      "PurchaseDebitNote": "No debit notes yet"
+    },
+    "emptyBody": {
+      "Quote": "A quote is an offer to a customer. When they accept it, turn it into an order or an invoice with one click.",
+      "SalesOrder": "An order records what a customer has asked for. Turn it into a delivery note or an invoice when you are ready.",
+      "DeliveryNote": "A delivery note records what you handed over. Turn it into an invoice with one click.",
+      "SalesInvoice": "An invoice is what a customer owes you. It posts to their account and to your revenue by itself.",
+      "SalesCreditNote": "A credit note takes back some or all of an invoice. Open the invoice and choose Credit note.",
+      "PurchaseOrder": "An order records what you asked a supplier for. Turn it into a goods receipt or a bill when it arrives.",
+      "GoodsReceipt": "A goods receipt records what a supplier delivered. Turn it into a bill with one click.",
+      "PurchaseInvoice": "A bill is what you owe a supplier. It posts to their account and to your expenses by itself.",
+      "PurchaseDebitNote": "A debit note takes back some or all of a bill. Open the bill and choose Debit note."
+    },
+    "status": {
+      "Draft": "Draft",
+      "Issued": "Issued",
+      "Converted": "Converted"
+    },
+    "number": "Number",
+    "customer": "Customer",
+    "supplier": "Supplier",
+    "dueDate": "Due date",
+    "kindTabs": "Kind of document",
+    "search": "Search by number, reference or name",
+    "save": "Save",
+    "issue": "Issue",
+    "issueInvoice": "Issue and post",
+    "saved": "Saved.",
+    "savedDraft": "Saved as a draft.",
+    "issuedAs": "Issued as {{number}}.",
+    "converted": "Made a draft {{kind}}. Check it and issue it.",
+    "deleted": "The document was deleted.",
+    "deleteTitle": "Delete {{kind}} {{number}}?",
+    "deleteBody": "The document will be deleted. This cannot be undone.",
+    "deletePostedBody": "Its entries in the books are deleted with it. The change is recorded in the audit log.",
+    "convertedNote": "This document was turned into the next one, so it cannot be changed. Delete the next document to get it back.",
+    "postedNote": "This document is posted to the books. Saving changes it there too.",
+    "cannotSave": "It cannot be saved yet:",
+    "convertTo": "Turn this into:",
+    "saveFirst": "Save your changes first.",
+    "product": "Product",
+    "account": "Account",
+    "revenueAccount": "Revenue account",
+    "expenseAccount": "Expense account",
+    "quantity": "Quantity",
+    "unitPrice": "Price",
+    "discountPercent": "Discount %",
+    "subtotal": "Subtotal",
+    "documentDiscount": "Discount on the whole document",
+    "creditLimitNote": "Credit limit: {{limit}}",
+    "products": "Products and services",
+    "priceLists": "Price lists",
+    "productTabs": "Products or price lists",
+    "productsAndPrices": "Products and prices",
+    "newProduct": "New product",
+    "newPriceList": "New price list",
+    "editProduct": "Edit product",
+    "editPriceList": "Edit price list",
+    "productDeleted": "The product was deleted.",
+    "priceListDeleted": "The price list was deleted.",
+    "deleteProductTitle": "Delete {{name}}?",
+    "deletePriceListTitle": "Delete the price list {{name}}?",
+    "unit": "Unit",
+    "unitHelp": "For example piece, hour or kg.",
+    "salePrice": "Sale price",
+    "purchasePrice": "Purchase price",
+    "searchProducts": "Search by code or name",
+    "emptyProductsTitle": "No products yet",
+    "emptyProductsBody": "Add the things you sell or buy. Choosing one on an invoice fills in its name, price and account.",
+    "emptyPriceListsTitle": "No price lists yet",
+    "emptyPriceListsBody": "A price list gives chosen customers their own prices. Give it to a customer on their page.",
+    "pricedProducts": "Products with a price",
+    "productAccountHelp": "Used when a document line has no account of its own.",
+    "priceListCurrencyHelp": "The list is used on documents in this currency.",
+    "addPriceLine": "+ Add a product",
+    "priceList": "Price list",
+    "priceListHelp": "This customer gets the prices of this list on documents in its currency.",
+    "issues": {
+      "document": {
+        "party-required": "Choose the customer or supplier.",
+        "party-wrong-kind": "This is not the right kind of customer or supplier for this document.",
+        "party-inactive": "This customer or supplier is switched off.",
+        "discount-invalid": "The discount must be between 0 and 100.",
+        "kind-cannot-change": "A document cannot change into another kind. Use Turn this into.",
+        "not-draft": "Only a draft can be saved as a draft.",
+        "converted": "This document was already turned into another one.",
+        "not-issued": "Issue the document before turning it into another one.",
+        "cannot-convert": "This document cannot be turned into that.",
+        "total-not-positive": "The total must be more than zero.",
+        "control-account-missing": "There is no active customers or suppliers account to post to. Check the chart of accounts."
+      },
+      "line": {
+        "product-unknown": "That product no longer exists.",
+        "quantity-invalid": "Enter a quantity above zero.",
+        "price-negative": "The price cannot be negative.",
+        "discount-invalid": "The discount must be between 0 and 100.",
+        "cost-center-unknown": "That cost center no longer exists.",
+        "account-invalid": "Choose an account that is active and takes entries.",
+        "account-required": "Choose the account this line posts to."
+      },
+      "product": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another product already uses this code.",
+        "name-required": "Enter a name.",
+        "price-negative": "A price cannot be negative.",
+        "account-invalid": "Choose an account that is active and takes entries.",
+        "in-use": "This product is on a document, so it cannot be deleted. Switch it off instead."
+      },
+      "price-list": {
+        "name-required": "Enter a name.",
+        "currency-unknown": "That currency is not known.",
+        "product-unknown": "A product on the list no longer exists.",
+        "product-twice": "A product can be on the list only once.",
+        "price-negative": "A price cannot be negative.",
+        "in-use": "A customer uses this price list. Choose another for them first, or switch it off."
       }
     }
   }

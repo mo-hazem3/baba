@@ -16,6 +16,8 @@ import {
   useListCountries,
   useListCurrencies,
   useListParties,
+  useListPriceLists,
+  useListProducts,
   useListRecentFiles,
 } from './generated/baba'
 import type { ListPartiesParams } from './generated/model'
@@ -59,6 +61,10 @@ export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck 
 export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
 
 export const useParties = (params?: ListPartiesParams) => useListParties(params, { query: { select: (r) => r.data } })
+
+export const useProducts = () => useListProducts({ query: { select: (r) => r.data } })
+
+export const usePriceLists = () => useListPriceLists({ query: { select: (r) => r.data } })
 
 export const useExchangeRates = () => useListExchangeRates(undefined, { query: { select: (r) => r.data } })
 

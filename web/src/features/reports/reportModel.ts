@@ -69,7 +69,11 @@ export const drillPath = (link: ReportLink): string => {
   return `/reports/statement-of-account?${query.toString()}`
 }
 
-export const voucherPath = (kind: VoucherKind, id: string): string => `/vouchers/${kind.toLowerCase()}/${id}`
+const documentVoucherKinds: readonly VoucherKind[] = ['SalesInvoice', 'SalesCreditNote', 'PurchaseInvoice', 'PurchaseDebitNote']
+
+/** Where a voucher opens. An invoice or note is shown as the document it was made from. */
+export const voucherPath = (kind: VoucherKind, id: string): string =>
+  documentVoucherKinds.includes(kind) ? `/vouchers/open/${id}` : `/vouchers/${kind.toLowerCase()}/${id}`
 
 export const reportKeys = [
   'trial-balance',

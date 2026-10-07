@@ -2,6 +2,7 @@ using System.Text.Json;
 using Baba.Application.Abstractions;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Trade;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -33,6 +34,11 @@ public sealed class CompanyDbContext(
     public DbSet<ReconciledEntry> ReconciledEntries => Set<ReconciledEntry>();
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<PriceList> PriceLists => Set<PriceList>();
+    public DbSet<PriceListLine> PriceListLines => Set<PriceListLine>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -47,6 +53,8 @@ public sealed class CompanyDbContext(
         configuration.Properties<VoucherKind>().HaveConversion<string>();
         configuration.Properties<VoucherStatus>().HaveConversion<string>();
         configuration.Properties<PartyKind>().HaveConversion<string>();
+        configuration.Properties<DocumentKind>().HaveConversion<string>();
+        configuration.Properties<DocumentStatus>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
 
@@ -103,6 +111,57 @@ public sealed class CompanyDbContext(
             costCenter.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
             costCenter.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
         });
+
+        model.Entity<Product>(product =>
+        {
+            product.Ignore(p => p.SalePrice).Ignore(p => p.PurchasePrice);
+            product.HasIndex(p => new { p.CompanyId, p.Code }).IsUnique();
+            product.HasOne<Account>().WithMany().HasForeignKey(p => p.SalesAccountId).OnDelete(DeleteBehavior.Restrict);
+            product.HasOne<Account>().WithMany().HasForeignKey(p => p.PurchaseAccountId).OnDelete(DeleteBehavior.Restrict);
+            product.HasQueryFilter(p => p.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PriceList>(list =>
+        {
+            list.HasMany(l => l.Lines).WithOne().HasForeignKey(l => l.PriceListId).OnDelete(DeleteBehavior.Cascade);
+            list.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<PriceListLine>(line =>
+        {
+            line.Ignore(l => l.Price);
+            line.HasOne<Product>().WithMany().HasForeignKey(l => l.ProductId).OnDelete(DeleteBehavior.Restrict);
+            line.HasIndex(l => new { l.PriceListId, l.ProductId }).IsUnique();
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<Party>().HasOne<PriceList>().WithMany().HasForeignKey(p => p.PriceListId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<Document>(document =>
+        {
+            document.Ignore(d => d.ExchangeRate).Ignore(d => d.DiscountPercent);
+            document.HasMany(d => d.Lines).WithOne().HasForeignKey(l => l.DocumentId).OnDelete(DeleteBehavior.Cascade);
+            document.HasOne<Party>().WithMany().HasForeignKey(d => d.PartyId).OnDelete(DeleteBehavior.Restrict);
+            // A number is unique once given; drafts have none. The links to other documents and to the voucher are plain ids.
+            document.HasIndex(d => new { d.CompanyId, d.Number }).IsUnique().HasFilter("\"Number\" IS NOT NULL");
+            document.HasIndex(d => d.Date);
+            document.HasIndex(d => d.PartyId);
+            document.HasIndex(d => d.VoucherId);
+            document.HasQueryFilter(d => d.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<DocumentLine>(line =>
+        {
+            line.Ignore(l => l.Quantity).Ignore(l => l.UnitPrice).Ignore(l => l.DiscountPercent);
+            line.HasOne<Product>().WithMany().HasForeignKey(l => l.ProductId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<CostCenter>().WithMany().HasForeignKey(l => l.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            line.HasIndex(l => new { l.DocumentId, l.LineNumber });
+            line.HasIndex(l => l.ProductId);
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<Voucher>().HasIndex(v => v.DocumentId);
 
         model.Entity<CurrencyRate>(rate =>
         {

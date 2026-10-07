@@ -40,6 +40,10 @@ public static class VoucherPrintBuilder
             VoucherKind.Transfer => ("Transfer voucher — money moved between accounts", "سند تحويل", "Transferred from", "محوَّل من"),
             VoucherKind.Opening => ("Opening balances", "أرصدة افتتاحية", "", ""),
             VoucherKind.Closing => ("Year-end closing entry", "قيد إقفال السنة المالية", "", ""),
+            VoucherKind.SalesInvoice => ("Sales invoice entry", "قيد فاتورة مبيعات", "", ""),
+            VoucherKind.SalesCreditNote => ("Sales credit note entry", "قيد إشعار دائن", "", ""),
+            VoucherKind.PurchaseInvoice => ("Purchase invoice entry", "قيد فاتورة مشتريات", "", ""),
+            VoucherKind.PurchaseDebitNote => ("Purchase debit note entry", "قيد إشعار مدين", "", ""),
             _ => ("Journal voucher", "قيد يومية", "", ""),
         };
         var numberText = voucher.Number is null ? L("Draft", "مسودة") : PrintHtml.E(PrintHtml.Digits(voucher.Number, layout, ai));

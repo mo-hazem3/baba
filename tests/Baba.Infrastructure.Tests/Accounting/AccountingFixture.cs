@@ -44,7 +44,11 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Guid Supplier,
         Baba.Application.Banking.BankService Bank,
         FiscalYearService Years,
-        ExchangeRateService Rates)
+        ExchangeRateService Rates,
+        Baba.Application.Trade.DocumentService Trade,
+        Baba.Application.Trade.ProductService Products,
+        Baba.Application.Trade.PriceListService PriceLists,
+        Baba.Application.Trade.PricingService Pricing)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -98,8 +102,13 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var ledger = new LedgerQuery(files);
         var reports = new Baba.Application.Reporting.ReportService(accounts, partyStore, costCenterStore, ledger, files);
         var parties = new PartyService(partyStore, ledger);
-        var customer = await parties.CreateAsync(new PartyInput(PartyKind.Customer, "C001", "العميل الأول", "First Customer", null, null, null, null, 0, 30, null));
-        var supplier = await parties.CreateAsync(new PartyInput(PartyKind.Supplier, "S001", "المورد الأول", "First Supplier", null, null, null, null, 0, 30, null));
+        var customer = await parties.CreateAsync(new PartyInput(PartyKind.Customer, "C001", "العميل الأول", "First Customer", null, null, null, null, 0, 30, null, null));
+        var supplier = await parties.CreateAsync(new PartyInput(PartyKind.Supplier, "S001", "المورد الأول", "First Supplier", null, null, null, null, 0, 30, null, null));
+
+        var documentStore = new Trade.DocumentStore(files);
+        var productStore = new Trade.ProductStore(files);
+        var priceListStore = new Trade.PriceListStore(files);
+        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, costCenterStore, rateStore, vouchers, files, Clock);
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();
@@ -114,7 +123,11 @@ public abstract class AccountingFixture : CompanyFilesFixture
             documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id,
             new Baba.Application.Banking.BankService(accounts, reconciliationStore, ledger, new Baba.Infrastructure.Printing.TabularReader(), Clock),
             new FiscalYearService(accounts, ledger, new VoucherStore(files), new PeriodStore(files), vouchers, files, Clock),
-            new ExchangeRateService(rateStore, files));
+            new ExchangeRateService(rateStore, files),
+            trade,
+            new Baba.Application.Trade.ProductService(productStore, documentStore, accounts),
+            new Baba.Application.Trade.PriceListService(priceListStore, productStore, files),
+            new Baba.Application.Trade.PricingService(productStore, priceListStore, partyStore, files));
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

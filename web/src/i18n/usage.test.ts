@@ -61,7 +61,16 @@ describe('translation keys used in the code', () => {
     const restoreCodes = ['restore.backup-missing', 'restore.destination-exists', 'restore.same-file', 'restore.backup-is-open']
     const partyCodes = ['party.code-required', 'party.code-duplicate', 'party.name-required', 'party.credit-limit-negative', 'party.terms-invalid', 'party.kind-in-use', 'party.in-use']
     const costCenterCodes = ['cost-center.code-required', 'cost-center.code-duplicate', 'cost-center.name-required', 'cost-center.in-use']
+    const tradeCodes = [
+      'document.party-required', 'document.party-wrong-kind', 'document.party-inactive', 'document.discount-invalid', 'document.kind-cannot-change',
+      'document.not-draft', 'document.converted', 'document.not-issued', 'document.cannot-convert', 'document.total-not-positive',
+      'document.control-account-missing', 'line.product-unknown', 'line.quantity-invalid', 'line.price-negative', 'line.discount-invalid',
+      'line.cost-center-unknown', 'line.account-invalid', 'line.account-required', 'product.code-required', 'product.code-duplicate',
+      'product.name-required', 'product.price-negative', 'product.account-invalid', 'product.in-use', 'price-list.name-required',
+      'price-list.currency-unknown', 'price-list.product-unknown', 'price-list.product-twice', 'price-list.price-negative', 'price-list.in-use',
+    ]
     const missing = [
+      ...tradeCodes.map((code) => `trade.issues.${code}`),
       ...accountCodes.map((code) => `accounts.issues.${code}`),
       ...voucherCodes.map((code) => `voucher.issues.${code}`),
       ...bankCodes.map((code) => `bank.issues.${code}`),
@@ -85,7 +94,8 @@ describe('translation keys used in the code', () => {
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products'].map((h) => `help.${h}`),
+      ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])
   })

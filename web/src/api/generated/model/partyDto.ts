@@ -27,4 +27,6 @@ export interface PartyDto {
   notes: string | null;
   inUse: boolean;
   balance: number;
+  /** @nullable */
+  priceListId?: string | null;
 }

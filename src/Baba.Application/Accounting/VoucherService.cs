@@ -88,11 +88,15 @@ public sealed class VoucherService(
         return await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
     }
 
-    /// <summary>For the year-end close only: saves and posts a voucher of a kind that people cannot make by hand.</summary>
-    internal async Task<VoucherDto> SaveAndPostSystemAsync(VoucherInput input, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// For Baba's own vouchers (the year-end close, and the ledger side of invoices and notes): saves and posts a voucher of a kind that
+    /// people cannot make by hand, new or changing the one with this id.
+    /// </summary>
+    internal async Task<VoucherDto> SaveAndPostSystemAsync(VoucherInput input, Guid? id = null, Guid? documentId = null, CancellationToken cancellationToken = default)
     {
-        var (voucher, context, wasPosted, oldDate) = await PrepareAsync(null, input, cancellationToken);
-        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, null, cancellationToken);
+        var (voucher, context, wasPosted, oldDate) = await PrepareAsync(id, input, cancellationToken);
+        voucher.DocumentId = documentId ?? voucher.DocumentId;
+        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
     }
 
     /// <summary>For the year-end close only: deletes a voucher of a kind that people cannot delete by hand.</summary>
@@ -105,10 +109,10 @@ public sealed class VoucherService(
         await vouchers.DeleteAsync(id, cancellationToken);
     }
 
-    /// <summary>The closing entry of a year is made by closing the year, so it cannot be saved or deleted like other vouchers.</summary>
+    /// <summary>The closing entry of a year is made by closing the year, and an invoice's entries by the invoice, so they cannot be saved or deleted like other vouchers.</summary>
     private static void RefuseSystemKind(VoucherKind kind)
     {
-        if (kind == VoucherKind.Closing)
+        if (kind == VoucherKind.Closing || kind.IsDocument())
             throw new ValidationException([new ValidationIssue("kind", "voucher.system-generated")]);
     }
 
@@ -261,5 +265,5 @@ public sealed class VoucherService(
         v.Id, v.Kind, v.Number, v.Date, v.Status, v.CurrencyCode, v.CashAccountId, v.Reference, v.Memo,
         v.Lines.OrderBy(l => l.LineNumber).Select(l => new VoucherLineDto(l.Id, l.AccountId, l.Description, l.Debit, l.Credit, l.PartyId, l.CostCenterId)).ToList(),
         v.Kind == VoucherKind.Receipt ? v.TotalCredit : v.TotalDebit,
-        v.PostedAt, v.ExchangeRate);
+        v.PostedAt, v.ExchangeRate, v.DocumentId);
 }

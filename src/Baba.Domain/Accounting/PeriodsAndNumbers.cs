@@ -51,6 +51,10 @@ public static class VoucherNumber
         VoucherKind.Transfer => "TV",
         VoucherKind.Opening => "OB",
         VoucherKind.Closing => "CL",
+        VoucherKind.SalesInvoice => "SI",
+        VoucherKind.SalesCreditNote => "SC",
+        VoucherKind.PurchaseInvoice => "PI",
+        VoucherKind.PurchaseDebitNote => "PD",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 

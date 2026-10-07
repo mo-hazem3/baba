@@ -96,7 +96,7 @@ public static class PostingEngine
         {
             if (voucher.Lines.Sum(l => l.DebitScaled) != voucher.Lines.Sum(l => l.CreditScaled))
                 issues.Add(new("balance", "balance.unbalanced"));
-            else if (issues.Count == 0 && BaseTotals(voucher, context) is var (debit, credit) && debit != credit)
+            else if (!voucher.Kind.IsDocument() && issues.Count == 0 && BaseTotals(voucher, context) is var (debit, credit) && debit != credit)
                 issues.Add(new("balance", "balance.unbalanced-base"));
         }
 
@@ -106,6 +106,9 @@ public static class PostingEngine
     /// <summary>Makes the ledger entries for a voucher that passed <see cref="ValidateForPosting"/>.</summary>
     public static IReadOnlyList<LedgerEntry> GenerateEntries(Voucher voucher, PostingContext context)
     {
+        if (voucher.Kind.IsDocument())
+            return GenerateDocumentEntries(voucher, context);
+
         var entries = new List<LedgerEntry>();
         var rate = voucher.ExchangeRate;
         long totalScaled = 0;
@@ -136,6 +139,35 @@ public static class PostingEngine
             entries.Add(LedgerEntry.Create(
                 voucher.CompanyId, voucher.Id, voucher.Date, voucher.CashAccountId!.Value, voucher.Memo, entries.Count,
                 totalScaled, 0, voucher.CurrencyCode, voucher.ExchangeRateScaled, totalBaseScaled, 0));
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    /// An invoice or note: line one is the customer's or supplier's account for the whole document. The other lines are converted to the
+    /// company currency one by one, and line one takes their total, so the entries balance to the last fils however the rounding falls.
+    /// </summary>
+    private static IReadOnlyList<LedgerEntry> GenerateDocumentEntries(Voucher voucher, PostingContext context)
+    {
+        var rate = voucher.ExchangeRate;
+        var ordered = voucher.Lines.OrderBy(l => l.LineNumber).ToList();
+        var others = ordered.Skip(1).Select(l => (Line: l, BaseDebit: ToBase(l.DebitScaled, rate, context.BaseCurrency), BaseCredit: ToBase(l.CreditScaled, rate, context.BaseCurrency))).ToList();
+        var net = others.Sum(o => o.BaseCredit) - others.Sum(o => o.BaseDebit); // what line one must debit (positive) or credit (negative)
+
+        var entries = new List<LedgerEntry>();
+        var control = ordered[0];
+        entries.Add(LedgerEntry.Create(
+            voucher.CompanyId, voucher.Id, voucher.Date, control.AccountId, control.Description ?? voucher.Memo, 0,
+            control.DebitScaled, control.CreditScaled, voucher.CurrencyCode, voucher.ExchangeRateScaled,
+            net > 0 ? net : 0, net < 0 ? -net : 0, control.PartyId, control.CostCenterId));
+
+        foreach (var (line, baseDebit, baseCredit) in others)
+        {
+            entries.Add(LedgerEntry.Create(
+                voucher.CompanyId, voucher.Id, voucher.Date, line.AccountId, line.Description ?? voucher.Memo, entries.Count,
+                line.DebitScaled, line.CreditScaled, voucher.CurrencyCode, voucher.ExchangeRateScaled,
+                baseDebit, baseCredit, line.PartyId, line.CostCenterId));
         }
 
         return entries;
