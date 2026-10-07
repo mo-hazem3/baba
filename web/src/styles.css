@@ -160,6 +160,20 @@ body {
   min-inline-size: 14em;
 }
 
+.form-row .ant-form-item.grow {
+  flex: 1 1 16em;
+}
+
+.static-field {
+  display: inline-block;
+  padding-block: 4px;
+}
+
+.problem-list {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+
 .vertical-options {
   display: flex;
   flex-direction: column;

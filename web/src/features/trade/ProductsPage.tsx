@@ -1,4 +1,4 @@
-import { Alert, App, Button, Form, Input, InputNumber, Modal, Segmented, Select, Space, Table, Tag } from 'antd'
+import { Alert, App, Button, Form, Input, InputNumber, Modal, Segmented, Select, Space, Switch, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router'
 import { createPriceList, createProduct, deletePriceList, deleteProduct, setPriceListActive, setProductActive, updatePriceList, updateProduct } from '../../api/generated/baba'
 import type { PriceListDto, PriceListInput, ProductDto, ProductInput } from '../../api/generated/model'
 import { ApiError } from '../../api/http'
-import { refreshBooks, useAccounts, useCurrencies, useCurrentCompany, usePriceLists, useProducts, useTaxCodes } from '../../api/hooks'
+import { refreshBooks, useAccounts, useCurrencies, useCurrentCompany, useModules, usePriceLists, useProducts, useTaxCodes } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
 import { errorMessage } from '../../layout/errors'
@@ -69,7 +69,7 @@ export function ProductsPage() {
         onClose={() => setImporting(false)}
         title={t('import.productsTitle')}
         intro={t('import.productsIntro')}
-        columns="Code, Name, Name (Arabic), Unit, Sale price, Purchase price, Revenue account, Expense account, Tax code"
+        columns="Code, Name, Name (Arabic), Unit, Sale price, Purchase price, Revenue account, Expense account, Tax code, Stock item, Barcode, Reorder level"
         url="/api/import/products"
         templateKey="products"
       />
@@ -109,6 +109,7 @@ function ProductsTable({ onEdit }: { onEdit: (product: ProductDto) => void }) {
     { title: t('parties.code'), dataIndex: 'code', width: 120, render: (code: string) => <span dir="ltr">{code}</span> },
     { title: t('parties.name'), key: 'name', render: (_: unknown, p) => <span className={p.isActive ? '' : 'muted'}>{itemName(p, settings.language)}</span> },
     { title: t('trade.unit'), dataIndex: 'unit', width: 100 },
+    { title: t('inventory.stockItem'), key: 'stock', width: 100, render: (_: unknown, p) => (p.isStockItem ? <Tag color="blue">{t('inventory.stockTag')}</Tag> : null) },
     { title: t('trade.salePrice'), key: 'sale', width: 140, align: 'end', render: (_: unknown, p) => <AmountText value={p.salePrice} minorUnits={minorUnits} /> },
     { title: t('trade.purchasePrice'), key: 'purchase', width: 140, align: 'end', render: (_: unknown, p) => <AmountText value={p.purchasePrice} minorUnits={minorUnits} /> },
     { title: t('parties.status'), key: 'status', width: 100, render: (_: unknown, p) => (p.isActive ? t('parties.active') : <Tag>{t('parties.inactive')}</Tag>) },
@@ -241,6 +242,11 @@ interface ProductValues {
   salesAccountId?: string
   purchaseAccountId?: string
   taxCodeId?: string
+  isStockItem?: boolean
+  barcode?: string
+  reorderLevel?: number
+  inventoryAccountId?: string
+  costOfSalesAccountId?: string
 }
 
 const productFieldOf: Record<string, keyof ProductValues> = {
@@ -251,6 +257,11 @@ const productFieldOf: Record<string, keyof ProductValues> = {
   salesAccount: 'salesAccountId',
   purchaseAccount: 'purchaseAccountId',
   taxCode: 'taxCodeId',
+  isStockItem: 'isStockItem',
+  barcode: 'barcode',
+  reorderLevel: 'reorderLevel',
+  inventoryAccount: 'inventoryAccountId',
+  costOfSalesAccount: 'costOfSalesAccountId',
 }
 
 function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?: ProductDto; onClose: () => void }) {
@@ -263,6 +274,8 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
   const company = useCurrentCompany()
   const currencies = useCurrencies()
   const minorUnits = currencies.data?.find((c) => c.code === company.data?.baseCurrencyCode)?.minorUnits ?? 2
+  const inventoryOn = useModules().has('inventory')
+  const isStockItem = Form.useWatch('isStockItem', form)
 
   useEffect(() => {
     if (!open) return
@@ -280,8 +293,13 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
             salesAccountId: editing.salesAccountId ?? undefined,
             purchaseAccountId: editing.purchaseAccountId ?? undefined,
             taxCodeId: editing.taxCodeId ?? undefined,
+            isStockItem: editing.isStockItem ?? false,
+            barcode: editing.barcode ?? '',
+            reorderLevel: editing.reorderLevel ?? 0,
+            inventoryAccountId: editing.inventoryAccountId ?? undefined,
+            costOfSalesAccountId: editing.costOfSalesAccountId ?? undefined,
           }
-        : { code: `P${String(next).padStart(3, '0')}`, nameEn: '', nameAr: '', unit: '', salePrice: 0, purchasePrice: 0 },
+        : { code: `P${String(next).padStart(3, '0')}`, nameEn: '', nameAr: '', unit: '', salePrice: 0, purchasePrice: 0, isStockItem: false, barcode: '', reorderLevel: 0 },
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the suggested code is worked out when the window opens
   }, [open, editing, form])
@@ -298,6 +316,11 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
         salesAccountId: values.salesAccountId ?? null,
         purchaseAccountId: values.purchaseAccountId ?? null,
         taxCodeId: values.taxCodeId ?? null,
+        isStockItem: values.isStockItem ?? false,
+        barcode: values.barcode?.trim() || null,
+        reorderLevel: values.reorderLevel ?? 0,
+        inventoryAccountId: values.isStockItem ? (values.inventoryAccountId ?? null) : null,
+        costOfSalesAccountId: values.isStockItem ? (values.costOfSalesAccountId ?? null) : null,
       }
       return editing ? updateProduct(editing.id, input) : createProduct(input)
     },
@@ -357,6 +380,31 @@ function ProductFormModal({ open, editing, onClose }: { open: boolean; editing?:
         <Form.Item name="purchaseAccountId" label={t('trade.expenseAccount')}>
           <AccountSelect value={undefined} onChange={() => undefined} accounts={accounts.filter((a) => a.type === 'Expense' || a.type === 'Asset')} ariaLabel={t('trade.expenseAccount')} />
         </Form.Item>
+        {(inventoryOn || editing?.isStockItem) && (
+          <>
+            <Form.Item name="isStockItem" label={t('inventory.stockItem')} valuePropName="checked" extra={t('inventory.stockItemHelp')}>
+              <Switch aria-label={t('inventory.stockItem')} />
+            </Form.Item>
+            {isStockItem && (
+              <>
+                <div className="form-row">
+                  <Form.Item name="barcode" label={t('inventory.barcode')}>
+                    <Input dir="ltr" />
+                  </Form.Item>
+                  <Form.Item name="reorderLevel" label={t('inventory.reorderLevel')} extra={t('inventory.reorderLevelHelp')}>
+                    <InputNumber min={0} precision={4} controls={false} className="amount-input" />
+                  </Form.Item>
+                </div>
+                <Form.Item name="inventoryAccountId" label={t('inventory.stockAccount')} extra={t('inventory.stockAccountHelp')}>
+                  <AccountSelect value={undefined} onChange={() => undefined} accounts={accounts.filter((a) => a.type === 'Asset')} ariaLabel={t('inventory.stockAccount')} />
+                </Form.Item>
+                <Form.Item name="costOfSalesAccountId" label={t('inventory.costOfSalesAccount')} extra={t('inventory.costOfSalesAccountHelp')}>
+                  <AccountSelect value={undefined} onChange={() => undefined} accounts={accounts.filter((a) => a.type === 'Expense')} ariaLabel={t('inventory.costOfSalesAccount')} />
+                </Form.Item>
+              </>
+            )}
+          </>
+        )}
       </Form>
     </Modal>
   )

@@ -1,7 +1,7 @@
 import { Select } from 'antd'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { CostCenterDto, PartyDto } from '../../api/generated/model'
+import type { CostCenterDto, PartyDto, ProductDto, WarehouseDto } from '../../api/generated/model'
 import { useSettings } from '../../settings/SettingsContext'
 import type { Language } from '../../settings/settings'
 import { matchesSearch, normalizeArabic } from '../../utils/arabic'
@@ -91,4 +91,12 @@ export function PartySelect({
 
 export function CostCenterSelect({ costCenters, ...props }: Omit<LookupProps, 'items'> & { costCenters: readonly CostCenterDto[] }) {
   return <LookupSelect {...props} items={costCenters} />
+}
+
+export function WarehouseSelect({ warehouses, ...props }: Omit<LookupProps, 'items'> & { warehouses: readonly WarehouseDto[] }) {
+  return <LookupSelect {...props} items={warehouses} />
+}
+
+export function ProductSelect({ products, ...props }: Omit<LookupProps, 'items'> & { products: readonly ProductDto[] }) {
+  return <LookupSelect {...props} items={products} />
 }

@@ -27,7 +27,9 @@
     "purchases": "Purchases",
     "products": "Products and prices",
     "recurring": "Recurring",
-    "taxCodes": "Tax codes"
+    "taxCodes": "Tax codes",
+    "stock": "Stock",
+    "warehouses": "Warehouses"
   },
   "header": {
     "language": "Language",
@@ -91,7 +93,9 @@
     "documents": "Quotes, orders, delivery notes, invoices, and credit or debit notes. Quotes and orders post nothing. An invoice posts to the customer or supplier and to revenue or expenses when you issue it, and you can change or delete it later. Use \"Turn this into\" to move to the next document without typing it again.",
     "products": "Products and services you sell or buy, with their prices and accounts, and price lists that give chosen customers their own prices. Choosing a product on an invoice fills in its name, price and account.",
     "recurring": "Invoices and entries that Baba makes again by itself, such as monthly rent. Open an invoice or a journal entry and choose Repeat to set one up. When the app is opened, whatever came due is made: as drafts to check, or issued straight away if you chose that.",
-    "taxCodes": "The tax codes you can put on invoice lines. The codes of your country come ready made with their rates; you choose which accounts they post to, which one new lines start with, and you can add your own. A line keeps the rate it was written with, so changing a code never changes an old invoice."
+    "taxCodes": "The tax codes you can put on invoice lines. The codes of your country come ready made with their rates; you choose which accounts they post to, which one new lines start with, and you can add your own. A line keeps the rate it was written with, so changing a code never changes an old invoice.",
+    "stock": "What is in stock and what it is worth. Opening stock is what you already had when you started. A stock count compares what you counted with what is recorded and books only the difference. A transfer moves stock between warehouses without changing its value. Sales and purchase invoices move stock by themselves.",
+    "warehouses": "Warehouses are the places where you keep stock. Every movement of stock names one. One warehouse is the default, and new documents use it unless you choose another."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -244,7 +248,9 @@
     "overdueOpenInvoices": "See the invoices",
     "overdueOpenBills": "See the bills",
     "overdueInvoices": "Invoices past their due date: {{count}}, {{amount}} {{currency}} unpaid.",
-    "overdueBills": "Supplier bills past their due date: {{count}}, {{amount}} {{currency}} unpaid."
+    "overdueBills": "Supplier bills past their due date: {{count}}, {{amount}} {{currency}} unpaid.",
+    "lowStock": "{{count}} products are at or below their reorder level.",
+    "lowStockOpen": "See what to reorder"
   },
   "settings": {
     "title": "Settings",
@@ -392,7 +398,10 @@
       "RetainedEarnings": "Retained earnings",
       "ExchangeDifference": "Exchange differences",
       "TaxPayable": "Tax payable (collected on sales)",
-      "TaxReceivable": "Tax receivable (paid on purchases)"
+      "TaxReceivable": "Tax receivable (paid on purchases)",
+      "Inventory": "Stock (inventory)",
+      "CostOfSales": "Cost of sales",
+      "InventoryAdjustment": "Stock gains and losses"
     },
     "issues": {
       "account": {
@@ -582,7 +591,10 @@
       "aging-receivable": "Customers aging",
       "aging-payable": "Suppliers aging",
       "cost-centers": "Cost centers",
-      "tax-return": "Tax return"
+      "tax-return": "Tax return",
+      "stock-valuation": "Stock valuation",
+      "stock-movements": "Stock movements",
+      "stock-reorder": "Products to reorder"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -595,7 +607,10 @@
       "aging-receivable": "Who owes you, and for how long it has been overdue.",
       "aging-payable": "Whom you owe, and for how long it has been overdue.",
       "cost-centers": "Revenue, expenses and profit of each cost center.",
-      "tax-return": "What was sold and bought under each tax code in a period, and the tax to pay or claim back."
+      "tax-return": "What was sold and bought under each tax code in a period, and the tax to pay or claim back.",
+      "stock-valuation": "What is in stock on a day and what it is worth. Checked against the stock accounts of the ledger.",
+      "stock-movements": "Every movement of stock in a period: what came in, what went out, and at what value.",
+      "stock-reorder": "Products whose stock has fallen to their reorder level."
     },
     "presets": {
       "thisMonth": "This month",
@@ -963,7 +978,16 @@
       "product": {
         "price-invalid": "The price is not a number.",
         "account-unknown": "That account code does not exist or does not take entries.",
-        "tax-code-unknown": "That tax code does not exist."
+        "tax-code-unknown": "That tax code does not exist.",
+        "reorder-invalid": "The reorder level must be a number."
+      },
+      "opening-stock": {
+        "product-column-missing": "The file needs a column with the product code (or the barcode).",
+        "product-unknown": "No product has this code or barcode.",
+        "product-not-stock": "This product is not a stock item. Switch it on in the product first.",
+        "warehouse-unknown": "No active warehouse has this code.",
+        "quantity-invalid": "The quantity must be a number above zero.",
+        "cost-invalid": "The cost must be a number, zero or more."
       }
     },
     "productsButton": "Import…",
@@ -1139,7 +1163,8 @@
         "control-account-missing": "There is no active customers or suppliers account to post to. Check the chart of accounts.",
         "has-payments": "This invoice has a payment against it. Delete the receipt or payment first.",
         "has-notes": "This invoice has a credit or debit note. Delete the note first.",
-        "immutable": "Under the e-invoicing rules of your country an issued invoice cannot be changed or deleted. Make a credit note instead."
+        "immutable": "Under the e-invoicing rules of your country an issued invoice cannot be changed or deleted. Make a credit note instead.",
+        "warehouse-invalid": "Choose an active warehouse."
       },
       "line": {
         "product-unknown": "That product no longer exists.",
@@ -1161,7 +1186,10 @@
         "price-negative": "A price cannot be negative.",
         "account-invalid": "Choose an account that is active and takes entries.",
         "in-use": "This product is on a document, so it cannot be deleted. Switch it off instead.",
-        "tax-code-unknown": "That tax code no longer exists."
+        "tax-code-unknown": "That tax code no longer exists.",
+        "barcode-duplicate": "Another product already has this barcode.",
+        "reorder-negative": "The reorder level cannot be negative.",
+        "has-stock": "Stock has been recorded for this product, so it must stay a stock item."
       },
       "price-list": {
         "name-required": "Enter a name.",
@@ -1181,6 +1209,13 @@
       },
       "fx": {
         "account-required": "Add an active exchange-differences account to the chart of accounts first, so the gain or loss can be booked."
+      },
+      "stock": {
+        "insufficient": "There is not enough stock for this quantity.",
+        "would-leave-later-sales-short": "Later sales need this stock. Change or delete them first.",
+        "locked-period": "This would change the cost of sales in a month that is locked.",
+        "accounts-missing": "The stock or cost of sales account is missing. Add it to the chart of accounts or choose one on the product.",
+        "counter-account-missing": "The stock gains and losses account is missing. Add it to the chart of accounts or choose an account."
       }
     },
     "receivePayment": "Receive payment",
@@ -1296,6 +1331,110 @@
         "in-use": "This tax code is used on a document or a product, so it cannot be deleted. Switch it off instead.",
         "pack-code": "This code came with your country and cannot be deleted. Switch it off instead.",
         "inactive": "Switch the code on before making it the default."
+      }
+    }
+  },
+  "inventory": {
+    "warehouse": "Warehouse",
+    "warehouses": "Warehouses",
+    "allWarehouses": "All warehouses",
+    "allProducts": "All products",
+    "newWarehouse": "New warehouse",
+    "editWarehouse": "Edit warehouse",
+    "warehouseDeleted": "Warehouse deleted.",
+    "deleteWarehouseTitle": "Delete {{name}}?",
+    "defaultWarehouse": "Default",
+    "makeDefault": "Make default",
+    "emptyWarehousesTitle": "No warehouses yet",
+    "emptyWarehousesBody": "A main warehouse is made for you the first time stock is recorded. Add others to keep stock in several places.",
+    "stock": "Stock",
+    "stockTabs": "Stock views",
+    "onHandTab": "On hand",
+    "documentsTab": "Stock documents",
+    "importOpening": "Import opening stock",
+    "importTitle": "Import opening stock",
+    "importIntro": "Upload an Excel or CSV file with one row per product and warehouse. The whole file is rejected if any row has a problem, so nothing is half imported.",
+    "new": {
+      "Opening": "Opening stock",
+      "Adjustment": "Count or adjust stock",
+      "Transfer": "Transfer stock"
+    },
+    "edit": {
+      "Opening": "Edit opening stock",
+      "Adjustment": "Edit stock adjustment",
+      "Transfer": "Edit stock transfer"
+    },
+    "intro": {
+      "Opening": "The stock you already had when you started, with what each unit cost. It is posted against the account below.",
+      "Adjustment": "Count the stock, or enter the change directly. Only the difference from what is recorded is booked, to the account below.",
+      "Transfer": "Move stock from one warehouse to another. Its value does not change, so nothing is posted to the books."
+    },
+    "kinds": {
+      "Opening": "Opening stock",
+      "Adjustment": "Adjustment",
+      "Transfer": "Transfer"
+    },
+    "notes": "Notes",
+    "counterAccount": "Other side of the entry",
+    "counterAccountHelp": "Leave empty to use the stock gains and losses account.",
+    "mode": "How to enter",
+    "modeCount": "Stock count",
+    "modeChange": "Change in quantity",
+    "loadStock": "Load the stock of this warehouse",
+    "line": "Line",
+    "fromWarehouse": "From warehouse",
+    "toWarehouse": "To warehouse",
+    "onHand": "On hand",
+    "counted": "Counted",
+    "change": "Change (+/-)",
+    "quantity": "Quantity",
+    "unitCost": "Cost per unit",
+    "unitCostHelp": "Leave the cost empty for stock that is found in a count: it comes in at the current average cost.",
+    "addLine": "Add a line",
+    "nothingCounted": "Nothing differs from what is recorded, so there is nothing to book.",
+    "averageCost": "Average cost",
+    "value": "Value",
+    "totalValue": "Total value of stock",
+    "openValuationReport": "Open the stock valuation report",
+    "emptyStockTitle": "No stock yet",
+    "emptyStockBody": "Mark a product as a stock item, then record opening stock or buy it on a purchase invoice.",
+    "emptyDocumentsTitle": "No stock documents yet",
+    "emptyDocumentsBody": "Opening stock, counts and transfers you record appear here.",
+    "documentDeleted": "Stock document deleted.",
+    "deleteDocumentTitle": "Delete {{number}}?",
+    "deleteDocumentBody": "The stock goes back to how it was, and the entry it made in the books is removed.",
+    "type": "Type",
+    "lines": "Lines",
+    "stockItem": "Stock item",
+    "stockItemHelp": "Switch on to keep track of how many you have. Services are not stock items.",
+    "stockTag": "Stock",
+    "barcode": "Barcode",
+    "reorderLevel": "Reorder level",
+    "reorderLevelHelp": "Baba warns you when the stock falls to this quantity. Leave 0 for no warning.",
+    "stockAccount": "Stock account",
+    "stockAccountHelp": "Leave empty to use the company's stock account.",
+    "costOfSalesAccount": "Cost of sales account",
+    "costOfSalesAccountHelp": "Leave empty to use the company's cost of sales account.",
+    "issueFrom": "Take stock from",
+    "receiveInto": "Receive stock into",
+    "issues": {
+      "warehouse": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another warehouse already uses this code.",
+        "name-required": "Enter a name.",
+        "in-use": "Stock has moved through this warehouse, so it cannot be deleted. Switch it off instead.",
+        "last-one": "There must always be one active warehouse, and it must be the default.",
+        "inactive": "A warehouse that is switched off cannot be the default."
+      },
+      "stockdoc": {
+        "cost-negative": "The cost cannot be negative.",
+        "counter-account-invalid": "Choose an active account that takes entries.",
+        "kind-cannot-change": "The type of a stock document cannot be changed.",
+        "product-not-stock": "Choose a product that is a stock item.",
+        "quantity-positive": "The quantity must be more than zero.",
+        "quantity-zero": "The change cannot be zero.",
+        "same-warehouse": "Choose a different warehouse to move the stock to.",
+        "warehouse-invalid": "Choose an active warehouse."
       }
     }
   }

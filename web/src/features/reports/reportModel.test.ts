@@ -66,7 +66,7 @@ describe('drill-down', () => {
 
 describe('the reports', () => {
   it('each say which inputs they need', () => {
-    expect(reportKeys).toHaveLength(11)
+    expect(reportKeys).toHaveLength(14)
     expect(reportInputs['tax-return'].range).toBe(true)
     expect(reportInputs['trial-balance']).toEqual({ range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false })
     expect(reportInputs['party-statement'].party).toBe(true)

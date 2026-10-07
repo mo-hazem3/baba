@@ -16,6 +16,8 @@ export interface ReportParams {
   DocumentKind?: DocumentKind
   DocumentStatus?: DocumentStatus
   PartyKind?: PartyKind
+  ProductId?: string
+  WarehouseId?: string
 }
 
 /** Exports a report (or list) the way the format asks: PDF opens in the viewer, Excel and CSV are saved as files. */

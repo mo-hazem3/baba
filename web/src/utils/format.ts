@@ -60,3 +60,7 @@ export const formatDate = (value: Date | string, digits: DigitStyle, hijri = fal
 /** Month names in the interface language (1 = January). */
 export const monthName = (month: number, language: string): string =>
   new Intl.DateTimeFormat(language, { month: 'long' }).format(new Date(2026, month - 1, 1))
+
+/** A quantity of stock: up to four decimals (the most Baba keeps), none when it is a whole number. */
+export const formatQuantity = (value: number, digits: DigitStyle): string =>
+  applyDigitStyle(new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(value), digits)

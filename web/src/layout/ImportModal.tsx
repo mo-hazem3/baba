@@ -65,6 +65,7 @@ export function ImportModal({
         `trade.issues.${code}`,
         `rates.issues.${code}`,
         `voucher.issues.${code}`,
+        `inventory.issues.${code}`,
       ],
       { defaultValue: code },
     )

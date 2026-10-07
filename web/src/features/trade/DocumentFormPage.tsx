@@ -7,7 +7,7 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, printDocument, saveDocumentDraft } from '../../api/generated/baba'
 import type { DocumentDto, DocumentKind, ProductDto, TaxCodeDto } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
-import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts, useTaxCodes } from '../../api/hooks'
+import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts, useTaxCodes, useWarehouses } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
@@ -92,6 +92,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const parties = useParties().data ?? []
   const products = useProducts().data ?? []
   const costCenters = useCostCenters().data ?? []
+  const warehouses = (useWarehouses().data ?? []).filter((w) => w.isActive)
   const taxCodes = useTaxCodes().data ?? []
   const host = useHost()
   const printSettings = usePrintSettings()
@@ -119,6 +120,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const [reference, setReference] = useState(initial?.reference ?? '')
   const [memo, setMemo] = useState(initial?.memo ?? '')
   const [discountPercent, setDiscountPercent] = useState(initial?.discountPercent ?? 0)
+  const [warehouseId, setWarehouseId] = useState<string | undefined>(initial?.warehouseId ?? undefined)
   const [currencyCode, setCurrencyCode] = useState(initial?.currencyCode ?? baseCurrencyCode)
   const [rate, setRate] = useState<number | null>(initial && initial.currencyCode !== baseCurrencyCode ? initial.exchangeRate : null)
   const [rows, setRows] = useState<DocRow[]>(() => withTrailingBlankRow(initial ? rowsFromDocument(initial) : [newDocRow()]))
@@ -126,7 +128,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const [repeating, setRepeating] = useState(false)
 
   const minorUnits = currencies.data?.find((c) => c.code === currencyCode)?.minorUnits ?? 2
-  const header = (): DocHeader => ({ date, dueDate, partyId, currencyCode, exchangeRate: rate, reference, memo, discountPercent })
+  const header = (): DocHeader => ({ date, dueDate, partyId, currencyCode, exchangeRate: rate, reference, memo, discountPercent, warehouseId })
   const current = () => fingerprintOf(header(), rows)
   const [savedFingerprint, setSavedFingerprint] = useState(current)
   const dirty = current() !== savedFingerprint
@@ -453,6 +455,19 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
           <label htmlFor="doc-reference">{t('voucher.reference')}</label>
           <Input id="doc-reference" value={reference} onChange={(e) => setReference(e.target.value)} maxLength={100} dir="ltr" disabled={readOnly} />
         </div>
+        {modules.has('inventory') && warehouses.length > 1 && rows.some((r) => products.find((p) => p.id === r.productId)?.isStockItem) && (
+          <div className="field">
+            <label htmlFor="doc-warehouse">{t(sales ? 'inventory.issueFrom' : 'inventory.receiveInto')}</label>
+            <Select
+              id="doc-warehouse"
+              value={warehouseId ?? warehouses.find((w) => w.isDefault)?.id}
+              onChange={setWarehouseId}
+              disabled={readOnly || issued}
+              options={warehouses.map((w) => ({ value: w.id, label: itemName(w, settings.language) }))}
+              popupMatchSelectWidth={false}
+            />
+          </div>
+        )}
       </div>
 
       <div className="lines-grid-wrap">

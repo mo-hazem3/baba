@@ -2,7 +2,7 @@ import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { runDueRecurring, useGetOverdue } from '../../api/generated/baba'
+import { runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
 import { refreshBooks, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
 import { Link } from 'react-router'
@@ -32,6 +32,8 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   const modules = useModules()
   const trades = modules.has('sales') || modules.has('purchases')
   const overdue = useGetOverdue({ query: { select: (r) => r.data, enabled: trades } })
+  // Stock at or below its reorder level (brief section 10.4): the same list as the reorder report.
+  const lowStock = useGetReport('stock-reorder', undefined, { query: { select: (r) => (r.status === 200 ? r.data.rows.length : 0), enabled: modules.has('inventory') } })
   const { message } = App.useApp()
   const queryClient = useQueryClient()
 
@@ -114,6 +116,15 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
                 currency: dashboard.data.currencyCode,
               })}
               description={<Link to="/purchases">{t('summary.overdueOpenBills')}</Link>}
+            />
+          )}
+          {(lowStock.data ?? 0) > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              className="form-alert"
+              message={t('summary.lowStock', { count: lowStock.data })}
+              description={<Link to="/reports/stock-reorder">{t('summary.lowStockOpen')}</Link>}
             />
           )}
           {dashboard.data.draftVouchers > 0 && (

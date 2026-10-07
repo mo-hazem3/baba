@@ -8,6 +8,7 @@ import {
   useGetDashboard,
   useGetHostInfo,
   useGetPrintSettings,
+  useGetStockLevels,
   useListAccounts,
   useListBankAccounts,
   useListFiscalYears,
@@ -20,6 +21,8 @@ import {
   useListPriceLists,
   useListProducts,
   useListRecentFiles,
+  useListStockDocuments,
+  useListWarehouses,
 } from './generated/baba'
 import type { ListPartiesParams } from './generated/model'
 
@@ -81,6 +84,13 @@ export const useExchangeRates = () => useListExchangeRates(undefined, { query: {
 export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
 
 export const useFiscalYears = () => useListFiscalYears({ query: { select: (r) => r.data } })
+
+export const useWarehouses = () => useListWarehouses({ query: { select: (r) => r.data } })
+
+/** The stock on hand (and its value) per product and warehouse, optionally as of a date. */
+export const useStockLevels = (asOf?: string) => useGetStockLevels(asOf ? { asOf } : undefined, { query: { select: (r) => r.data } })
+
+export const useStockDocuments = () => useListStockDocuments(undefined, { query: { select: (r) => r.data } })
 
 export const useCostCenters = () => useListCostCenters({ query: { select: (r) => r.data } })
 

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useParams, useSearchParams } from 'react-router'
 import { getReport } from '../../api/generated/baba'
 import { ApiError } from '../../api/http'
-import { useAccounts, useCostCenters, useCurrentCompany, useParties } from '../../api/hooks'
+import { useAccounts, useCostCenters, useCurrentCompany, useParties, useProducts, useWarehouses } from '../../api/hooks'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
 import { ExportControls } from '../../layout/ExportControls'
@@ -13,7 +13,7 @@ import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { toIsoDate } from '../../utils/format'
 import { AccountSelect } from '../accounting/AccountSelect'
-import { CostCenterSelect, PartySelect } from '../accounting/LookupSelects'
+import { CostCenterSelect, PartySelect, ProductSelect, WarehouseSelect } from '../accounting/LookupSelects'
 import { exportAndShow, type ReportParams } from './exportReport'
 import { ReportTable } from './ReportTable'
 import { isReportKey, matchPreset, presetRange, reportInputs, reportSubtitle, reportTitle, type RangePreset } from './reportModel'
@@ -37,6 +37,8 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
   const accounts = useAccounts()
   const parties = useParties()
   const costCenters = useCostCenters()
+  const warehouses = useWarehouses()
+  const products = useProducts()
   const [params, setParams] = useSearchParams()
   const inputs = reportInputs[reportKey]
   const fiscalStart = company.data?.fiscalYearStartMonth ?? 1
@@ -53,6 +55,8 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
   const accountId = params.get('accountId') ?? undefined
   const partyId = params.get('partyId') ?? undefined
   const costCenterId = params.get('costCenterId') ?? undefined
+  const warehouseId = params.get('warehouseId') ?? undefined
+  const productId = params.get('productId') ?? undefined
   const compare = params.get('comparison') === 'PreviousYear'
 
   const set = (changes: Record<string, string | undefined>) =>
@@ -77,6 +81,8 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
     ...(inputs.account ? { AccountId: accountId } : {}),
     ...(inputs.party ? { PartyId: partyId } : {}),
     ...(inputs.costCenter ? { CostCenterId: costCenterId } : {}),
+    ...(inputs.warehouse ? { WarehouseId: warehouseId } : {}),
+    ...(inputs.product ? { ProductId: productId } : {}),
     ...(inputs.comparison && compare ? { Comparison: 'PreviousYear' } : {}),
   }
 
@@ -140,6 +146,32 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
               costCenters={costCenters.data ?? []}
               placeholder={t('reports.allCostCenters')}
               ariaLabel={t('reports.costCenter')}
+            />
+          </div>
+        )}
+        {inputs.warehouse && (warehouses.data?.length ?? 0) > 1 && (
+          <div className="field field-wide">
+            <label htmlFor="report-warehouse">{t('inventory.warehouse')}</label>
+            <WarehouseSelect
+              id="report-warehouse"
+              value={warehouseId}
+              onChange={(id) => set({ warehouseId: id })}
+              warehouses={warehouses.data ?? []}
+              placeholder={t('inventory.allWarehouses')}
+              ariaLabel={t('inventory.warehouse')}
+            />
+          </div>
+        )}
+        {inputs.product && (
+          <div className="field field-wide">
+            <label htmlFor="report-product">{t('trade.product')}</label>
+            <ProductSelect
+              id="report-product"
+              value={productId}
+              onChange={(id) => set({ productId: id })}
+              products={(products.data ?? []).filter((p) => p.isStockItem)}
+              placeholder={t('inventory.allProducts')}
+              ariaLabel={t('trade.product')}
             />
           </div>
         )}

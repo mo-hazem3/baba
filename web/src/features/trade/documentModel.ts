@@ -156,6 +156,7 @@ export interface DocHeader {
   reference: string
   memo: string
   discountPercent: number
+  warehouseId?: string
 }
 
 export const toDocumentInput = (kind: DocumentKind, header: DocHeader, rows: readonly DocRow[], baseCurrencyCode: string): DocumentInput => ({
@@ -168,6 +169,7 @@ export const toDocumentInput = (kind: DocumentKind, header: DocHeader, rows: rea
   reference: header.reference.trim() || null,
   memo: header.memo.trim() || null,
   discountPercent: header.discountPercent,
+  warehouseId: header.warehouseId ?? null,
   lines: rowsToSend(rows).map(
     (r): DocumentLineInput => ({
       id: r.id ?? null,
@@ -217,5 +219,6 @@ export const fingerprintOf = (header: DocHeader, rows: readonly DocRow[]): strin
     header.reference.trim(),
     header.memo.trim(),
     header.discountPercent,
+    header.warehouseId ?? '',
     rowsToSend(rows).map((r) => [r.productId ?? '', r.accountId ?? '', r.costCenterId ?? '', r.taxCodeId ?? '', r.description.trim(), r.quantity ?? 0, r.unitPrice ?? 0, r.discountPercent ?? 0]),
   ])
