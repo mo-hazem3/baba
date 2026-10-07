@@ -12,6 +12,7 @@ import {
   useListBankAccounts,
   useListFiscalYears,
   useListCostCenters,
+  useListExchangeRates,
   useListCountries,
   useListCurrencies,
   useListParties,
@@ -58,6 +59,8 @@ export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck 
 export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
 
 export const useParties = (params?: ListPartiesParams) => useListParties(params, { query: { select: (r) => r.data } })
+
+export const useExchangeRates = () => useListExchangeRates(undefined, { query: { select: (r) => r.data } })
 
 export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
 

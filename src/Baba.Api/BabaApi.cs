@@ -49,6 +49,7 @@ public static class BabaApi
         services.AddBabaInfrastructure();
         services.AddSingleton<ChartOfAccountsService>();
         services.AddSingleton<PartyService>();
+        services.AddSingleton<ExchangeRateService>();
         services.AddSingleton<Baba.Application.Importing.ImportService>();
         services.AddSingleton<FiscalYearService>();
         services.AddSingleton<Baba.Application.Banking.BankService>();
@@ -98,6 +99,7 @@ public static class BabaApi
         api.MapVoucherEndpoints();
         api.MapPartyEndpoints();
         api.MapBankEndpoints();
+        api.MapExchangeRateEndpoints();
         api.MapImportEndpoints();
         api.MapFiscalYearEndpoints();
         api.MapPeriodEndpoints();

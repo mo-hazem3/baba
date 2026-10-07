@@ -17,4 +17,8 @@ export interface VoucherInput {
   /** @nullable */
   memo: string | null;
   lines: VoucherLineInput[];
+  /** @nullable */
+  currencyCode?: string | null;
+  /** @nullable */
+  exchangeRate?: number | null;
 }

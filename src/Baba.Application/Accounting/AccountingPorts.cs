@@ -39,7 +39,8 @@ public sealed record VoucherSummary(
     string? Reference,
     string? Memo,
     decimal Total,
-    int LineCount);
+    int LineCount,
+    string CurrencyCode = "");
 
 public interface IVoucherStore
 {

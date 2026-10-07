@@ -6,6 +6,7 @@ import { useCurrentCompany } from './api/hooks'
 import { ChartOfAccountsPage } from './features/accounts/ChartOfAccountsPage'
 import { CostCentersPage } from './features/costcenters/CostCentersPage'
 import { BankPage } from './features/bank/BankPage'
+import { ExchangeRatesPage } from './features/rates/ExchangeRatesPage'
 import { ReconcilePage } from './features/bank/ReconcilePage'
 import { PartiesPage } from './features/parties/PartiesPage'
 import { OpeningPage } from './features/vouchers/OpeningPage'
@@ -65,6 +66,7 @@ export function App() {
         <Route path="/bank" element={<BankPage />} />
         <Route path="/bank/:accountId/reconcile" element={<ReconcilePage />} />
         <Route path="/year-end" element={<YearEndPage />} />
+        <Route path="/exchange-rates" element={<ExchangeRatesPage />} />
         <Route path="/vouchers/open/:id" element={<VoucherOpenPage />} />
         <Route path="/vouchers/:kind/:id" element={<VoucherFormPage />} />
         <Route path="/reports" element={<ReportsPage />} />

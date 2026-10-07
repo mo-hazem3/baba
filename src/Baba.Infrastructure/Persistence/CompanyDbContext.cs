@@ -32,6 +32,7 @@ public sealed class CompanyDbContext(
     public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
     public DbSet<ReconciledEntry> ReconciledEntries => Set<ReconciledEntry>();
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
+    public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -101,6 +102,13 @@ public sealed class CompanyDbContext(
         {
             costCenter.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
             costCenter.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<CurrencyRate>(rate =>
+        {
+            rate.Ignore(r => r.Rate);
+            rate.HasIndex(r => new { r.CompanyId, r.CurrencyCode, r.Date }).IsUnique();
+            rate.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
         });
 
         model.Entity<BankReconciliation>(reconciliation =>

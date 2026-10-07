@@ -15,7 +15,11 @@ public sealed record VoucherInput(
     Guid? CashAccountId,
     string? Reference,
     string? Memo,
-    IReadOnlyList<VoucherLineInput> Lines);
+    IReadOnlyList<VoucherLineInput> Lines,
+    /// <summary>The currency the amounts are in. Null means the company's own currency.</summary>
+    string? CurrencyCode = null,
+    /// <summary>How many company-currency units one unit of the currency is worth. Null takes the latest rate on or before the date.</summary>
+    decimal? ExchangeRate = null);
 
 public sealed record VoucherLineDto(
     Guid Id, Guid AccountId, string? Description, decimal Debit, decimal Credit, Guid? PartyId = null, Guid? CostCenterId = null);
@@ -32,7 +36,9 @@ public sealed record VoucherDto(
     string? Memo,
     IReadOnlyList<VoucherLineDto> Lines,
     decimal Total,
-    DateTime? PostedAt);
+    DateTime? PostedAt,
+    decimal ExchangeRate = 1m,
+    Guid? DocumentId = null);
 
 /// <summary>
 /// Payment, receipt and journal vouchers (brief section 10.1). A voucher is a draft (saved for later, no ledger entries) or posted
@@ -46,6 +52,7 @@ public sealed class VoucherService(
     ICostCenterStore costCenters,
     Banking.IReconciliationStore reconciliations,
     IPeriodStore periods,
+    ICurrencyRateStore currencyRates,
     ICompanyFiles files,
     TimeProvider clock)
 {
@@ -93,7 +100,7 @@ public sealed class VoucherService(
     {
         var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
         var issues = new List<PostingIssue>();
-        AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(cancellationToken));
+        AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(null, cancellationToken));
         Throw(issues);
         await vouchers.DeleteAsync(id, cancellationToken);
     }
@@ -127,7 +134,7 @@ public sealed class VoucherService(
     {
         var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
         RefuseSystemKind(voucher.Kind);
-        var context = await ContextAsync(cancellationToken);
+        var context = await ContextAsync(voucher.CurrencyCode, cancellationToken);
         return await PostPreparedAsync(voucher, context, voucher.Status == VoucherStatus.Posted, voucher.Date, id, cancellationToken);
     }
 
@@ -139,7 +146,7 @@ public sealed class VoucherService(
         if (voucher.Status == VoucherStatus.Posted)
         {
             var issues = new List<PostingIssue>();
-            AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(cancellationToken));
+            AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(null, cancellationToken));
             if (await reconciliations.HasReconciledEntriesAsync(id, cancellationToken))
                 issues.Add(new PostingIssue("voucher", "voucher.reconciled"));
             Throw(issues);
@@ -169,7 +176,9 @@ public sealed class VoucherService(
         Guid? id, VoucherInput input, CancellationToken cancellationToken)
     {
         var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
-        var context = await ContextAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(input.CurrencyCode) && CurrencyCatalog.Find(input.CurrencyCode.Trim()) is null)
+            throw new ValidationException([new ValidationIssue("currency", "currency.unknown")]);
+        var context = await ContextAsync(input.CurrencyCode, cancellationToken);
 
         Voucher voucher;
         var wasPosted = false;
@@ -188,8 +197,10 @@ public sealed class VoucherService(
         }
 
         voucher.Date = input.Date;
-        voucher.CurrencyCode = company.BaseCurrencyCode; // transaction currency = base currency until the multi-currency screens exist
-        voucher.ExchangeRateScaled = FxRate.One;
+        voucher.CurrencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode) ? company.BaseCurrencyCode : input.CurrencyCode.Trim().ToUpperInvariant();
+        voucher.ExchangeRateScaled = voucher.CurrencyCode == company.BaseCurrencyCode
+            ? FxRate.One
+            : FxRate.ToScaled(input.ExchangeRate ?? await LatestRateAsync(voucher.CurrencyCode, input.Date, cancellationToken));
         voucher.CashAccountId = input.Kind.UsesCashAccount() ? input.CashAccountId : null;
         voucher.Reference = Clean(input.Reference);
         voucher.Memo = Clean(input.Memo);
@@ -213,17 +224,23 @@ public sealed class VoucherService(
         return (voucher, context, wasPosted, oldDate);
     }
 
-    private async Task<PostingContext> ContextAsync(CancellationToken cancellationToken)
+    private async Task<decimal> LatestRateAsync(string currencyCode, DateOnly date, CancellationToken cancellationToken) =>
+        (await currencyRates.ListAsync(cancellationToken))
+            .Where(r => r.CurrencyCode == currencyCode && r.Date <= date)
+            .OrderByDescending(r => r.Date).Select(r => r.Rate).FirstOrDefault(); // 0 when there is none: the engine says the rate is invalid
+
+    private async Task<PostingContext> ContextAsync(string? currencyCode, CancellationToken cancellationToken)
     {
         var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
         var baseCurrency = CurrencyCatalog.Find(company.BaseCurrencyCode)?.Currency ?? new Currency(company.BaseCurrencyCode, 2);
         var locked = (await periods.ListAsync(cancellationToken)).Where(p => p.IsLocked).ToList();
         var allAccounts = (await accounts.ListAsync(cancellationToken)).ToDictionary(a => a.Id);
+        var voucherCurrency = CurrencyCatalog.Find(currencyCode ?? company.BaseCurrencyCode)?.Currency ?? baseCurrency;
         var allParties = (await parties.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
         var allCostCenters = (await costCenters.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
 
         return new PostingContext(
-            allAccounts, baseCurrency, baseCurrency, date => !locked.Any(p => p.Start <= date && date <= p.End), allParties, allCostCenters);
+            allAccounts, baseCurrency, voucherCurrency, date => !locked.Any(p => p.Start <= date && date <= p.End), allParties, allCostCenters);
     }
 
     private static void AddLockedPeriodIssue(List<PostingIssue> issues, DateOnly date, PostingContext context)
@@ -244,5 +261,5 @@ public sealed class VoucherService(
         v.Id, v.Kind, v.Number, v.Date, v.Status, v.CurrencyCode, v.CashAccountId, v.Reference, v.Memo,
         v.Lines.OrderBy(l => l.LineNumber).Select(l => new VoucherLineDto(l.Id, l.AccountId, l.Description, l.Debit, l.Credit, l.PartyId, l.CostCenterId)).ToList(),
         v.Kind == VoucherKind.Receipt ? v.TotalCredit : v.TotalDebit,
-        v.PostedAt);
+        v.PostedAt, v.ExchangeRate);
 }

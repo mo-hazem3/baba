@@ -29,7 +29,7 @@ public sealed class VoucherStore(ICompanyDbContextFactory contexts) : IVoucherSt
             .Take(Math.Clamp(search.Limit, 1, 10_000))
             .Select(v => new
             {
-                v.Id, v.Kind, v.Number, v.Date, v.Status, v.Reference, v.Memo,
+                v.Id, v.Kind, v.Number, v.Date, v.Status, v.Reference, v.Memo, v.CurrencyCode,
                 Debit = v.Lines.Sum(l => l.DebitScaled),
                 Credit = v.Lines.Sum(l => l.CreditScaled),
                 LineCount = v.Lines.Count,
@@ -38,7 +38,7 @@ public sealed class VoucherStore(ICompanyDbContextFactory contexts) : IVoucherSt
 
         return rows.Select(r => new VoucherSummary(
             r.Id, r.Kind, r.Number, r.Date, r.Status, r.Reference, r.Memo,
-            Scaled.ToDecimal(r.Kind == VoucherKind.Receipt ? r.Credit : r.Debit), r.LineCount)).ToList();
+            Scaled.ToDecimal(r.Kind == VoucherKind.Receipt ? r.Credit : r.Debit), r.LineCount, r.CurrencyCode)).ToList();
     }
 
     public async Task SaveAsync(Voucher voucher, IReadOnlyList<LedgerEntry> ledger, CancellationToken cancellationToken = default)

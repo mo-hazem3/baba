@@ -21,7 +21,8 @@
     "bank": "Bank and cash",
     "transfers": "Transfers",
     "opening": "Opening balances",
-    "yearEnd": "Year-end"
+    "yearEnd": "Year-end",
+    "exchangeRates": "Exchange rates"
   },
   "header": {
     "language": "Language",
@@ -80,7 +81,8 @@
     "bank": "These are your bank and cash accounts. Reconcile an account when you get the bank's statement: you check that what Baba has recorded matches what the bank says, line by line.",
     "reconcile": "Type the date and the closing balance from the bank's statement, then tick every entry that appears on it. When the difference is zero, finish. Entries that are not on the statement yet stay unticked for next time. If you load the statement from a file, Baba suggests the matches.",
     "opening": "The opening balances are what the business had on the day you start using Baba: cash, bank, what customers owe, what you owe, and the owners' capital. Debits and credits must be equal. There is only one opening-balances entry, and you can correct it later.",
-    "yearEnd": "At the end of a fiscal year you close it. Baba moves the year's profit or loss into retained earnings, locks the year's months, and saves a copy of your file first. If you made a mistake you can reopen the latest closed year."
+    "yearEnd": "At the end of a fiscal year you close it. Baba moves the year's profit or loss into retained earnings, locks the year's months, and saves a copy of your file first. If you made a mistake you can reopen the latest closed year.",
+    "rates": "For every foreign currency you use, enter how many units of your own currency it is worth, from a date on. A voucher or document in that currency starts from the latest rate on or before its date, and you can change it for that one document."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -374,7 +376,8 @@
       "CashOrBank": "Cash or bank",
       "Receivable": "Money owed to you",
       "Payable": "Money you owe",
-      "RetainedEarnings": "Retained earnings"
+      "RetainedEarnings": "Retained earnings",
+      "ExchangeDifference": "Exchange differences"
     },
     "issues": {
       "account": {
@@ -541,7 +544,10 @@
       }
     },
     "closingNote": "This entry was made by closing the fiscal year. It cannot be changed here: reopen the year from Year-end if it was a mistake.",
-    "openingNote": "Enter each account's balance on the day you start. Customers and suppliers are entered one by one on their accounts. Debits and credits must be equal."
+    "openingNote": "Enter each account's balance on the day you start. Customers and suppliers are entered one by one on their accounts. Debits and credits must be equal.",
+    "currency": "Currency",
+    "exchangeRate": "Rate: 1 {{from}} = ? {{to}}",
+    "noRateOnFile": "No rate on file for this date. Type one, or add it in Exchange rates."
   },
   "reports": {
     "title": "Reports",
@@ -918,6 +924,26 @@
       "party": {
         "kind-unknown": "The kind must be customer or supplier.",
         "credit-limit-invalid": "The credit limit is not a number."
+      }
+    }
+  },
+  "rates": {
+    "title": "Exchange rates",
+    "intro": "Each rate says how many {{currency}} one unit of the foreign currency is worth, from its date until a newer rate is entered.",
+    "add": "Add or change a rate",
+    "currency": "Currency",
+    "from": "From",
+    "worth": "Worth in {{currency}}",
+    "saved": "The rate was saved.",
+    "delete": "Delete",
+    "emptyTitle": "No exchange rates yet",
+    "emptyBody": "Add a rate before you write a voucher or invoice in a foreign currency.",
+    "issues": {
+      "rate": {
+        "currency-unknown": "This currency is not known.",
+        "currency-is-base": "This is your own currency: its rate is always 1.",
+        "date-required": "Choose a date.",
+        "rate-invalid": "Enter a rate greater than zero."
       }
     }
   }

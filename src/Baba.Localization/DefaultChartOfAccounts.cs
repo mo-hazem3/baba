@@ -60,6 +60,7 @@ public static class DefaultChartOfAccounts
             new("425", "Bank charges", "رسوم بنكية", AccountType.Expense, "42", true),
             new("426", "Depreciation expense", "مصروف الإهلاك", AccountType.Expense, "42", true),
             new("427", "Other expenses", "مصروفات أخرى", AccountType.Expense, "42", true),
+            new("428", "Exchange differences", "فروق العملة", AccountType.Expense, "42", true, AccountRole.ExchangeDifference),
 
             // Revenues
             new("5", "Revenues", "الإيرادات", AccountType.Revenue, null, false),

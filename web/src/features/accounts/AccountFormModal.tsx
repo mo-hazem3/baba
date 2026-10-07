@@ -11,7 +11,7 @@ import { useSettings } from '../../settings/SettingsContext'
 import { accountLabel, possibleParents, suggestCode } from '../accounting/accountTree'
 
 const types: AccountType[] = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']
-const roles: AccountRole[] = ['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings']
+const roles: AccountRole[] = ['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings', 'ExchangeDifference']
 
 interface Values {
   parentId: string | null

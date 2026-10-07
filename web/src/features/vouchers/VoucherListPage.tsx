@@ -35,7 +35,14 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
 
   const range = useMemo(() => presetRange(preset, new Date(), company.data?.fiscalYearStartMonth ?? 1), [preset, company.data?.fiscalYearStartMonth])
   const statusFilter = status === 'All' ? undefined : status
-  const minorUnits = currencies.data?.find((c) => c.code === company.data?.baseCurrencyCode)?.minorUnits ?? 2
+  const baseCode = company.data?.baseCurrencyCode ?? ''
+  // An amount in the currency the voucher was written in (the code is shown only when it is not the company's own).
+  const AmountInCurrency = ({ value, code }: { value: number; code?: string }) => (
+    <span>
+      <AmountText value={value} minorUnits={currencies.data?.find((c) => c.code === (code || baseCode))?.minorUnits ?? 2} />
+      {code && code !== baseCode && <span className="muted"> {code}</span>}
+    </span>
+  )
 
   const query = useQuery({
     queryKey: ['/api/vouchers', kind, status, range.from, range.to],
@@ -46,7 +53,10 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
     () => (query.data ?? []).filter((v) => matchesSearch(search, v.number ?? '', v.reference ?? '', v.memo ?? '')),
     [query.data, search],
   )
-  const total = vouchers.reduce((sum, v) => sum + v.total, 0)
+  // Amounts in different currencies are never added together: there is one total per currency.
+  const totalsByCurrency = Object.entries(
+    vouchers.reduce<Record<string, number>>((all, v) => ({ ...all, [v.currencyCode || baseCode]: (all[v.currencyCode || baseCode] ?? 0) + v.total }), {}),
+  )
   const open = (id: string) => navigate(`/vouchers/${routeOfKind(kind)}/${id}`)
   const create = () => navigate(`/vouchers/${routeOfKind(kind)}/new`)
 
@@ -71,7 +81,7 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
       key: 'total',
       align: 'end',
       width: 150,
-      render: (_: unknown, v) => <AmountText value={v.total} minorUnits={minorUnits} />,
+      render: (_: unknown, v) => <AmountInCurrency value={v.total} code={v.currencyCode} />,
     },
     {
       title: t('voucher.status'),
@@ -143,7 +153,11 @@ export function VoucherListPage({ kind }: { kind: VoucherKind }) {
                   {t('voucher.totalOf', { count: vouchers.length })}
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="end">
-                  <AmountText value={total} minorUnits={minorUnits} />
+                  {totalsByCurrency.map(([code, sum]) => (
+                    <div key={code}>
+                      <AmountInCurrency value={sum} code={code} />
+                    </div>
+                  ))}
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={2} />
               </Table.Summary.Row>

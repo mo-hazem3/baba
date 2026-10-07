@@ -20,4 +20,5 @@ export interface VoucherSummary {
   memo: string | null;
   total: number;
   lineCount: number;
+  currencyCode?: string;
 }

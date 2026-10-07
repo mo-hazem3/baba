@@ -10,6 +10,9 @@ public enum AccountRole
     Receivable,
     Payable,
     RetainedEarnings,
+
+    /// Where realised gains and losses from exchange-rate differences are posted when a foreign-currency invoice is paid.
+    ExchangeDifference,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

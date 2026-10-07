@@ -18,6 +18,7 @@ import { formatAmount, toIsoDate } from '../../utils/format'
 import { openPdf } from '../../utils/download'
 import { AccountSearchDialog } from '../accounting/AccountSearchDialog'
 import { AccountSelect } from '../accounting/AccountSelect'
+import { CurrencyFields } from '../accounting/CurrencyFields'
 import { VoucherLinesGrid } from '../accounting/VoucherLinesGrid'
 import { TransferForm } from './TransferForm'
 import {
@@ -61,8 +62,8 @@ export function VoucherFormPage() {
   return <VoucherForm key={`${kind}-${voucherId ?? 'new'}`} kind={kind} initial={query.data ?? undefined} />
 }
 
-const fingerprint = (date: string, cash: string | undefined, reference: string, memo: string, rows: readonly LineRow[]) =>
-  JSON.stringify([date, cash ?? '', reference.trim(), memo.trim(), rowsToSend(rows).map((r) => [r.accountId ?? '', r.partyId ?? '', r.costCenterId ?? '', r.description.trim(), r.debit ?? 0, r.credit ?? 0])])
+const fingerprint = (date: string, cash: string | undefined, reference: string, memo: string, rows: readonly LineRow[], currency = '', rate: number | null = null) =>
+  JSON.stringify([date, cash ?? '', currency, rate ?? 0, reference.trim(), memo.trim(), rowsToSend(rows).map((r) => [r.accountId ?? '', r.partyId ?? '', r.costCenterId ?? '', r.description.trim(), r.debit ?? 0, r.credit ?? 0])])
 
 function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDto }) {
   const { t } = useTranslation()
@@ -82,8 +83,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   const host = useHost()
   const printSettings = usePrintSettings()
 
-  const currencyCode = company.data?.baseCurrencyCode ?? ''
-  const minorUnits = currencies.data?.find((c) => c.code === currencyCode)?.minorUnits ?? 2
+  const baseCurrencyCode = company.data?.baseCurrencyCode ?? ''
   const listPath = listPathOf(kind)
   const readOnly = kind === 'Closing' // made by closing a year, never by hand
   const freeLines = hasFreeLines(kind)
@@ -97,21 +97,26 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   const [cashAccountId, setCashAccountId] = useState(initial?.cashAccountId ?? undefined)
   const [reference, setReference] = useState(initial?.reference ?? '')
   const [memo, setMemo] = useState(initial?.memo ?? '')
+  const [currencyCode, setCurrencyCode] = useState(initial?.currencyCode ?? baseCurrencyCode)
+  const [rate, setRate] = useState<number | null>(initial && initial.currencyCode !== baseCurrencyCode ? (initial.exchangeRate ?? null) : null)
+  const minorUnits = currencies.data?.find((c) => c.code === currencyCode)?.minorUnits ?? 2
   const [rows, setRows] = useState<LineRow[]>(() => withTrailingBlank(initial ? rowsFromVoucher(initial) : [newRow()]))
   const [issues, setIssues] = useState<MappedIssues>()
   const [find, setFind] = useState<{ open: boolean; target?: string }>({ open: false })
 
-  const [savedFingerprint, setSavedFingerprint] = useState(() => fingerprint(date, cashAccountId, reference, memo, rows))
-  const dirty = fingerprint(date, cashAccountId, reference, memo, rows) !== savedFingerprint
+  const current = () => fingerprint(date, cashAccountId, reference, memo, rows, currencyCode, rate)
+  const [savedFingerprint, setSavedFingerprint] = useState(current)
+  const dirty = current() !== savedFingerprint
   useUnsavedWork(dirty)
 
   const sum = totals(rows)
   const hasAmounts = rowsToSend(rows).length > 0
   const total = kind === 'Receipt' ? sum.credit : sum.debit
-  const input = () => toVoucherInput(kind, { date, cashAccountId, reference, memo }, rows)
+  const input = () =>
+    toVoucherInput(kind, { date, cashAccountId, reference, memo, currencyCode: currencyCode === baseCurrencyCode ? '' : currencyCode, exchangeRate: rate }, rows)
 
   const finish = async (text: string) => {
-    setSavedFingerprint(fingerprint(date, cashAccountId, reference, memo, rows)) // saved: nothing is unsaved any more
+    setSavedFingerprint(current()) // saved: nothing is unsaved any more
     await refreshBooks(queryClient)
     void message.success(text)
     navigate(listPath)
@@ -143,7 +148,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
     onSuccess: async () => {
       const snapshot = input()
       const wasDraft = initial!.status === 'Draft'
-      setSavedFingerprint(fingerprint(date, cashAccountId, reference, memo, rows))
+      setSavedFingerprint(current())
       await refreshBooks(queryClient)
       navigate(listPath)
       if (wasDraft) {
@@ -207,7 +212,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
       okButtonProps: { danger: true },
       cancelText: t('voucher.keepEditing'),
       onOk: () => {
-        setSavedFingerprint(fingerprint(date, cashAccountId, reference, memo, rows))
+        setSavedFingerprint(current())
         navigate(listPath)
       },
     })
@@ -312,6 +317,18 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
             {issues?.header.cashAccount && <div className="cell-error">{problem(issues.header.cashAccount)}</div>}
           </div>
         )}
+        <CurrencyFields
+          date={date}
+          currencyCode={currencyCode}
+          rate={rate}
+          disabled={readOnly}
+          rateStatus={issues?.header.exchangeRate ? 'error' : undefined}
+          onChange={(change) => {
+            setCurrencyCode(change.currencyCode)
+            setRate(change.rate)
+          }}
+        />
+        {issues?.header.exchangeRate && <div className="cell-error">{problem(issues.header.exchangeRate)}</div>}
         <div className="field">
           <label htmlFor="voucher-reference">{t('voucher.reference')}</label>
           <Input id="voucher-reference" value={reference} onChange={(e) => setReference(e.target.value)} maxLength={100} dir="ltr" />

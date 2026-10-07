@@ -14,4 +14,5 @@ export const AccountRole = {
   Receivable: 'Receivable',
   Payable: 'Payable',
   RetainedEarnings: 'RetainedEarnings',
+  ExchangeDifference: 'ExchangeDifference',
 } as const;

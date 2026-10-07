@@ -38,6 +38,7 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
     { key: '/reports', label: t('nav.reports') },
     { key: '/vouchers/opening', label: t('nav.opening') },
     { key: '/year-end', label: t('nav.yearEnd') },
+    { key: '/exchange-rates', label: t('nav.exchangeRates') },
     { key: '/settings', label: t('nav.settings') },
   ]
   // A page deeper in a module (a voucher, a report) keeps its module highlighted.

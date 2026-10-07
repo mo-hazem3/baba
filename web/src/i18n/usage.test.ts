@@ -57,6 +57,7 @@ describe('translation keys used in the code', () => {
       'statement.amount-invalid', 'accounts.code-column-missing', 'parties.name-column-missing', 'account.type-required', 'account.type-unknown',
       'account.role-unknown', 'party.kind-unknown', 'party.credit-limit-invalid',
     ]
+    const rateCodes = ['rate.currency-unknown', 'rate.currency-is-base', 'rate.date-required', 'rate.rate-invalid']
     const restoreCodes = ['restore.backup-missing', 'restore.destination-exists', 'restore.same-file', 'restore.backup-is-open']
     const partyCodes = ['party.code-required', 'party.code-duplicate', 'party.name-required', 'party.credit-limit-negative', 'party.terms-invalid', 'party.kind-in-use', 'party.in-use']
     const costCenterCodes = ['cost-center.code-required', 'cost-center.code-duplicate', 'cost-center.name-required', 'cost-center.in-use']
@@ -66,6 +67,8 @@ describe('translation keys used in the code', () => {
       ...bankCodes.map((code) => `bank.issues.${code}`),
       ...yearCodes.map((code) => `yearEnd.issues.${code}`),
       ...importCodes.map((code) => `import.issues.${code}`),
+      ...rateCodes.map((code) => `rates.issues.${code}`),
+      'accounts.roles.ExchangeDifference',
       ...restoreCodes.map((code) => `start.issues.${code}`),
       'accounts.issues.move.has-reconciled',
       ...partyCodes.map((code) => `parties.issues.${code}`),
@@ -82,7 +85,7 @@ describe('translation keys used in the code', () => {
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates'].map((h) => `help.${h}`),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])
   })

@@ -1418,6 +1418,129 @@
         }
       }
     },
+    "/api/exchange-rates": {
+      "get": {
+        "tags": [
+          "Exchange rates"
+        ],
+        "operationId": "ListExchangeRates",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyRateDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Exchange rates"
+        ],
+        "operationId": "SetExchangeRate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyRateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyRateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/exchange-rates/{id}": {
+      "delete": {
+        "tags": [
+          "Exchange rates"
+        ],
+        "operationId": "DeleteExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exchange-rates/on": {
+      "get": {
+        "tags": [
+          "Exchange rates"
+        ],
+        "operationId": "GetExchangeRateOn",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateOnDate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/import/accounts": {
       "put": {
         "tags": [
@@ -2043,7 +2166,8 @@
           "CashOrBank",
           "Receivable",
           "Payable",
-          "RetainedEarnings"
+          "RetainedEarnings",
+          "ExchangeDifference"
         ]
       },
       "AccountType": {
@@ -2518,6 +2642,53 @@
           },
           "nameAr": {
             "type": "string"
+          }
+        }
+      },
+      "CurrencyRateDto": {
+        "required": [
+          "id",
+          "currencyCode",
+          "date",
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "CurrencyRateInput": {
+        "required": [
+          "currencyCode",
+          "date",
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "currencyCode": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -3192,6 +3363,30 @@
           }
         }
       },
+      "RateOnDate": {
+        "required": [
+          "rate",
+          "rateDate",
+          "found"
+        ],
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "rateDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "found": {
+            "type": "boolean"
+          }
+        }
+      },
       "RecentFileDto": {
         "required": [
           "path",
@@ -3778,6 +3973,18 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "exchangeRate": {
+            "type": "number",
+            "format": "double",
+            "default": 1
+          },
+          "documentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3823,6 +4030,19 @@
             "items": {
               "$ref": "#/components/schemas/VoucherLineInput"
             }
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exchangeRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -3994,6 +4214,10 @@
           "lineCount": {
             "type": "integer",
             "format": "int32"
+          },
+          "currencyCode": {
+            "type": "string",
+            "default": ""
           }
         }
       }
@@ -4032,6 +4256,9 @@
     },
     {
       "name": "Bank and cash"
+    },
+    {
+      "name": "Exchange rates"
     },
     {
       "name": "Import"

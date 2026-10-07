@@ -37,13 +37,17 @@ import type {
   CountryDto,
   CreateCompanyRequest,
   CurrencyDto,
+  CurrencyRateDto,
+  CurrencyRateInput,
   DashboardDto,
   ExportReportParams,
   FiscalYearDto,
+  GetExchangeRateOnParams,
   GetReconciliationParams,
   GetReportParams,
   HostInfo,
   ImportResult,
+  ListExchangeRatesParams,
   ListPartiesParams,
   ListPeriodsParams,
   ListVouchersParams,
@@ -60,6 +64,7 @@ import type {
   PrintSettingsDto,
   PrintSettingsInput,
   PrintVoucherParams,
+  RateOnDate,
   RecentFileDto,
   ReconciliationDto,
   ReconciliationView,
@@ -4781,6 +4786,408 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getClearBankStatementMutationOptions(options), queryClient);
     }
+
+export type listExchangeRatesResponse200 = {
+  data: CurrencyRateDto[]
+  status: 200
+}
+
+export type listExchangeRatesResponseSuccess = (listExchangeRatesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listExchangeRatesResponse = (listExchangeRatesResponseSuccess)
+
+export const getListExchangeRatesUrl = (params?: ListExchangeRatesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/exchange-rates?${stringifiedParams}` : `/api/exchange-rates`
+}
+
+export const listExchangeRates = async (params?: ListExchangeRatesParams, options?: Parameters<typeof http>[1]): Promise<listExchangeRatesResponse> => {
+
+  return http<listExchangeRatesResponse>(getListExchangeRatesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListExchangeRatesQueryKey = (params?: ListExchangeRatesParams,) => {
+    return [
+    `/api/exchange-rates`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListExchangeRatesQueryOptions = <TData = Awaited<ReturnType<typeof listExchangeRates>>, TError = unknown>(params?: ListExchangeRatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListExchangeRatesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listExchangeRates>>> = ({ signal }) => listExchangeRates(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListExchangeRatesQueryResult = NonNullable<Awaited<ReturnType<typeof listExchangeRates>>>
+export type ListExchangeRatesQueryError = unknown
+
+
+export function useListExchangeRates<TData = Awaited<ReturnType<typeof listExchangeRates>>, TError = unknown>(
+ params: undefined |  ListExchangeRatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listExchangeRates>>,
+          TError,
+          Awaited<ReturnType<typeof listExchangeRates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListExchangeRates<TData = Awaited<ReturnType<typeof listExchangeRates>>, TError = unknown>(
+ params?: ListExchangeRatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listExchangeRates>>,
+          TError,
+          Awaited<ReturnType<typeof listExchangeRates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListExchangeRates<TData = Awaited<ReturnType<typeof listExchangeRates>>, TError = unknown>(
+ params?: ListExchangeRatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListExchangeRates<TData = Awaited<ReturnType<typeof listExchangeRates>>, TError = unknown>(
+ params?: ListExchangeRatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listExchangeRates>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListExchangeRatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type setExchangeRateResponse200 = {
+  data: CurrencyRateDto
+  status: 200
+}
+
+export type setExchangeRateResponseSuccess = (setExchangeRateResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setExchangeRateResponse = (setExchangeRateResponseSuccess)
+
+export const getSetExchangeRateUrl = () => {
+
+
+
+
+  return `/api/exchange-rates`
+}
+
+export const setExchangeRate = async (currencyRateInput: CurrencyRateInput, options?: Parameters<typeof http>[1]): Promise<setExchangeRateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setExchangeRateResponse>(getSetExchangeRateUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(currencyRateInput)
+  }
+);}
+
+
+
+
+
+export const getSetExchangeRateMutationKey = () => ['setExchangeRate'] as const;
+
+export const getSetExchangeRateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setExchangeRate>>, TError,SetExchangeRateMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setExchangeRate>>, TError,SetExchangeRateMutationVariables, TContext> => {
+
+const mutationKey = getSetExchangeRateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setExchangeRate>>, SetExchangeRateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setExchangeRate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetExchangeRateMutationResult = NonNullable<Awaited<ReturnType<typeof setExchangeRate>>>
+    export type SetExchangeRateMutationBody = CurrencyRateInput
+    export type SetExchangeRateMutationError = unknown
+    export type SetExchangeRateMutationVariables = {data: CurrencyRateInput}
+
+    export const useSetExchangeRate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setExchangeRate>>, TError,SetExchangeRateMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setExchangeRate>>,
+        TError,
+        SetExchangeRateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetExchangeRateMutationOptions(options), queryClient);
+    }
+
+export type deleteExchangeRateResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteExchangeRateResponseSuccess = (deleteExchangeRateResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteExchangeRateResponse = (deleteExchangeRateResponseSuccess)
+
+export const getDeleteExchangeRateUrl = (id: string,) => {
+
+
+
+
+  return `/api/exchange-rates/${id}`
+}
+
+export const deleteExchangeRate = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteExchangeRateResponse> => {
+
+  return http<deleteExchangeRateResponse>(getDeleteExchangeRateUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteExchangeRateMutationKey = () => ['deleteExchangeRate'] as const;
+
+export const getDeleteExchangeRateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExchangeRate>>, TError,DeleteExchangeRateMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteExchangeRate>>, TError,DeleteExchangeRateMutationVariables, TContext> => {
+
+const mutationKey = getDeleteExchangeRateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteExchangeRate>>, DeleteExchangeRateMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteExchangeRate(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteExchangeRateMutationResult = NonNullable<Awaited<ReturnType<typeof deleteExchangeRate>>>
+
+    export type DeleteExchangeRateMutationError = unknown
+    export type DeleteExchangeRateMutationVariables = {id: string}
+
+    export const useDeleteExchangeRate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExchangeRate>>, TError,DeleteExchangeRateMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteExchangeRate>>,
+        TError,
+        DeleteExchangeRateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteExchangeRateMutationOptions(options), queryClient);
+    }
+
+export type getExchangeRateOnResponse200 = {
+  data: RateOnDate
+  status: 200
+}
+
+export type getExchangeRateOnResponseSuccess = (getExchangeRateOnResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getExchangeRateOnResponse = (getExchangeRateOnResponseSuccess)
+
+export const getGetExchangeRateOnUrl = (params: GetExchangeRateOnParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/exchange-rates/on?${stringifiedParams}` : `/api/exchange-rates/on`
+}
+
+export const getExchangeRateOn = async (params: GetExchangeRateOnParams, options?: Parameters<typeof http>[1]): Promise<getExchangeRateOnResponse> => {
+
+  return http<getExchangeRateOnResponse>(getGetExchangeRateOnUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetExchangeRateOnQueryKey = (params?: GetExchangeRateOnParams,) => {
+    return [
+    `/api/exchange-rates/on`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetExchangeRateOnQueryOptions = <TData = Awaited<ReturnType<typeof getExchangeRateOn>>, TError = unknown>(params: GetExchangeRateOnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetExchangeRateOnQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getExchangeRateOn>>> = ({ signal }) => getExchangeRateOn(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetExchangeRateOnQueryResult = NonNullable<Awaited<ReturnType<typeof getExchangeRateOn>>>
+export type GetExchangeRateOnQueryError = unknown
+
+
+export function useGetExchangeRateOn<TData = Awaited<ReturnType<typeof getExchangeRateOn>>, TError = unknown>(
+ params: GetExchangeRateOnParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExchangeRateOn>>,
+          TError,
+          Awaited<ReturnType<typeof getExchangeRateOn>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExchangeRateOn<TData = Awaited<ReturnType<typeof getExchangeRateOn>>, TError = unknown>(
+ params: GetExchangeRateOnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExchangeRateOn>>,
+          TError,
+          Awaited<ReturnType<typeof getExchangeRateOn>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExchangeRateOn<TData = Awaited<ReturnType<typeof getExchangeRateOn>>, TError = unknown>(
+ params: GetExchangeRateOnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetExchangeRateOn<TData = Awaited<ReturnType<typeof getExchangeRateOn>>, TError = unknown>(
+ params: GetExchangeRateOnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateOn>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetExchangeRateOnQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type importAccountsResponse200 = {
   data: ImportResult

@@ -67,6 +67,10 @@ export interface VoucherHeader {
   cashAccountId?: string | null
   reference?: string | null
   memo?: string | null
+  /** The currency the amounts are in; empty means the company's own. */
+  currencyCode?: string
+  /** One unit of the currency in the company's currency; null lets the latest rate on the date be used. */
+  exchangeRate?: number | null
 }
 
 /** The request for the API. Payment rows send a debit, receipt rows a credit, journal rows whichever was typed. */
@@ -76,6 +80,8 @@ export const toVoucherInput = (kind: VoucherKind, header: VoucherHeader, rows: r
   cashAccountId: usesCashAccount(kind) ? (header.cashAccountId ?? null) : null,
   reference: header.reference?.trim() ? header.reference.trim() : null,
   memo: header.memo?.trim() ? header.memo.trim() : null,
+  currencyCode: header.currencyCode ? header.currencyCode : null,
+  exchangeRate: header.currencyCode && header.exchangeRate ? header.exchangeRate : null,
   lines: rowsToSend(rows).map((r) => ({
     id: r.id ?? null,
     accountId: r.accountId ?? '00000000-0000-0000-0000-000000000000',

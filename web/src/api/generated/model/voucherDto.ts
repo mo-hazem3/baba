@@ -26,4 +26,7 @@ export interface VoucherDto {
   total: number;
   /** @nullable */
   postedAt: string | null;
+  exchangeRate?: number;
+  /** @nullable */
+  documentId?: string | null;
 }

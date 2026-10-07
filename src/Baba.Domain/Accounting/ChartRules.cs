@@ -55,14 +55,15 @@ public static class ChartRules
 
         if (account.Role != AccountRole.None)
         {
-            var allowedType = account.Role switch
+            var typeFits = account.Role switch
             {
-                AccountRole.CashOrBank or AccountRole.Receivable => AccountType.Asset,
-                AccountRole.Payable => AccountType.Liability,
-                AccountRole.RetainedEarnings => AccountType.Equity,
-                _ => account.Type,
+                AccountRole.CashOrBank or AccountRole.Receivable => account.Type == AccountType.Asset,
+                AccountRole.Payable => account.Type == AccountType.Liability,
+                AccountRole.RetainedEarnings => account.Type == AccountType.Equity,
+                AccountRole.ExchangeDifference => account.Type is AccountType.Revenue or AccountType.Expense,
+                _ => true,
             };
-            if (account.Type != allowedType)
+            if (!typeFits)
                 issues.Add(new("role", "account.role-wrong-type"));
             else if (!account.IsPosting)
                 issues.Add(new("role", "account.role-needs-posting"));
