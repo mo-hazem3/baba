@@ -1,22 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-import { chooseOption, companyFile, expectNoHorizontalScroll, password, setLanguage } from './helpers'
-
-/** Walks the new-company wizard to the end for Kuwait (no tax numbers needed). */
-async function createKuwaitCompany(page: Page, file: string, labels: Record<string, string>) {
-  await page.getByRole('button', { name: labels.newCompany! }).click()
-  await page.getByLabel(labels.nameEn!).fill('Al Noor Trading')
-  await page.getByLabel(labels.nameAr!).fill('شركة النور للتجارة')
-  await chooseOption(page, labels.country!, labels.kuwait!)
-  await expect(page.getByTitle('KWD', { exact: false }).first()).toBeVisible() // currency defaults to the dinar
-  await page.getByRole('button', { name: labels.next! }).click()
-  await page.getByRole('button', { name: labels.next! }).click() // taxes: none for this country
-  await page.getByRole('button', { name: labels.next! }).click() // address
-  await page.getByRole('button', { name: labels.next! }).click() // chart
-  await page.getByRole('button', { name: labels.next! }).click() // modules
-  await page.getByLabel(labels.password!, { exact: true }).fill(password)
-  await page.getByLabel(labels.confirm!).fill(password)
-  await page.getByPlaceholder('C:\\Books\\My Company.baba').fill(file)
-}
+import { expect, test } from '@playwright/test'
+import { chooseOption, companyFile, createKuwaitCompany, expectNoHorizontalScroll, password, setLanguage } from './helpers'
 
 // The server is shared by all tests, so every test starts with no company open.
 test.beforeEach(async ({ request }) => {
@@ -50,7 +33,7 @@ test('English: create a company, close it, and reopen it with the password', asy
   await page.getByRole('button', { name: en.create }).click()
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
-  await expect(page.getByText('Your company is ready')).toBeVisible()
+  await expect(page.getByText('Cash and bank')).toBeVisible() // the dashboard, with nothing recorded yet
   await expect(page.locator('.company-details')).toContainText('Al Noor Trading')
   await expect(page.locator('.company-details')).toContainText('KWD')
   await expectNoHorizontalScroll(page)

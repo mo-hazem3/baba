@@ -11,15 +11,15 @@ describe('defaultSettings', () => {
   })
 
   it('starts with normal text and Western digits', () => {
-    expect(defaultSettings('en')).toMatchObject({ textSize: 'normal', digits: 'western' })
+    expect(defaultSettings('en')).toMatchObject({ textSize: 'normal', digits: 'western', hijri: false })
   })
 })
 
 describe('saved settings', () => {
   it('are remembered', () => {
-    saveSettings({ language: 'ar', textSize: 'xlarge', digits: 'arabic-indic' })
+    saveSettings({ language: 'ar', textSize: 'xlarge', digits: 'arabic-indic', hijri: true })
 
-    expect(loadSettings()).toEqual({ language: 'ar', textSize: 'xlarge', digits: 'arabic-indic' })
+    expect(loadSettings()).toEqual({ language: 'ar', textSize: 'xlarge', digits: 'arabic-indic', hijri: true })
   })
 
   it('fall back to defaults when nothing or garbage is stored', () => {

@@ -20,7 +20,7 @@ public sealed record RemoveRecentFileRequest(string Path);
 public sealed record RecentFileDto(string Path, string Name, DateTime LastOpenedAt, bool Exists);
 
 /// <summary>What this host can do. The UI hides features the host does not offer (for example native file dialogs).</summary>
-public sealed record HostInfo(bool FileDialogs, string Version);
+public sealed record HostInfo(bool FileDialogs, bool PdfPrinting, string Version);
 
 /// <summary>A company file the app was asked to open on start (double-click on a .baba file).</summary>
 public sealed record StartupInfo(string? OpenPath);

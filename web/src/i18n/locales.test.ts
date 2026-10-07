@@ -32,7 +32,7 @@ describe('translations', () => {
 
   it('write Arabic texts in Arabic script', () => {
     // Allowed to stay Latin: product names, the file name example and the language switch label.
-    const allowed = new Set(['app.arabicName', 'header.switchLanguage', 'start.pathPlaceholder', 'settings.languageEnglish'])
+    const allowed = new Set(['app.arabicName', 'header.switchLanguage', 'start.pathPlaceholder', 'settings.languageEnglish', 'export.pdf', 'export.excel', 'export.csv'])
     for (const [key, text] of Object.entries(arabic)) {
       if (!allowed.has(key)) expect(text, key).toMatch(/[؀-ۿ]/)
     }

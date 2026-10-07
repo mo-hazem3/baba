@@ -7,5 +7,6 @@
 
 export interface HostInfo {
   fileDialogs: boolean;
+  pdfPrinting: boolean;
   version: string;
 }

@@ -1,6 +1,7 @@
 import { DownOutlined } from '@ant-design/icons'
 import { App, Button, Dropdown, Select } from 'antd'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { refreshCompany } from '../api/hooks'
@@ -9,6 +10,7 @@ import type { CompanyInfo } from '../api/generated/model'
 import { useSettings } from '../settings/SettingsContext'
 import { textSizes } from '../settings/settings'
 import { errorMessage } from './errors'
+import { ShortcutsDialog } from './ShortcutsDialog'
 
 /** The blue bar on every screen: name, language, text size and the menu. All controls have text labels (no icon-only buttons). */
 export function AppHeader({ company }: { company?: CompanyInfo | null }) {
@@ -17,6 +19,7 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
   const { modal, message } = App.useApp()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   const close = useMutation({
     mutationFn: () => closeCompany(),
@@ -41,6 +44,7 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
   const menuItems = company
     ? [
         { key: 'settings', label: t('nav.settings'), onClick: () => navigate('/settings') },
+        { key: 'shortcuts', label: t('nav.shortcuts'), onClick: () => setShortcutsOpen(true) },
         { type: 'divider' as const },
         { key: 'close', label: t('header.closeCompany'), onClick: confirmClose },
       ]
@@ -76,6 +80,7 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
           </Button>
         </Dropdown>
       )}
+      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   )
 }

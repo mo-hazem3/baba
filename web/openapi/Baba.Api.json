@@ -932,6 +932,20 @@
               "default": "None",
               "$ref": "#/components/schemas/Comparison"
             }
+          },
+          {
+            "name": "Kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherKind"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherStatus"
+            }
           }
         ],
         "responses": {
@@ -1019,6 +1033,20 @@
             "schema": {
               "default": "None",
               "$ref": "#/components/schemas/Comparison"
+            }
+          },
+          {
+            "name": "Kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherKind"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VoucherStatus"
             }
           }
         ],
@@ -1615,11 +1643,15 @@
       "HostInfo": {
         "required": [
           "fileDialogs",
+          "pdfPrinting",
           "version"
         ],
         "type": "object",
         "properties": {
           "fileDialogs": {
+            "type": "boolean"
+          },
+          "pdfPrinting": {
             "type": "boolean"
           },
           "version": {

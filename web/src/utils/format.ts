@@ -20,11 +20,38 @@ export const formatAmount = (value: number, minorUnits: number, digits: DigitSty
   return applyDigitStyle(`${value < 0 ? '-' : ''}${formatted}`, digits)
 }
 
-/** A short date such as 06/10/2026, always day first, in the user's digit style. */
-export const formatDate = (value: Date | string, digits: DigitStyle): string => {
-  const date = typeof value === 'string' ? new Date(value) : value
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return applyDigitStyle(`${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`, digits)
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** A date as the API sends it (2026-10-06) read as that calendar day on this computer, never shifted by a time zone. */
+export const parseIsoDate = (value: string): Date => {
+  const [year = 0, month = 1, day = 1] = value.slice(0, 10).split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/** A date as the API wants it (2026-10-06). */
+export const toIsoDate = (date: Date): string => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+
+const toDate = (value: Date | string): Date => (typeof value === 'string' ? parseIsoDate(value) : value)
+
+/**
+ * The Hijri (Umm al-Qura, the civil Hijri calendar used in the Gulf) date for a Gregorian one, as 22/04/1448. Display only: Baba never stores
+ * or asks for Hijri dates (brief section 6).
+ */
+export const formatHijri = (value: Date | string, digits: DigitStyle): string => {
+  const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura-nu-latn', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }).formatToParts(toDate(value))
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0)
+  return applyDigitStyle(`${pad(part('day'))}/${pad(part('month'))}/${part('year')}`, digits)
+}
+
+/** A short date such as 06/10/2026, always day first, in the user's digit style; with the Hijri date after it when that is switched on. */
+export const formatDate = (value: Date | string, digits: DigitStyle, hijri = false): string => {
+  const date = toDate(value)
+  const gregorian = applyDigitStyle(`${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`, digits)
+  return hijri ? `${gregorian} (${formatHijri(date, digits)} هـ)` : gregorian
 }
 
 /** Month names in the interface language (1 = January). */

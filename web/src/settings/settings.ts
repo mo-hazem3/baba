@@ -6,6 +6,8 @@ export interface Settings {
   language: Language
   textSize: TextSize
   digits: DigitStyle
+  /** Show the Hijri (Umm al-Qura) date next to Gregorian dates. Display only, off by default (brief section 6). */
+  hijri: boolean
 }
 
 export const textSizes: readonly TextSize[] = ['normal', 'large', 'xlarge']
@@ -22,6 +24,7 @@ export const defaultSettings = (preferredLanguage: string = navigator.language):
   language: preferredLanguage.toLowerCase().startsWith('ar') ? 'ar' : 'en',
   textSize: 'normal',
   digits: 'western',
+  hijri: false,
 })
 
 /** Browser storage can be missing or blocked, so every access is guarded and the app works without it. */
@@ -35,6 +38,7 @@ export const loadSettings = (): Settings => {
       language: s.language === 'ar' || s.language === 'en' ? s.language : defaults.language,
       textSize: s.textSize && textSizes.includes(s.textSize) ? s.textSize : defaults.textSize,
       digits: s.digits === 'arabic-indic' || s.digits === 'western' ? s.digits : defaults.digits,
+      hijri: s.hijri === true,
     }
   } catch {
     return defaults

@@ -5,7 +5,10 @@ import {
   getListRecentFilesQueryKey,
   getStartup,
   useGetCurrentCompany,
+  useGetDashboard,
   useGetHostInfo,
+  useGetPrintSettings,
+  useListAccounts,
   useListCountries,
   useListCurrencies,
   useListRecentFiles,
@@ -44,3 +47,17 @@ let firstStartupCheck: Promise<string | null> | undefined
 
 /** The first check at start-up, shared so React's double render in development cannot lose the file. */
 export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck ??= fetchStartupFile())
+
+// ---- Accounting ----
+
+export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
+
+export const useDashboard = () => useGetDashboard({ query: { select: (r) => r.data } })
+
+export const usePrintSettings = () => useGetPrintSettings({ query: { select: (r) => r.data } })
+
+/**
+ * Anything that changes the books changes balances, reports and lists. Pages that are not on screen are read again too ("all"), so
+ * going to the Summary after posting never shows the balances from before for a moment.
+ */
+export const refreshBooks = (queryClient: QueryClient) => queryClient.invalidateQueries({ refetchType: 'all' })

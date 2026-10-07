@@ -14,10 +14,18 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
+  // Without a company there is nothing to go to, so the menu only lists the modules of an open one.
   const items = [
     { key: '/', label: t('nav.summary') },
+    { key: '/accounts', label: t('nav.accounts') },
+    { key: '/vouchers/payment', label: t('nav.payments') },
+    { key: '/vouchers/receipt', label: t('nav.receipts') },
+    { key: '/vouchers/journal', label: t('nav.journal') },
+    { key: '/reports', label: t('nav.reports') },
     { key: '/settings', label: t('nav.settings') },
   ]
+  // A page deeper in a module (a voucher, a report) keeps its module highlighted.
+  const selected = items.map((i) => i.key).filter((key) => key === '/' ? pathname === '/' : pathname === key || pathname.startsWith(key + '/'))
 
   return (
     <Layout className="app-shell">
@@ -33,7 +41,7 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
             <nav aria-label={t('nav.label')}>
               <Menu
                 mode="inline"
-                selectedKeys={[pathname]}
+                selectedKeys={selected}
                 items={items}
                 onClick={({ key }) => navigate(key)}
               />

@@ -185,6 +185,7 @@ internal sealed class MainForm : Form
             e.Handled = true;
             OpenExternally(e.Uri);
         };
+        _webView.CoreWebView2.DownloadStarting += OnDownloadStarting;
         _webView.CoreWebView2.DocumentTitleChanged += (_, _) =>
         {
             if (_smokeTestOutput is null && !string.IsNullOrWhiteSpace(_webView.CoreWebView2.DocumentTitle))
@@ -199,6 +200,45 @@ internal sealed class MainForm : Form
             else
                 await RunPageSmokeTestAsync();
         };
+    }
+
+    /// <summary>
+    /// A file the app made (an Excel or CSV export): asks where to save it with the normal Windows dialog, instead of dropping it into
+    /// the Downloads folder unseen. Cancelling the dialog cancels the download.
+    /// </summary>
+    private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)
+    {
+        e.Handled = true; // no browser-style download bubble; the dialog below is the only prompt
+        var deferral = e.GetDeferral();
+        BeginInvoke(() =>
+        {
+            try
+            {
+                var suggested = Path.GetFileName(e.ResultFilePath);
+                var extension = Path.GetExtension(suggested).TrimStart('.').ToLowerInvariant();
+                using var dialog = new SaveFileDialog
+                {
+                    FileName = suggested,
+                    DefaultExt = extension,
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    Filter = extension switch
+                    {
+                        "xlsx" => "Excel workbook (*.xlsx)|*.xlsx|All files (*.*)|*.*",
+                        "csv" => "CSV file (*.csv)|*.csv|All files (*.*)|*.*",
+                        _ => "All files (*.*)|*.*",
+                    },
+                };
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                    e.ResultFilePath = dialog.FileName;
+                else
+                    e.Cancel = true;
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        });
     }
 
     /// <summary>Stays inside the app: links to other sites open in the normal browser instead.</summary>

@@ -3,11 +3,14 @@ using Baba.Application.Accounting;
 using Baba.Application.Printing;
 using Baba.Application.Reporting;
 using Baba.Domain;
+using Baba.Domain.Accounting;
 
 namespace Baba.Api.Endpoints;
 
 /// <summary>The inputs a report may take. Each report uses the ones it needs: date range, "as of" date, account, comparison.</summary>
-public sealed record ReportQuery(DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None);
+public sealed record ReportQuery(
+    DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None,
+    VoucherKind? Kind = null, VoucherStatus? Status = null);
 
 /// <summary>
 /// The reports (trial balance, profit and loss, balance sheet, statement of account, general ledger, journal) and the two
@@ -60,7 +63,7 @@ public static class ReportEndpoints
             case "general-ledger": return await reports.GeneralLedgerAsync(q.From, q.To, ct);
             case "journal": return await reports.JournalAsync(q.From, q.To, ct);
             case "chart-of-accounts": return await listings.ChartOfAccountsAsync(ct);
-            case "vouchers": return await listings.VouchersAsync(new VoucherSearch(From: q.From, To: q.To), ct);
+            case "vouchers": return await listings.VouchersAsync(new VoucherSearch(q.Kind, q.Status, q.From, q.To), ct);
             case "statement-of-account":
                 if (q.AccountId is not { } accountId)
                     throw new ValidationException([new ValidationIssue("accountId", "report.account-required")]);

@@ -8,7 +8,13 @@
   "nav": {
     "label": "Main menu",
     "summary": "Summary",
-    "settings": "Settings"
+    "settings": "Settings",
+    "accounts": "Chart of accounts",
+    "payments": "Payments",
+    "receipts": "Receipts",
+    "journal": "Journal vouchers",
+    "reports": "Reports",
+    "shortcuts": "Keyboard shortcuts"
   },
   "header": {
     "language": "Language",
@@ -45,13 +51,21 @@
     "optional": "optional",
     "required": "required",
     "help": "Help",
-    "dismiss": "Got it"
+    "dismiss": "Got it",
+    "save": "Save",
+    "undo": "Undo",
+    "hijriSuffix": "AH"
   },
   "help": {
     "start": "Create a new company, or open a company file you already have. Each company is one file on your computer, protected by its own password. You can copy the file to back it up or send it to your accountant.",
     "wizard": "Answer a few questions to set up your company. You can go back to any step. Nothing is created until the last step.",
     "summary": "This is your starting page. It shows your company and will show your key balances once you start recording entries.",
-    "settings": "Choose the language, text size and number style. These settings are saved on this computer."
+    "settings": "Choose the language, text size and number style. These settings are saved on this computer.",
+    "accounts": "The chart of accounts is the list of accounts every entry is recorded against. Group accounts hold other accounts; only the accounts under them take entries. Add, rename or move accounts at any time. An account that already has entries cannot be deleted, but its entries can be moved to another account.",
+    "vouchers": "Vouchers are your records of money coming in, going out, or being moved between accounts. A draft can be changed freely and does not affect your reports. Once you post a voucher it gets a number and appears in your books.",
+    "voucher": "Fill in the date and the accounts, then save. \"Save as draft\" keeps your work without recording it. \"Save and post\" records it in your books and gives it a number. A posted voucher can still be corrected unless its month is locked.",
+    "reports": "Every report is worked out from your posted vouchers. Click any amount in a report to see the entries behind it.",
+    "report": "Choose the dates at the top. Click any amount to see the entries behind it. Use Export to print the report or save it as PDF, Excel or CSV."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -179,8 +193,14 @@
     "backup": "Back up now",
     "backupSaved": "Backup saved to {{path}}",
     "backupName": "{{name}} backup {{date}}",
-    "welcomeTitle": "Your company is ready",
-    "welcomeBody": "Your accounts are set up. The screens for recording entries are coming next."
+    "cash": "Cash and bank",
+    "receivables": "Owed to you",
+    "payables": "You owe",
+    "profit": "Profit this month",
+    "month": "Month: {{from}} – {{to}}",
+    "drafts": "Draft vouchers",
+    "draftsBody": "Drafts are not in your books until you post them.",
+    "quickActions": "Record something"
   },
   "settings": {
     "title": "Settings",
@@ -198,7 +218,9 @@
       "English": "Print in English",
       "Both": "Print in Arabic and English",
       "unavailable": "Printing to PDF is available in the Baba desktop app."
-    }
+    },
+    "hijri": "Hijri dates",
+    "hijriHelp": "Show the Hijri date next to dates. Baba always records the Gregorian date."
   },
   "errors": {
     "WrongPasswordOrNotABabaFile": "The password is wrong, or this is not a Baba file.",
@@ -253,5 +275,320 @@
     "body": "Your new company has not been created yet. If you close Baba now, what you typed will be lost.",
     "leave": "Close Baba",
     "stay": "Keep working"
+  },
+  "accounting": {
+    "account": "Account",
+    "accountPlaceholder": "Type a code or a name…",
+    "amount": "Amount",
+    "debit": "Debit",
+    "credit": "Credit",
+    "description": "Description",
+    "findAccount": "Find an account",
+    "findAccountHint": "Type part of a code or name, use the arrow keys, and press Enter to choose.",
+    "noAccountFound": "No account matches.",
+    "searchAccounts": "Search accounts"
+  },
+  "accounts": {
+    "title": "Chart of accounts",
+    "new": "New account",
+    "newTitle": "New account",
+    "editTitle": "Edit account",
+    "edit": "Edit",
+    "search": "Search by code or name",
+    "code": "Code",
+    "name": "Name",
+    "nameAr": "Name (Arabic)",
+    "nameEn": "Name (English)",
+    "nameHelp": "Enter at least one name. If you leave one empty, the other is used for both.",
+    "type": "Type",
+    "kind": "Kind",
+    "kindHelp": "A group holds other accounts. A posting account takes entries.",
+    "group": "Group",
+    "postable": "Takes entries",
+    "parent": "Inside",
+    "parentHelp": "The group this account belongs to.",
+    "noParent": "Nothing (top level)",
+    "role": "Special use",
+    "roleHelp": "Marks accounts Baba needs to know about, such as cash and bank accounts for payments and receipts.",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody": "This cannot be undone.",
+    "deleted": "Account deleted.",
+    "emptyTitle": "No accounts yet",
+    "emptyBody": "Add your first account to start recording entries.",
+    "moveTitle": "This account has entries",
+    "moveBody": "{{name}} has entries, so it cannot be deleted as it is. Choose the account to move them to. The entries are kept and the account is then deleted.",
+    "moveTarget": "Move the entries to",
+    "moveAndDelete": "Move entries and delete",
+    "types": {
+      "Asset": "Assets",
+      "Liability": "Liabilities",
+      "Equity": "Equity",
+      "Revenue": "Revenue",
+      "Expense": "Expenses"
+    },
+    "roles": {
+      "None": "None",
+      "CashOrBank": "Cash or bank",
+      "Receivable": "Money owed to you",
+      "Payable": "Money you owe",
+      "RetainedEarnings": "Retained earnings"
+    },
+    "issues": {
+      "account": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another account already uses this code.",
+        "name-required": "Enter a name.",
+        "has-children": "This account has accounts inside it. Move or delete those first.",
+        "has-entries": "This account has entries.",
+        "group-has-entries": "This account has entries, so it cannot become a group.",
+        "posting-has-children": "This account has accounts inside it, so it must stay a group.",
+        "parent-cycle": "An account cannot be placed inside itself.",
+        "parent-must-be-group": "Choose a group to put this account in.",
+        "parent-unknown": "That group no longer exists.",
+        "role-needs-posting": "Only an account that takes entries can have a special use.",
+        "role-wrong-type": "This special use does not fit the account type.",
+        "type-differs-from-parent": "An account must have the same type as the group it is in.",
+        "type-has-children": "The accounts inside this one have a different type. Change them first.",
+        "type-has-entries": "This account has entries, so its type cannot change."
+      },
+      "move": {
+        "same-account": "Choose a different account.",
+        "target-not-cash": "Choose another cash or bank account.",
+        "target-not-usable": "Choose an account that takes entries and is active.",
+        "target-unknown": "That account no longer exists.",
+        "type-differs": "Choose an account of the same type."
+      }
+    }
+  },
+  "voucher": {
+    "title": {
+      "Payment": "Payment voucher",
+      "Receipt": "Receipt voucher",
+      "Journal": "Journal voucher"
+    },
+    "plural": {
+      "Payment": "Payments",
+      "Receipt": "Receipts",
+      "Journal": "Journal vouchers"
+    },
+    "new": {
+      "Payment": "New payment",
+      "Receipt": "New receipt",
+      "Journal": "New journal voucher"
+    },
+    "emptyTitle": {
+      "Payment": "No payments yet",
+      "Receipt": "No receipts yet",
+      "Journal": "No journal vouchers yet"
+    },
+    "emptyBody": {
+      "Payment": "Record money you pay out: rent, suppliers, salaries.",
+      "Receipt": "Record money you receive: from customers, or any other income.",
+      "Journal": "Record any entry that is not cash coming in or going out."
+    },
+    "emptySearch": "Nothing matches your search.",
+    "newShort": "New",
+    "draft": "Draft",
+    "posted": "Posted",
+    "allStatuses": "All",
+    "status": "Status",
+    "number": "Number",
+    "date": "Date",
+    "reference": "Reference",
+    "notes": "Notes",
+    "amount": "Amount",
+    "total": "Total",
+    "totalOf": "{{count}} vouchers",
+    "search": "Search number, reference or notes",
+    "paidFrom": "Paid from",
+    "receivedInto": "Received into",
+    "cashPlaceholder": "Choose a cash or bank account",
+    "balanced": "Balanced",
+    "difference": "Difference",
+    "mustBeZero": "debits and credits must be equal",
+    "removeRow": "Remove",
+    "rowActions": "Actions",
+    "saveAsDraft": "Save as draft",
+    "save": "Save and post",
+    "savedDraft": "Draft saved.",
+    "postedAs": "Posted as {{number}}.",
+    "print": "Print",
+    "printSaveFirst": "Save the voucher first, then print it.",
+    "cannotSave": "The voucher cannot be saved yet",
+    "delete": "Delete",
+    "deleteTitle": "Delete this {{kind}}?",
+    "deleteBody": "A posted voucher is removed from your books. You can undo this straight afterwards.",
+    "deleted": "Voucher deleted.",
+    "draftDeleted": "Draft deleted.",
+    "draftRestored": "Voucher restored.",
+    "discardTitle": "Leave without saving?",
+    "discardBody": "Your changes have not been saved.",
+    "discard": "Leave",
+    "keepEditing": "Keep editing",
+    "issues": {
+      "lines": {
+        "required": "Add at least two lines, or one line for a payment or receipt."
+      },
+      "line": {
+        "account-required": "Line {{line}}: choose an account.",
+        "account-unknown": "Line {{line}}: this account no longer exists.",
+        "account-inactive": "Line {{line}}: this account is inactive.",
+        "account-not-posting": "Line {{line}}: this is a group. Choose an account inside it.",
+        "amount-required": "Line {{line}}: enter an amount.",
+        "amount-negative": "Line {{line}}: the amount cannot be negative.",
+        "amount-both-sides": "Line {{line}}: use either debit or credit, not both.",
+        "amount-decimals": "Line {{line}}: too many decimal places for this currency.",
+        "amount-wrong-side": "Line {{line}}: this amount is on the wrong side."
+      },
+      "balance": {
+        "unbalanced": "Debits and credits are not equal.",
+        "unbalanced-base": "Debits and credits are not equal once converted to the company currency."
+      },
+      "cash-account": {
+        "required": "Choose the cash or bank account.",
+        "invalid": "Choose a cash or bank account that is active."
+      },
+      "date": {
+        "required": "Choose a date.",
+        "locked-period": "This month is locked. Unlock it in Settings to make changes."
+      },
+      "currency": {
+        "required": "Choose a currency.",
+        "unknown": "This currency is not known."
+      },
+      "exchange-rate": {
+        "invalid": "Enter a valid exchange rate.",
+        "base-must-be-one": "The rate for the company currency is always 1."
+      },
+      "voucher": {
+        "kind-cannot-change": "A voucher cannot change from one kind to another."
+      }
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "names": {
+      "trial-balance": "Trial balance",
+      "profit-and-loss": "Profit and loss",
+      "balance-sheet": "Balance sheet",
+      "statement-of-account": "Account statement",
+      "general-ledger": "General ledger",
+      "journal": "Journal"
+    },
+    "descriptions": {
+      "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
+      "profit-and-loss": "Income less expenses for a period: how much you earned.",
+      "balance-sheet": "What you own, what you owe and what is left for the owners, on one day.",
+      "statement-of-account": "Every entry on one account with a running balance.",
+      "general-ledger": "The entries of every account, one account after another.",
+      "journal": "Every entry in date order, as it was recorded."
+    },
+    "presets": {
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisYear": "This year",
+      "lastYear": "Last year",
+      "all": "All dates",
+      "custom": "Custom"
+    },
+    "dates": "Dates",
+    "from": "From",
+    "to": "To",
+    "asOf": "As of",
+    "compare": "Compare with last year",
+    "chooseAccount": "Choose an account",
+    "chooseAccountFirst": "Choose an account to see its statement.",
+    "checkFailed": "check failed"
+  },
+  "export": {
+    "export": "Export",
+    "print": "Print",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "csv": "CSV",
+    "language": "Language",
+    "both": "Arabic and English",
+    "arabic": "Arabic",
+    "english": "English",
+    "pdfUnavailable": "PDF is only available in the Baba desktop app. Excel and CSV work everywhere."
+  },
+  "printing": {
+    "title": "Print template",
+    "intro": "Choose what appears on voucher printouts and reports. These settings are saved in the company file.",
+    "showCompanyName": "Company name",
+    "showLogo": "Logo",
+    "showStamp": "Stamp",
+    "showSignatures": "Signature lines",
+    "showAmountInWords": "Amount in words",
+    "arabicIndicDigits": "Arabic-Indic digits (١٢٣)",
+    "defaultLayout": "Printout language",
+    "defaultLayoutHelp": "The language used unless you choose another when printing.",
+    "headerEn": "Header text (English)",
+    "headerAr": "Header text (Arabic)",
+    "headerHelp": "Shown under the company name, for example an address or phone number.",
+    "footerEn": "Footer text (English)",
+    "footerAr": "Footer text (Arabic)",
+    "saved": "Print template saved.",
+    "issues": {
+      "print": {
+        "layout-unknown": "Choose a language for printouts.",
+        "text-too-long": "This text is too long."
+      }
+    }
+  },
+  "branding": {
+    "title": "Logo and stamp",
+    "intro": "Shown on printouts when switched on in the print template. PNG or JPEG, up to 1 MB.",
+    "logo": "Logo",
+    "stamp": "Stamp",
+    "logoAlt": "Company logo",
+    "stampAlt": "Company stamp",
+    "none": "No picture",
+    "upload": "Choose a picture…",
+    "replace": "Replace…",
+    "remove": "Remove",
+    "issues": {
+      "image": {
+        "required": "Choose a picture.",
+        "too-large": "This picture is larger than 1 MB.",
+        "unsupported-type": "Use a PNG or JPEG picture."
+      }
+    }
+  },
+  "periods": {
+    "title": "Locked months",
+    "intro": "Lock a month once it is closed, for example after filing a tax return. Nobody can then add, change or delete vouchers dated in it until it is unlocked.",
+    "fiscalYear": "Fiscal year",
+    "month": "Month",
+    "dates": "Dates",
+    "status": "Status",
+    "open": "Open",
+    "locked": "Locked",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "lockTitle": "Lock {{month}}?",
+    "lockBody": "Vouchers in this month can no longer be added, changed or deleted until you unlock it."
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "intro": "Everything in Baba can be done with the keyboard.",
+    "key": "Keys",
+    "action": "What it does",
+    "actions": {
+      "save": "Save",
+      "print": "Print",
+      "new": "New",
+      "findAccount": "Find an account",
+      "nextCell": "Next field",
+      "nextRow": "Next row",
+      "textSize": "Make text larger or smaller",
+      "back": "Go back"
+    }
   }
 }

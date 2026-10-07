@@ -26,6 +26,9 @@ const companyFile = path.join(dataDir, 'RealWindow.baba')
 const backupFile = path.join(dataDir, 'RealWindow-backup.baba')
 const password = 'correct-horse'
 const port = 9333
+// BABA_NO_NATIVE=1 skips the steps that type into native Windows dialogs (they need an unlocked, interactive desktop):
+// the company is made and backed up through the API instead, and the Excel/CSV/close-window dialog steps are skipped.
+const native = process.env.BABA_NO_NATIVE !== '1'
 const log = (...a) => console.log('•', ...a)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -60,7 +63,7 @@ async function main() {
     console.error('\nREAL WINDOW FLOW FAILED: watchdog timeout (the flow got stuck)')
     app.kill()
     process.exit(2)
-  }, 420000)
+  }, 780000)
 
   try {
     for (let i = 0; i < 60; i++) {
@@ -92,31 +95,46 @@ async function main() {
     log('start screen shown in the real window')
 
     // ---- Phase 0: new company wizard, with the NATIVE Save dialog ----
-    await page.getByRole('button', { name: 'New company' }).click()
-    await page.getByLabel('Company name (English)').fill('Real Window Trading')
-    await page.getByLabel('Company name (Arabic)').fill('شركة النافذة الحقيقية')
-    await chooseOption(page, 'Country', 'Kuwait')
-    for (let i = 0; i < 5; i++) await page.getByRole('button', { name: 'Next' }).click()
-    await page.getByLabel('File password', { exact: true }).fill(password)
-    await page.getByLabel('Confirm password').fill(password)
-    const readOnly = await page.getByPlaceholder('C:\\Books\\My Company.baba').getAttribute('readonly')
-    log('file path box is read-only (must use the native dialog):', readOnly !== null)
-    typeIntoDialog(companyFile)
-    await page.getByRole('button', { name: 'Choose location…' }).click()
-    await expect(page.getByPlaceholder('C:\\Books\\My Company.baba')).toHaveValue(companyFile, { timeout: 30000 })
-    log('native Save dialog returned:', companyFile)
-    await page.screenshot({ path: path.join(shots, '2-wizard-file.png') })
+    if (native) {
+      await page.getByRole('button', { name: 'New company' }).click()
+      await page.getByLabel('Company name (English)').fill('Real Window Trading')
+      await page.getByLabel('Company name (Arabic)').fill('شركة النافذة الحقيقية')
+      await chooseOption(page, 'Country', 'Kuwait')
+      for (let i = 0; i < 5; i++) await page.getByRole('button', { name: 'Next' }).click()
+      await page.getByLabel('File password', { exact: true }).fill(password)
+      await page.getByLabel('Confirm password').fill(password)
+      const readOnly = await page.getByPlaceholder('C:\\Books\\My Company.baba').getAttribute('readonly')
+      log('file path box is read-only (must use the native dialog):', readOnly !== null)
+      typeIntoDialog(companyFile)
+      await page.getByRole('button', { name: 'Choose location…' }).click()
+      await expect(page.getByPlaceholder('C:\\Books\\My Company.baba')).toHaveValue(companyFile, { timeout: 30000 })
+      log('native Save dialog returned:', companyFile)
+      await page.screenshot({ path: path.join(shots, '2-wizard-file.png') })
 
-    await page.getByRole('button', { name: 'Create company' }).click()
+      await page.getByRole('button', { name: 'Create company' }).click()
+    } else {
+      log('NO-NATIVE mode: the company is created through the API (the wizard and its native Save dialog were not driven in this run)')
+      const created = await page.evaluate(async ({ path, password, year }) => {
+        const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة النافذة الحقيقية', nameEn: 'Real Window Trading', countryCode: 'KW', baseCurrencyCode: 'KWD', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: {}, address: null, chartTemplateKey: 'default', enabledModules: [] } }) })
+        return response.status
+      }, { path: companyFile, password, year: new Date().getFullYear() })
+      if (created !== 200) throw new Error('Creating the company through the API returned ' + created)
+      await page.reload()
+    }
     await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible({ timeout: 60000 })
     await expect(page.locator('.company-details')).toContainText('Real Window Trading')
     log('company created; file exists:', fs.existsSync(companyFile), '| size', fs.statSync(companyFile).size, 'bytes | window title:', await page.title())
     await page.screenshot({ path: path.join(shots, '3-summary.png') })
 
     // Backup through the native Save dialog.
-    typeIntoDialog(backupFile)
-    await page.getByRole('button', { name: 'Back up now' }).click()
-    await expect(page.getByText(/Backup saved to/)).toBeVisible({ timeout: 60000 })
+    if (native) {
+      typeIntoDialog(backupFile)
+      await page.getByRole('button', { name: 'Back up now' }).click()
+      await expect(page.getByText(/Backup saved to/)).toBeVisible({ timeout: 60000 })
+    } else {
+      const status = await page.evaluate(async (destinationPath) => (await fetch('/api/company/backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destinationPath }) })).status, backupFile)
+      if (status !== 200 && status !== 204) throw new Error('Backup through the API returned ' + status)
+    }
     log('backup written through the native dialog; exists:', fs.existsSync(backupFile))
 
     // Printing from Settings opens the PDF in the viewer window.
@@ -166,29 +184,144 @@ async function main() {
     await page.getByRole('button', { name: 'English' }).click()
     await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
 
-    // ---- ADD THE NEXT PHASE'S FLOWS HERE (before the close-window test) ----
+    // ---- Phase 1: a little bookkeeping, reports, and exports through the NATIVE Save dialog ----
+    const pickAccount = async (label, search) => {
+      const box = page.getByLabel(label, { exact: true })
+      await box.click()
+      await box.fill(search)
+      await page.locator('.ant-select-dropdown:visible .ant-select-item-option', { hasText: search }).first().click()
+    }
+    const menu = (name) => page.getByRole('menuitem', { name, exact: true }).click()
 
-    // Close-window warning: with a half-filled new company the window asks first. Default button = keep working.
-    await page.getByRole('button', { name: /Menu/ }).click()
-    await page.getByText('Close company', { exact: true }).click()
-    await page.getByRole('button', { name: 'Close company' }).last().click()
-    await page.getByRole('button', { name: 'New company' }).click()
-    await page.getByLabel('Company name (English)').fill('Unfinished Trading')
-    sendKeys('{ENTER}', 3000) // the default button is "Keep working"
-    closeMainWindow(app.pid)
-    await sleep(6000)
-    if (appExit !== null) throw new Error('The window closed even though it had unsaved work and the user chose to keep working')
-    await expect(page.getByLabel('Company name (English)')).toHaveValue('Unfinished Trading')
-    log('close warning shown; "Keep working" kept the window open and the typed data')
+    await menu('Receipts')
+    await page.getByRole('button', { name: 'New receipt' }).click()
+    await pickAccount('Received into', '111')
+    await pickAccount('Account 1', '511')
+    await page.getByLabel('Amount 1').fill('1000')
+    await page.getByRole('button', { name: 'Save and post' }).click()
+    await expect(page.getByText(/Posted as RV-\d{4}-0001/)).toBeVisible()
+    log('receipt of 1,000 posted in the real window')
+    await page.screenshot({ path: path.join(shots, '6-receipts-list.png') })
 
-    sendKeys('{TAB}{ENTER}', 3000) // move to "Close Baba" and confirm
-    closeMainWindow(app.pid)
-    for (let i = 0; i < 40 && appExit === null; i++) await sleep(500)
-    if (appExit === null) throw new Error('"Close Baba" did not close the window')
-    log('"Close Baba" closed the app (exit code', appExit + ')')
-    const locks = fs.readdirSync(dataDir).filter((f) => f.endsWith('.lock'))
-    log('company file released (no lock file left):', locks.length === 0)
-    if (locks.length > 0) throw new Error('A lock file was left behind')
+    await menu('Payments')
+    await page.getByRole('button', { name: 'New payment' }).click()
+    await pickAccount('Paid from', '111')
+    await pickAccount('Account 1', '422')
+    await page.getByLabel('Amount 1').fill('300')
+    await page.getByRole('button', { name: 'Save and post' }).click()
+    await expect(page.getByText(/Posted as PV-\d{4}-0001/)).toBeVisible()
+    log('payment of 300 posted')
+
+    await menu('Journal vouchers')
+    await page.getByRole('button', { name: 'New journal voucher' }).click()
+    await pickAccount('Account 1', '112')
+    await page.getByLabel('Debit 1').fill('500')
+    await pickAccount('Account 2', '31')
+    await page.getByLabel('Credit 2').fill('500')
+    await expect(page.getByText('Balanced')).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '7-journal-form.png') })
+    await page.getByRole('button', { name: 'Save and post' }).click()
+    await expect(page.getByText(/Posted as JV-\d{4}-0001/)).toBeVisible()
+    log('balanced journal voucher of 500 posted')
+
+    await menu('Reports')
+    await page.getByRole('button', { name: 'Open Trial balance' }).click()
+    await expect(page.locator('.report-total').first()).toContainText('1,500.000')
+    await expect(page.locator('.check-bad')).toHaveCount(0)
+    await page.screenshot({ path: path.join(shots, '8-trial-balance.png') })
+    log('trial balance: debits = credits = 1,500.000')
+
+    if (native) {
+      // Excel and CSV: the host asks where to save with the normal Windows dialog.
+      const xlsxFile = path.join(dataDir, 'trial-balance.xlsx')
+      const csvFile = path.join(dataDir, 'trial-balance.csv')
+      typeIntoDialog(xlsxFile)
+      await page.getByRole('button', { name: /^Export/ }).click()
+      await page.getByRole('menuitem', { name: 'Excel' }).click()
+      for (let i = 0; i < 60 && !fs.existsSync(xlsxFile); i++) await sleep(500)
+      if (!fs.existsSync(xlsxFile) || fs.readFileSync(xlsxFile).subarray(0, 2).toString() !== 'PK') throw new Error('The Excel export was not saved as a real .xlsx file')
+      log('Excel saved through the native dialog:', fs.statSync(xlsxFile).size, 'bytes')
+
+      typeIntoDialog(csvFile)
+      await page.getByRole('button', { name: /^Export/ }).click()
+      await page.getByRole('menuitem', { name: 'CSV' }).click()
+      for (let i = 0; i < 60 && !fs.existsSync(csvFile); i++) await sleep(500)
+      if (!fs.existsSync(csvFile) || !fs.readFileSync(csvFile, 'utf8').includes('Cash on hand')) throw new Error('The CSV export is missing or has no accounts in it')
+      log('CSV saved through the native dialog:', fs.statSync(csvFile).size, 'bytes')
+
+    } else {
+      // The native Save dialog was not driven; at least the files themselves are checked, fetched from the page.
+      const { xlsx, csv } = await page.evaluate(async () => {
+        const q = new URLSearchParams(location.search)
+        const get = async (format) => { const r = await fetch('/api/reports/trial-balance/export?format=' + format + '&layout=Both'); return { status: r.status, bytes: new Uint8Array(await r.arrayBuffer()) } }
+        const x = await get('Xlsx'); const c = await get('Csv')
+        return { xlsx: { status: x.status, head: String.fromCharCode(...x.bytes.slice(0, 2)), size: x.bytes.length }, csv: { status: c.status, text: new TextDecoder().decode(c.bytes), size: c.bytes.length } }
+      })
+      if (xlsx.status !== 200 || xlsx.head !== 'PK') throw new Error('The Excel export is not a real .xlsx file')
+      if (csv.status !== 200 || !csv.text.includes('Cash on hand')) throw new Error('The CSV export has no accounts in it')
+      log('NO-NATIVE mode: Excel (' + xlsx.size + ' bytes, PK header) and CSV (' + csv.size + ' bytes) fetched OK; the native Save dialog for downloads was NOT driven')
+    }
+
+    // Logo upload, then a voucher PDF in the viewer window.
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+    await menu('Settings')
+    await page.getByTestId('upload-logo').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png })
+    await expect(page.getByAltText('Company logo')).toBeVisible()
+    log('logo uploaded and shown in Settings')
+    await page.screenshot({ path: path.join(shots, '9-settings-cards.png'), fullPage: true })
+
+    await menu('Receipts')
+    await page.getByRole('link', { name: /RV-\d{4}-0001/ }).click()
+    const voucherPopup = context.waitForEvent('page', { timeout: 60000 })
+    await page.getByRole('button', { name: 'Print', exact: true }).click()
+    const voucherPdf = await voucherPopup
+    await sleep(2500)
+    log('voucher PDF opened in the viewer window | title:', await voucherPdf.title())
+    await Promise.race([page.bringToFront().catch(() => {}), sleep(5000)])
+
+    // Arabic reports in the real window.
+    await page.getByRole('button', { name: 'العربية' }).click()
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+    await menu('التقارير')
+    await page.getByRole('button', { name: 'فتح ميزان المراجعة' }).click()
+    await expect(page.locator('.report-total').first()).toContainText('1,500.000')
+    await page.screenshot({ path: path.join(shots, '10-arabic-trial-balance.png') })
+    log('Arabic trial balance shown right-to-left')
+    await page.getByRole('button', { name: 'English' }).click()
+    await expect(page.getByRole('heading', { name: /Trial balance/ })).toBeVisible()
+    await menu('Summary')
+    await expect(page.getByText('Cash and bank')).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '11-summary-dashboard.png') })
+
+    if (native) {
+      // Close-window warning: with a half-filled new company the window asks first. Default button = keep working.
+      await page.getByRole('button', { name: /Menu/ }).click()
+      await page.getByText('Close company', { exact: true }).click()
+      await page.getByRole('button', { name: 'Close company' }).last().click()
+      await page.getByRole('button', { name: 'New company' }).click()
+      await page.getByLabel('Company name (English)').fill('Unfinished Trading')
+      sendKeys('{ENTER}', 3000) // the default button is "Keep working"
+      closeMainWindow(app.pid)
+      await sleep(6000)
+      if (appExit !== null) throw new Error('The window closed even though it had unsaved work and the user chose to keep working')
+      await expect(page.getByLabel('Company name (English)')).toHaveValue('Unfinished Trading')
+      log('close warning shown; "Keep working" kept the window open and the typed data')
+
+      sendKeys('{TAB}{ENTER}', 3000) // move to "Close Baba" and confirm
+      closeMainWindow(app.pid)
+      for (let i = 0; i < 40 && appExit === null; i++) await sleep(500)
+      if (appExit === null) throw new Error('"Close Baba" did not close the window')
+      log('"Close Baba" closed the app (exit code', appExit + ')')
+      const locks = fs.readdirSync(dataDir).filter((f) => f.endsWith('.lock'))
+      log('company file released (no lock file left):', locks.length === 0)
+      if (locks.length > 0) throw new Error('A lock file was left behind')
+
+    } else {
+      log('NO-NATIVE mode: the close-window warning (native dialog) was NOT driven')
+      closeMainWindow(app.pid) // nothing unsaved is open, so the window just closes
+      for (let i = 0; i < 40 && appExit === null; i++) await sleep(500)
+      log('window closed without a prompt (exit code', appExit + ')')
+    }
 
     await browser.close().catch(() => {})
     console.log('\nREAL WINDOW FLOW: ALL STEPS PASSED')

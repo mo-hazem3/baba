@@ -1,4 +1,4 @@
-import { App, Button, Card, Form, Radio, Typography } from 'antd'
+import { App, Button, Card, Form, Radio, Switch, Typography } from 'antd'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { printTestPage } from '../../api/generated/baba'
@@ -9,11 +9,14 @@ import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { textSizes } from '../../settings/settings'
 import { formatAmount, formatDate } from '../../utils/format'
+import { BrandingCard } from './BrandingCard'
+import { PeriodsCard } from './PeriodsCard'
+import { PrintTemplateCard } from './PrintTemplateCard'
 
 /** Language, text size and number style (brief sections 6 and 7.2). Saved on this computer. */
 export function SettingsPage() {
   const { t } = useTranslation()
-  const { settings, setLanguage, setTextSize, setDigits } = useSettings()
+  const { settings, setLanguage, setTextSize, setDigits, setHijri } = useSettings()
   const { message } = App.useApp()
 
   // Makes a sample invoice PDF and opens it in the viewer, where it can be checked, printed or saved.
@@ -67,11 +70,14 @@ export function SettingsPage() {
               ]}
             />
           </Form.Item>
+          <Form.Item label={t('settings.hijri')} extra={t('settings.hijriHelp')}>
+            <Switch checked={settings.hijri} onChange={setHijri} aria-label={t('settings.hijri')} />
+          </Form.Item>
           <Form.Item label={t('settings.preview')}>
             <p className="numbers preview">
               {formatAmount(1234567.891, 3, settings.digits)} &nbsp;|&nbsp;
               <span className="negative"> {formatAmount(-1250, 3, settings.digits)}</span> &nbsp;|&nbsp;
-              {formatDate(new Date(2026, 9, 6), settings.digits)}
+              {formatDate(new Date(2026, 9, 6), settings.digits, settings.hijri)}
             </p>
           </Form.Item>
         </Form>
@@ -92,6 +98,10 @@ export function SettingsPage() {
           ))}
         </div>
       </Card>
+
+      <PrintTemplateCard />
+      <BrandingCard />
+      <PeriodsCard />
     </div>
   )
 }

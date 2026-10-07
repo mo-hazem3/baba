@@ -15,6 +15,7 @@ interface SettingsContextValue {
   setLanguage: (language: Language) => void
   setTextSize: (size: TextSize) => void
   setDigits: (digits: DigitStyle) => void
+  setHijri: (hijri: boolean) => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -59,6 +60,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setLanguage: (language) => setSettings((s) => ({ ...s, language })),
       setTextSize,
       setDigits: (digits) => setSettings((s) => ({ ...s, digits })),
+      setHijri: (hijri) => setSettings((s) => ({ ...s, hijri })),
     }),
     [settings, setTextSize],
   )

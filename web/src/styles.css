@@ -244,3 +244,324 @@ body {
 .settings-card {
   margin-block-start: 16px;
 }
+
+.strong {
+  font-weight: 700;
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+kbd {
+  padding: 2px 6px;
+  border: 1px solid #8a93a3;
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* Filters and form fields */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-block-end: 16px;
+}
+
+.filter-search {
+  min-inline-size: 18em;
+  max-inline-size: 28em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-inline-size: 12em;
+}
+
+.field-wide {
+  min-inline-size: 22em;
+  flex: 1 1 22em;
+}
+
+.field-full {
+  flex: 1 1 100%;
+  margin-block-start: 16px;
+}
+
+.field label {
+  font-weight: 600;
+}
+
+.date-field {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input {
+  min-inline-size: 11em;
+}
+
+.export-language {
+  min-inline-size: 12em;
+}
+
+.account-select {
+  inline-size: 100%;
+  min-inline-size: 14em;
+}
+
+.amount-input {
+  inline-size: 100%;
+  min-inline-size: 8em;
+}
+
+.cell-error {
+  margin-block-start: 2px;
+  color: #b00020;
+  font-size: 0.9em;
+}
+
+.issue-list {
+  margin: 0;
+  padding-inline-start: 20px;
+}
+
+/* Voucher form */
+
+.form-page {
+  max-inline-size: 1100px;
+}
+
+.voucher-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block-end: 16px;
+  padding: 16px;
+  border: 1px solid #d5dae3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.lines-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid #d5dae3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.lines-grid {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.lines-grid th,
+.lines-grid td {
+  padding: 8px;
+  border-block-end: 1px solid #e6e9ef;
+  vertical-align: top;
+  text-align: start;
+}
+
+.lines-grid th {
+  background: #eef1f6;
+  font-weight: 600;
+}
+
+.lines-grid .num {
+  text-align: end;
+  min-inline-size: 9em;
+}
+
+.lines-grid .col-number {
+  inline-size: 3em;
+  text-align: center;
+  color: #444b57;
+}
+
+.lines-grid .col-actions {
+  inline-size: 6em;
+  white-space: nowrap;
+}
+
+.voucher-totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-block: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #eef1f6;
+}
+
+.check-ok {
+  color: #0b6b2e;
+}
+
+.check-bad {
+  color: #b00020;
+}
+
+.form-bar {
+  position: sticky;
+  inset-block-end: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-start: 20px;
+  padding: 12px 0;
+  border-block-start: 1px solid #d5dae3;
+  background: #f4f6f9;
+}
+
+.form-bar-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Chart of accounts and account finder */
+
+.account-tree {
+  max-block-size: 50vh;
+  overflow-y: auto;
+  margin-block-start: 12px;
+}
+
+.account-tree-hint {
+  margin-block: 12px 0;
+}
+
+/* Reports */
+
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18em, 1fr));
+  gap: 16px;
+}
+
+.report-card p {
+  min-block-size: 3.5em;
+  margin-block-start: 0;
+}
+
+.report-subtitle {
+  margin-block: 0 12px;
+}
+
+.report .report-group td,
+.report .report-heading td {
+  background: #eef1f6;
+  font-weight: 700;
+}
+
+.report .report-subtotal td {
+  font-weight: 600;
+  border-block-start: 1px solid #8a93a3;
+}
+
+.report .report-total td,
+.ant-table-summary .report-total td {
+  background: #e3e8f1;
+  font-weight: 700;
+  border-block-start: 2px solid #12356b;
+}
+
+.report .report-row:hover td a {
+  text-decoration: underline;
+}
+
+.report-checks {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-checks li {
+  margin-block: 4px;
+}
+
+.hijri {
+  font-size: 0.9em;
+}
+
+/* Summary and settings */
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+  gap: 16px;
+  margin-block-end: 8px;
+}
+
+.dashboard-amount {
+  font-size: 1.4em;
+  font-weight: 700;
+}
+
+.dashboard-amount small {
+  font-size: 0.6em;
+  font-weight: 400;
+  color: #444b57;
+}
+
+.switch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+  gap: 0 16px;
+}
+
+.branding-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.branding-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-inline-size: 14em;
+}
+
+.branding-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 14em;
+  block-size: 8em;
+  border: 1px dashed #8a93a3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.branding-preview img {
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+@media print {
+  .app-header-bar,
+  .app-sider,
+  .form-bar,
+  .skip-link {
+    display: none;
+  }
+}

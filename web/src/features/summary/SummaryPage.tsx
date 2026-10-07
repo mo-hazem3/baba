@@ -1,21 +1,24 @@
-import { Alert, App, Button, Card, Descriptions } from 'antd'
+import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { backupCompany, pickCompanyFileToSave } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
-import { useCountries, useHost } from '../../api/hooks'
+import { useCountries, useDashboard, useHost } from '../../api/hooks'
+import { Link } from 'react-router'
+import { AmountText } from '../../layout/AmountText'
 import { errorMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { formatDate, monthName } from '../../utils/format'
 
-/** The home page of an open company. Key balances will appear here once entries can be recorded (Phase 1). */
+/** The home page of an open company: the few numbers an owner checks every morning, shortcuts to record something, and the company's details. */
 export function SummaryPage({ company }: { company: CompanyInfo }) {
   const { t } = useTranslation()
   const { settings } = useSettings()
   const { message } = App.useApp()
   const countries = useCountries()
   const host = useHost()
+  const dashboard = useDashboard()
   const ar = settings.language === 'ar'
 
   const country = countries.data?.find((c) => c.code === company.countryCode)
@@ -53,7 +56,62 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
         }
       />
 
-      <Alert type="success" showIcon message={t('summary.welcomeTitle')} description={t('summary.welcomeBody')} className="form-alert" />
+      {dashboard.isError && <Alert type="error" showIcon message={errorMessage(dashboard.error, t)} className="form-alert" />}
+      {dashboard.data && (
+        <>
+          <div className="dashboard-cards">
+            {[
+              { key: 'cash', label: t('summary.cash'), value: dashboard.data.cash },
+              { key: 'receivables', label: t('summary.receivables'), value: dashboard.data.receivables },
+              { key: 'payables', label: t('summary.payables'), value: dashboard.data.payables },
+              { key: 'profit', label: t('summary.profit'), value: dashboard.data.profitThisMonth },
+            ].map((card) => (
+              <Card key={card.key} className="dashboard-card">
+                <Statistic
+                  title={card.label}
+                  valueRender={() => (
+                    <span className="dashboard-amount">
+                      <AmountText value={card.value} minorUnits={dashboard.data.minorUnits} /> <small>{dashboard.data.currencyCode}</small>
+                    </span>
+                  )}
+                />
+              </Card>
+            ))}
+          </div>
+          <p className="muted">
+            {t('summary.month', {
+              from: formatDate(dashboard.data.monthStart, settings.digits, settings.hijri),
+              to: formatDate(dashboard.data.monthEnd, settings.digits, settings.hijri),
+            })}
+          </p>
+          {dashboard.data.draftVouchers > 0 && (
+            <Alert
+              type="info"
+              showIcon
+              className="form-alert"
+              message={`${t('summary.drafts')}: ${dashboard.data.draftVouchers}`}
+              description={t('summary.draftsBody')}
+            />
+          )}
+        </>
+      )}
+
+      <Card title={t('summary.quickActions')} className="settings-card">
+        <div className="form-buttons">
+          <Link to="/vouchers/receipt/new">
+            <Button type="primary">{t('voucher.new.Receipt')}</Button>
+          </Link>
+          <Link to="/vouchers/payment/new">
+            <Button type="primary">{t('voucher.new.Payment')}</Button>
+          </Link>
+          <Link to="/vouchers/journal/new">
+            <Button>{t('voucher.new.Journal')}</Button>
+          </Link>
+          <Link to="/reports">
+            <Button>{t('reports.title')}</Button>
+          </Link>
+        </div>
+      </Card>
 
       <Card title={t('summary.company')}>
         <Descriptions column={1} bordered size="middle" className="company-details">

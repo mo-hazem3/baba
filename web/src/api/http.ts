@@ -38,10 +38,11 @@ export const http = async <T>(url: string, options: RequestInit): Promise<T> => 
     throw new ApiError(0, 'Network', 'Cannot reach Baba.')
   }
 
-  // PDFs come back as a Blob (the OpenAPI document has no schema for them, so the generated type is `void`:
-  // callers use asBlob below). Everything else is JSON, or empty.
+  // Files (PDF, Excel, CSV, pictures) come back as a Blob (the OpenAPI document has no schema for them, so the generated type
+  // is `void`: callers use asBlob below). Everything else is JSON, or empty.
   let data: unknown
-  if ((response.headers.get('content-type') ?? '').startsWith('application/pdf')) {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (response.ok && /^(application\/(pdf|octet-stream|vnd\.)|text\/csv|image\/)/.test(contentType)) {
     data = await response.blob()
   } else {
     const text = await response.text()

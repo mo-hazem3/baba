@@ -4,7 +4,7 @@ namespace Baba.Application.Printing;
 
 /// <summary>
 /// An amount written out in words, for the "amount in words" line of cheques and vouchers (تفقيط), in English or Arabic and per
-/// currency: "One thousand two hundred forty-nine Kuwaiti dinars and five hundred fils only".
+/// currency: "One thousand two hundred forty-nine dinars and five hundred fils only".
 /// </summary>
 public static class AmountInWords
 {
