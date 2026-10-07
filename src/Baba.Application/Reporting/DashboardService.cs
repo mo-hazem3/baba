@@ -39,7 +39,7 @@ public sealed class DashboardService(IAccountStore accounts, ILedgerQuery ledger
                 .Sum(t => debitSide ? t.Debit - t.Credit : t.Credit - t.Debit);
 
         var everything = await ledger.TotalsAsync(null, null, cancellationToken);
-        var thisMonth = await ledger.TotalsAsync(monthStart, monthEnd, cancellationToken);
+        var thisMonth = await ledger.OperatingTotalsAsync(monthStart, monthEnd, cancellationToken); // the year-end closing entry is not a loss
         var drafts = await vouchers.SearchAsync(new VoucherSearch(Status: VoucherStatus.Draft), cancellationToken);
 
         return new DashboardDto(

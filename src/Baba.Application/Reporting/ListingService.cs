@@ -99,6 +99,9 @@ public sealed class ListingService(ChartOfAccountsService chart, VoucherService 
     {
         VoucherKind.Payment => ("Payment voucher", "سند صرف"),
         VoucherKind.Receipt => ("Receipt voucher", "سند قبض"),
+        VoucherKind.Transfer => ("Transfer voucher", "سند تحويل"),
+        VoucherKind.Opening => ("Opening balances", "أرصدة افتتاحية"),
+        VoucherKind.Closing => ("Closing entry", "قيد إقفال"),
         _ => ("Journal voucher", "قيد يومية"),
     };
 }

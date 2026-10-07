@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { AccountDto, CostCenterDto, PartyDto, VoucherKind } from '../../api/generated/model'
 import { AccountSelect } from './AccountSelect'
 import { CostCenterSelect, PartySelect } from './LookupSelects'
-import { withTrailingBlank, type LineRow, type MappedIssues } from './voucherModel'
+import { hasFreeLines, withTrailingBlank, type LineRow, type MappedIssues } from './voucherModel'
 
 type Column = 'account' | 'party' | 'description' | 'costCenter' | 'amount' | 'debit' | 'credit'
 
@@ -46,7 +46,7 @@ export function VoucherLinesGrid({
 }) {
   const { t } = useTranslation()
   const container = useRef<HTMLDivElement>(null)
-  const journal = kind === 'Journal'
+  const journal = hasFreeLines(kind)
   const accountsById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts])
 
   const columns: Column[] = [

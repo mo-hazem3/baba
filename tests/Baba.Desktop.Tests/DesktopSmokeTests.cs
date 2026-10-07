@@ -45,6 +45,10 @@ public class DesktopSmokeTests
                 Assert.True(pdf.GetProperty("EmbedsArabicFont").GetBoolean(), layout);
             }
 
+            // A file made by the page (an Excel or CSV export) reaches the host's download handler and is saved.
+            var download = root.GetProperty("download");
+            Assert.True(download.GetProperty("Ok").GetBoolean(), download.ToString());
+
             Assert.Equal(0, process.ExitCode);
         }
         finally

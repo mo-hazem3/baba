@@ -16,6 +16,7 @@ import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
 import { matchesSearch } from '../../utils/arabic'
 import { itemName } from '../accounting/LookupSelects'
+import { ImportModal } from '../../layout/ImportModal'
 import { PartyFormModal } from './PartyFormModal'
 
 /**
@@ -36,6 +37,7 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
   const minorUnits = currencies.data?.find((c) => c.code === company.data?.baseCurrencyCode)?.minorUnits ?? 2
 
   const [search, setSearch] = useState('')
+  const [importing, setImporting] = useState(false)
   const [form, setForm] = useState<{ open: boolean; editing?: PartyDto }>({ open: false })
 
   const rows = useMemo(() => parties.filter((p) => matchesSearch(search, p.code, p.nameAr, p.nameEn, p.phone ?? '')), [parties, search])
@@ -139,6 +141,7 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
       help="parties"
       newLabel={t(customer ? 'parties.newCustomer' : 'parties.newSupplier')}
       onNew={() => setForm({ open: true })}
+      actions={<Button onClick={() => setImporting(true)}>{t('import.partiesButton')}</Button>}
       filters={
         <Input.Search
           value={search}
@@ -156,6 +159,16 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
         <Table<PartyDto> columns={columns} dataSource={rows} rowKey="id" loading={partiesQuery.isPending} pagination={false} size="middle" bordered />
       )}
 
+      <ImportModal
+        open={importing}
+        onClose={() => setImporting(false)}
+        title={t(customer ? 'import.customersTitle' : 'import.suppliersTitle')}
+        intro={t('import.partiesIntro')}
+        columns="Code, Name, Name (Arabic), Phone, Email, Address, Tax number, Credit limit, Payment terms"
+        url={`/api/import/parties/${kind}`}
+        template={'Code,Name,Name (Arabic),Phone,Email,Address,Tax number,Credit limit,Payment terms\n,Gulf Traders,الخليج للتجارة,+965 5555 1111,,,,1500,30\n'}
+        templateName={customer ? 'customers-template.csv' : 'suppliers-template.csv'}
+      />
       <PartyFormModal
         open={form.open}
         kind={kind}

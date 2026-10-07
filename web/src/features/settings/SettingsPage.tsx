@@ -9,6 +9,7 @@ import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { textSizes } from '../../settings/settings'
 import { formatAmount, formatDate } from '../../utils/format'
+import { BackupsCard } from './BackupsCard'
 import { BrandingCard } from './BrandingCard'
 import { ModulesCard } from './ModulesCard'
 import { PeriodsCard } from './PeriodsCard'
@@ -104,6 +105,7 @@ export function SettingsPage() {
       <PrintTemplateCard />
       <BrandingCard />
       <PeriodsCard />
+      <BackupsCard />
     </div>
   )
 }

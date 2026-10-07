@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { pickCompanyFileToOpen, removeRecentFile } from '../../api/generated/baba'
+import { pickCompanyFileToOpen, pickCompanyFileToSave, removeRecentFile, restoreBackup } from '../../api/generated/baba'
 import type { RecentFileDto } from '../../api/generated/model'
 import { fetchStartupFile, refreshRecentFiles, startupFileOnce, useHost, useRecentFiles } from '../../api/hooks'
+import { ApiError } from '../../api/http'
 import { EmptyState } from '../../layout/EmptyState'
 import { errorMessage } from '../../layout/errors'
 import { PageHeader } from '../../layout/PageHeader'
@@ -50,6 +51,30 @@ export function StartPage() {
     onError: (error) => void message.error(errorMessage(error, t)),
   })
 
+  // Restoring: choose the backup, choose where the restored company goes, and it is ready to open with its password.
+  const restore = useMutation({
+    mutationFn: async () => {
+      const picked = await pickCompanyFileToOpen()
+      const backupPath = picked.status === 200 ? picked.data.path : null
+      if (!backupPath) return null // cancelled
+      const where = await pickCompanyFileToSave({ suggestedFileName: `${fileName(backupPath)} ${t('start.restoredSuffix')}.baba` })
+      const destinationPath = where.status === 200 ? where.data.path : null
+      if (!destinationPath) return null
+      const response = await restoreBackup({ backupPath, destinationPath })
+      return response.status === 200 ? response.data.path : null
+    },
+    onSuccess: (path) => {
+      if (path) {
+        void message.success(t('start.restored'))
+        setTarget({ path, name: fileName(path) })
+      }
+    },
+    onError: (error) => {
+      const code = error instanceof ApiError ? error.issues[0]?.code : undefined
+      void message.error(code ? t(`start.issues.${code}`, { defaultValue: errorMessage(error, t) }) : errorMessage(error, t))
+    },
+  })
+
   const remove = useMutation({
     mutationFn: (path: string) => removeRecentFile({ path }),
     onSuccess: () => refreshRecentFiles(queryClient),
@@ -74,6 +99,11 @@ export function StartPage() {
         <Button size="large" onClick={openFile} loading={pick.isPending}>
           {t('start.openFile')}
         </Button>
+        {host.data?.fileDialogs && (
+          <Button size="large" onClick={() => restore.mutate()} loading={restore.isPending}>
+            {t('start.restore')}
+          </Button>
+        )}
       </div>
 
       <Card title={t('start.recent')} className="recent-card">

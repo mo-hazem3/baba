@@ -25,7 +25,7 @@ internal sealed class MainForm : Form
     private readonly string? _openPath;
     private readonly SingleInstance? _instance;
     private readonly string? _smokeTestOutput;
-    private readonly WebView2 _webView = new() { Dock = DockStyle.Fill };
+    private WebView2 _webView = new() { Dock = DockStyle.Fill };
     private readonly string _token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private WebApplication? _api;
     private Uri? _origin;
@@ -160,7 +160,24 @@ internal sealed class MainForm : Form
 
     private async Task StartBrowserAsync()
     {
-        await _webView.EnsureCoreWebView2Async(await _environment);
+        // WebView2 now and then answers "not in the correct state" (0x8007139F) at start-up, for example while the browser process of a
+        // window that was closed a moment ago is still shutting down. A new control a little later works, so try again before giving up.
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await _webView.EnsureCoreWebView2Async(await _environment);
+                break;
+            }
+            catch (System.Runtime.InteropServices.COMException e) when (e.HResult == unchecked((int)0x8007139F) && attempt < 5)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(attempt));
+                Controls.Remove(_webView);
+                _webView.Dispose();
+                _webView = new WebView2 { Dock = DockStyle.Fill };
+                Controls.Add(_webView);
+            }
+        }
 
         var settings = _webView.CoreWebView2.Settings;
         settings.AreDevToolsEnabled = Debugger.IsAttached || Environment.GetEnvironmentVariable("BABA_DEVTOOLS") == "1";
@@ -208,6 +225,22 @@ internal sealed class MainForm : Form
     /// </summary>
     private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)
     {
+        if (_smokeTestOutput is not null)
+        {
+            // The smoke test has nobody to answer a dialog: the file goes next to the result file, and the test checks that it arrived.
+            var smokePath = Path.ChangeExtension(_smokeTestOutput, ".download" + Path.GetExtension(e.ResultFilePath));
+            e.ResultFilePath = smokePath;
+            e.Handled = true;
+            e.DownloadOperation.StateChanged += (_, _) =>
+            {
+                if (e.DownloadOperation.State == CoreWebView2DownloadState.Completed)
+                    _smokeDownload.TrySetResult(smokePath);
+                else if (e.DownloadOperation.State == CoreWebView2DownloadState.Interrupted)
+                    _smokeDownload.TrySetResult(null);
+            };
+            return;
+        }
+
         e.Handled = true; // no browser-style download bubble; the dialog below is the only prompt
         var deferral = e.GetDeferral();
         BeginInvoke(() =>
@@ -300,6 +333,7 @@ internal sealed class MainForm : Form
     // --- Smoke test: `Baba.Desktop.exe --smoke-test <result.json>` proves WebView2 + token + API + web app work end to end. ---
 
     private SmokeApiResult? _smokeApiResult;
+    private readonly TaskCompletionSource<string?> _smokeDownload = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private sealed record SmokeApiResult(bool Ok, string BrowserSawApi, int RequestWithoutTokenStatus);
 
@@ -349,14 +383,16 @@ internal sealed class MainForm : Form
             var api = _smokeApiResult!;
             var postStatus = await PostFromPageAsync();
             var pdfs = await RenderSmokeTestPdfsAsync();
+            var download = await DownloadFromPageAsync();
             await FinishSmokeTestAsync(new
             {
-                ok = api.Ok && heading.Length > 0 && postStatus == 204 && pdfs.All(p => p.Value.Ok),
+                ok = api.Ok && heading.Length > 0 && postStatus == 204 && pdfs.All(p => p.Value.Ok) && download.Ok,
                 browserSawApi = api.BrowserSawApi,
                 requestWithoutTokenStatus = api.RequestWithoutTokenStatus,
                 webApp = heading,
                 postFromPageStatus = postStatus,
                 pdfs,
+                download,
             });
         }
         catch (Exception e)
@@ -383,6 +419,26 @@ internal sealed class MainForm : Form
         }
 
         return 0;
+    }
+
+    private const string SmokeDownloadContent = "PK-baba-download-test";
+
+    private sealed record SmokeDownload(bool Ok, long Bytes);
+
+    /// <summary>
+    /// Stage 4: a file the page makes (as an Excel or CSV export does) is handed to the host, which saves it. Without this check the
+    /// export would only fail in front of a user.
+    /// </summary>
+    private async Task<SmokeDownload> DownloadFromPageAsync()
+    {
+        await _webView.CoreWebView2.ExecuteScriptAsync(
+            "(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['" + SmokeDownloadContent + "'])); " +
+            "a.download = 'check.xlsx'; document.body.appendChild(a); a.click(); a.remove(); })()");
+
+        var finished = await Task.WhenAny(_smokeDownload.Task, Task.Delay(TimeSpan.FromSeconds(15)));
+        var path = finished == _smokeDownload.Task ? _smokeDownload.Task.Result : null;
+        var bytes = path is not null && File.Exists(path) ? new FileInfo(path).Length : 0;
+        return new SmokeDownload(path is not null && bytes == SmokeDownloadContent.Length, bytes);
     }
 
     private sealed record SmokePdf(bool Ok, int Status, int Bytes, bool IsPdf, bool EmbedsArabicFont, string File);

@@ -16,6 +16,7 @@ import { useSettings } from '../../settings/SettingsContext'
 import { matchesSearch } from '../../utils/arabic'
 import { exportAndShow } from '../reports/exportReport'
 import { accountName, buildTree, type AccountNode } from '../accounting/accountTree'
+import { ImportModal } from '../../layout/ImportModal'
 import { AccountFormModal } from './AccountFormModal'
 import { MoveEntriesModal } from './MoveEntriesModal'
 
@@ -36,6 +37,7 @@ export function ChartOfAccountsPage() {
   const [search, setSearch] = useState('')
   const [form, setForm] = useState<{ open: boolean; editing?: AccountDto }>({ open: false })
   const [moving, setMoving] = useState<AccountDto>()
+  const [importing, setImporting] = useState(false)
 
   const searching = search.trim().length > 0
   const rows: Row[] = useMemo(
@@ -122,7 +124,12 @@ export function ChartOfAccountsPage() {
       help="accounts"
       newLabel={t('accounts.new')}
       onNew={() => setForm({ open: true })}
-      actions={<ExportControls run={(format, layout) => exportAndShow('chart-of-accounts', {}, format, layout)} />}
+      actions={
+        <Space wrap>
+          <Button onClick={() => setImporting(true)}>{t('import.accountsButton')}</Button>
+          <ExportControls run={(format, layout) => exportAndShow('chart-of-accounts', {}, format, layout)} />
+        </Space>
+      }
       filters={
         <Input.Search
           value={search}
@@ -152,6 +159,16 @@ export function ChartOfAccountsPage() {
       )}
 
       <AccountFormModal open={form.open} editing={form.editing} accounts={accounts} onClose={() => setForm({ open: false })} />
+      <ImportModal
+        open={importing}
+        onClose={() => setImporting(false)}
+        title={t('import.accountsTitle')}
+        intro={t('import.accountsIntro')}
+        columns="Code, Name, Name (Arabic), Parent code, Type, Kind, Special use"
+        url="/api/import/accounts"
+        template={'Code,Name,Name (Arabic),Parent code,Type,Kind,Special use\n9,Other assets,أصول أخرى,,Asset,group,\n91,Petty cash,صندوق المصروفات,9,,posting,Cash\n'}
+        templateName="accounts-template.csv"
+      />
       <MoveEntriesModal account={moving} accounts={accounts.filter((a) => a.isPosting && a.isActive)} onClose={() => setMoving(undefined)} />
     </ListPage>
   )

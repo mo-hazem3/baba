@@ -19,16 +19,19 @@ import { openPdf } from '../../utils/download'
 import { AccountSearchDialog } from '../accounting/AccountSearchDialog'
 import { AccountSelect } from '../accounting/AccountSelect'
 import { VoucherLinesGrid } from '../accounting/VoucherLinesGrid'
+import { TransferForm } from './TransferForm'
 import {
+  hasFreeLines,
   isBlank,
   kindFromRoute,
+  listPathOf,
   mapIssues,
   newRow,
-  routeOfKind,
   rowsFromVoucher,
   rowsToSend,
   toVoucherInput,
   totals,
+  usesCashAccount,
   withTrailingBlank,
   type LineRow,
   type MappedIssues,
@@ -51,9 +54,10 @@ export function VoucherFormPage() {
 
   if (!kind) return <Navigate to="/" replace />
   if (voucherId && query.isPending) return <Spin size="large" className="page-spinner" />
-  if (voucherId && query.data === null) return <Navigate to={`/vouchers/${routeOfKind(kind)}`} replace />
+  if (voucherId && query.data === null) return <Navigate to={listPathOf(kind)} replace />
 
   // A new form for each voucher, so nothing typed in one leaks into the next.
+  if (kind === 'Transfer') return <TransferForm key={`transfer-${voucherId ?? 'new'}`} initial={query.data ?? undefined} />
   return <VoucherForm key={`${kind}-${voucherId ?? 'new'}`} kind={kind} initial={query.data ?? undefined} />
 }
 
@@ -80,9 +84,16 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
 
   const currencyCode = company.data?.baseCurrencyCode ?? ''
   const minorUnits = currencies.data?.find((c) => c.code === currencyCode)?.minorUnits ?? 2
-  const listPath = `/vouchers/${routeOfKind(kind)}`
+  const listPath = listPathOf(kind)
+  const readOnly = kind === 'Closing' // made by closing a year, never by hand
+  const freeLines = hasFreeLines(kind)
 
-  const [date, setDate] = useState(initial?.date ?? toIsoDate(new Date()))
+  // Opening balances are dated the day before the books start; everything else starts today.
+  const defaultDate =
+    kind === 'Opening' && company.data
+      ? toIsoDate(new Date(company.data.firstFiscalYear, company.data.fiscalYearStartMonth - 1, 0))
+      : toIsoDate(new Date())
+  const [date, setDate] = useState(initial?.date ?? defaultDate)
   const [cashAccountId, setCashAccountId] = useState(initial?.cashAccountId ?? undefined)
   const [reference, setReference] = useState(initial?.reference ?? '')
   const [memo, setMemo] = useState(initial?.memo ?? '')
@@ -229,9 +240,11 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
     'ctrl+s': () => !busy && save.mutate(true),
     'ctrl+p': () => initial && !dirty && host.data?.pdfPrinting && print.mutate(),
     f2: openFind,
-    'ctrl+n': () => !dirty && navigate(`${listPath}/new`),
+    'ctrl+n': () => !dirty && kind !== 'Opening' && kind !== 'Closing' && navigate(`${listPath}/new`),
   })
 
+  // The opening balances are the balance sheet as it was: revenue and expense accounts have no opening balance.
+  const gridAccounts = kind === 'Opening' ? accounts.filter((a) => a.type !== 'Revenue' && a.type !== 'Expense') : accounts
   const problem = (code: string | undefined) => (code ? t(`voucher.issues.${code}`, { defaultValue: code }) : undefined)
   const cashLabel = kind === 'Payment' ? t('voucher.paidFrom') : t('voucher.receivedInto')
   const difference = sum.difference
@@ -247,8 +260,8 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
         { label: initial ? (initial.number ?? t('voucher.draft')) : t('voucher.newShort') },
       ]}
       badge={initial && (initial.status === 'Posted' ? <Tag color="blue">{t('voucher.posted')}</Tag> : <Tag>{t('voucher.draft')}</Tag>)}
-      save={{ label: t('voucher.save'), onClick: () => save.mutate(true), loading: save.isPending && save.variables === true, disabled: busy }}
-      saveAsDraft={{ label: t('voucher.saveAsDraft'), onClick: () => save.mutate(false), loading: save.isPending && save.variables === false, disabled: busy }}
+      save={readOnly ? undefined : { label: t('voucher.save'), onClick: () => save.mutate(true), loading: save.isPending && save.variables === true, disabled: busy }}
+      saveAsDraft={readOnly ? undefined : { label: t('voucher.saveAsDraft'), onClick: () => save.mutate(false), loading: save.isPending && save.variables === false, disabled: busy }}
       print={{
         label: t('voucher.print'),
         onClick: () => print.mutate(),
@@ -257,8 +270,10 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
         title: !initial || dirty ? t('voucher.printSaveFirst') : host.data?.pdfPrinting ? undefined : t('export.pdfUnavailable'),
       }}
       cancel={{ label: t('common.cancel'), onClick: cancel, disabled: busy }}
-      remove={initial ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
+      remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
+      {readOnly && <Alert type="info" showIcon className="form-alert" message={t('voucher.closingNote')} />}
+      {kind === 'Opening' && !initial && <Alert type="info" showIcon className="form-alert" message={t('voucher.openingNote')} />}
       {issues && issues.list.length > 0 && (
         <Alert
           type="error"
@@ -281,7 +296,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
           <DateField id="voucher-date" value={date} onChange={(v) => v && setDate(v)} status={issues?.header.date ? 'error' : undefined} ariaLabel={t('voucher.date')} />
           {issues?.header.date && <div className="cell-error">{problem(issues.header.date)}</div>}
         </div>
-        {kind !== 'Journal' && (
+        {usesCashAccount(kind) && (
           <div className="field field-wide" data-field="cash">
             <label htmlFor="voucher-cash">{cashLabel}</label>
             <AccountSelect
@@ -310,7 +325,8 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
           setRows(next)
           setIssues(undefined) // an edit takes the old complaints away; saving checks again
         }}
-        accounts={accounts}
+        accounts={gridAccounts}
+        disabled={readOnly}
         parties={parties}
         costCenters={costCenters}
         // The columns are offered when the module is on, and also whenever the voucher already has such a tag (switching a module off hides nothing that was recorded).
@@ -322,7 +338,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
       {issues?.header.lines && <div className="cell-error">{problem(issues.header.lines)}</div>}
 
       <div className="voucher-totals" aria-live="polite">
-        {kind === 'Journal' ? (
+        {freeLines ? (
           <>
             <span>
               {t('accounting.debit')}: <AmountText value={sum.debit} minorUnits={minorUnits} />
@@ -354,7 +370,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
         <Input.TextArea id="voucher-memo" value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} maxLength={500} />
       </div>
 
-      <AccountSearchDialog open={find.open} accounts={accounts} cashOnly={find.target === 'cash'} onPick={pick} onClose={() => setFind({ open: false })} />
+      <AccountSearchDialog open={find.open} accounts={gridAccounts} cashOnly={find.target === 'cash'} onPick={pick} onClose={() => setFind({ open: false })} />
     </FormPage>
   )
 }

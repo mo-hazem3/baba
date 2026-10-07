@@ -190,6 +190,59 @@ public class CompanyServiceTests
         Assert.True(error.Issues.Count >= 4);
     }
 
+    // ---- Restoring a backup ----
+
+    private static string TempFolder()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "baba-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        return folder;
+    }
+
+    [Fact]
+    public void A_backup_is_restored_by_copying_it_to_a_new_company_file_and_the_backup_is_left_alone()
+    {
+        var folder = TempFolder();
+        try
+        {
+            var backup = Path.Combine(folder, "Al Noor.before-close-2026.baba");
+            File.WriteAllBytes(backup, [1, 2, 3, 4]);
+
+            var restored = _service.Restore(backup, Path.Combine(folder, "Al Noor restored")); // the .baba ending is added
+
+            Assert.Equal(Path.Combine(folder, "Al Noor restored.baba"), restored);
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, File.ReadAllBytes(restored));
+            Assert.True(File.Exists(backup));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Restoring_never_overwrites_and_explains_what_is_wrong()
+    {
+        var folder = TempFolder();
+        try
+        {
+            var backup = Path.Combine(folder, "backup.baba");
+            var taken = Path.Combine(folder, "taken.baba");
+            File.WriteAllBytes(backup, [1]);
+            File.WriteAllBytes(taken, [9]);
+
+            Assert.Contains(Assert.Throws<ValidationException>(() => _service.Restore(Path.Combine(folder, "missing.baba"), Path.Combine(folder, "new.baba"))).Issues, i => i.Code == "restore.backup-missing");
+            Assert.Contains(Assert.Throws<ValidationException>(() => _service.Restore(backup, "relative.baba")).Issues, i => i.Code == "path.not-absolute");
+            Assert.Contains(Assert.Throws<ValidationException>(() => _service.Restore(backup, taken)).Issues, i => i.Code == "restore.destination-exists");
+            Assert.Contains(Assert.Throws<ValidationException>(() => _service.Restore(backup, backup)).Issues, i => i.Code == "restore.same-file");
+            Assert.Equal(new byte[] { 9 }, File.ReadAllBytes(taken)); // untouched
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     private sealed class FakeCompanyFiles : ICompanyFiles
     {
         public string? CreatedPath { get; private set; }

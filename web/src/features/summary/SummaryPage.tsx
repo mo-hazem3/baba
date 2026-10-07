@@ -1,12 +1,11 @@
-import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
-import { useMutation } from '@tanstack/react-query'
+import { Alert, Button, Card, Descriptions, Statistic } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { backupCompany, pickCompanyFileToSave } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
 import { useCountries, useDashboard, useHost } from '../../api/hooks'
 import { Link } from 'react-router'
 import { AmountText } from '../../layout/AmountText'
 import { errorMessage } from '../../layout/errors'
+import { useBackup } from './useBackup'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { formatDate, monthName } from '../../utils/format'
@@ -15,7 +14,6 @@ import { formatDate, monthName } from '../../utils/format'
 export function SummaryPage({ company }: { company: CompanyInfo }) {
   const { t } = useTranslation()
   const { settings } = useSettings()
-  const { message } = App.useApp()
   const countries = useCountries()
   const host = useHost()
   const dashboard = useDashboard()
@@ -24,23 +22,7 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   const country = countries.data?.find((c) => c.code === company.countryCode)
   const companyName = ar ? company.nameAr : company.nameEn
 
-  const backup = useMutation({
-    mutationFn: async () => {
-      const suggestion = t('summary.backupName', {
-        name: companyName,
-        date: formatDate(new Date(), 'western').replace(/\//g, '-'),
-      })
-      const picked = await pickCompanyFileToSave({ suggestedFileName: `${suggestion}.baba` })
-      const path = picked.status === 200 ? picked.data.path : null
-      if (!path) return null // the user cancelled the dialog
-      await backupCompany({ destinationPath: path })
-      return path
-    },
-    onSuccess: (path) => {
-      if (path) void message.success(t('summary.backupSaved', { path }))
-    },
-    onError: (error) => void message.error(errorMessage(error, t)),
-  })
+  const backup = useBackup()
 
   return (
     <div>

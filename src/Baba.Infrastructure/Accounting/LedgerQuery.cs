@@ -23,6 +23,22 @@ public sealed class LedgerQuery(ICompanyDbContextFactory contexts) : ILedgerQuer
         return rows.Select(r => new AccountTotal(r.AccountId, Scaled.ToDecimal(r.Debit), Scaled.ToDecimal(r.Credit))).ToList();
     }
 
+    public async Task<IReadOnlyList<AccountTotal>> OperatingTotalsAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        var entries = context.LedgerEntries.AsNoTracking()
+            .Where(e => !context.Vouchers.Any(v => v.Id == e.VoucherId && v.Kind == VoucherKind.Closing));
+        if (from is { } start) entries = entries.Where(e => e.Date >= start);
+        if (to is { } end) entries = entries.Where(e => e.Date <= end);
+
+        var rows = await entries
+            .GroupBy(e => e.AccountId)
+            .Select(g => new { AccountId = g.Key, Debit = g.Sum(e => e.BaseDebitScaled), Credit = g.Sum(e => e.BaseCreditScaled) })
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(r => new AccountTotal(r.AccountId, Scaled.ToDecimal(r.Debit), Scaled.ToDecimal(r.Credit))).ToList();
+    }
+
     public async Task<IReadOnlyList<LedgerLine>> LinesAsync(
         IReadOnlyCollection<Guid>? accountIds, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
     {

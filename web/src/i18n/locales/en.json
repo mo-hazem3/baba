@@ -17,7 +17,11 @@
     "shortcuts": "Keyboard shortcuts",
     "customers": "Customers",
     "suppliers": "Suppliers",
-    "costCenters": "Cost centers"
+    "costCenters": "Cost centers",
+    "bank": "Bank and cash",
+    "transfers": "Transfers",
+    "opening": "Opening balances",
+    "yearEnd": "Year-end"
   },
   "header": {
     "language": "Language",
@@ -57,7 +61,8 @@
     "dismiss": "Got it",
     "save": "Save",
     "undo": "Undo",
-    "hijriSuffix": "AH"
+    "hijriSuffix": "AH",
+    "ok": "OK"
   },
   "help": {
     "start": "Create a new company, or open a company file you already have. Each company is one file on your computer, protected by its own password. You can copy the file to back it up or send it to your accountant.",
@@ -70,7 +75,12 @@
     "reports": "Every report is worked out from your posted vouchers. Click any amount in a report to see the entries behind it.",
     "report": "Choose the dates at the top. Click any amount to see the entries behind it. Use Export to print the report or save it as PDF, Excel or CSV.",
     "parties": "Customers owe you money and suppliers are owed money by you. Every entry on a receivable or payable account names the customer or supplier it is for, which is what lets Baba show each one's statement and how long their balance has been outstanding. A customer or supplier that has been used cannot be deleted, only switched off.",
-    "costCenters": "A cost center (or project) is an optional tag you can put on any voucher line, for example a branch or a job. The profit and loss can then be read for each one."
+    "costCenters": "A cost center (or project) is an optional tag you can put on any voucher line, for example a branch or a job. The profit and loss can then be read for each one.",
+    "transfer": "A transfer moves money from one bank or cash account to another, for example taking cash to the bank. Choose where it comes from, where it goes and the amount. Nothing is earned or spent, so your profit does not change.",
+    "bank": "These are your bank and cash accounts. Reconcile an account when you get the bank's statement: you check that what Baba has recorded matches what the bank says, line by line.",
+    "reconcile": "Type the date and the closing balance from the bank's statement, then tick every entry that appears on it. When the difference is zero, finish. Entries that are not on the statement yet stay unticked for next time. If you load the statement from a file, Baba suggests the matches.",
+    "opening": "The opening balances are what the business had on the day you start using Baba: cash, bank, what customers owe, what you owe, and the owners' capital. Debits and credits must be equal. There is only one opening-balances entry, and you can correct it later.",
+    "yearEnd": "At the end of a fiscal year you close it. Baba moves the year's profit or loss into retained earnings, locks the year's months, and saves a copy of your file first. If you made a mistake you can reopen the latest closed year."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -94,7 +104,21 @@
     "removeRecent": "Remove {{name}} from the list",
     "pathLabel": "File location",
     "pathPlaceholder": "C:\\Books\\My Company.baba",
-    "pathHelp": "Type the full location of the company file."
+    "pathHelp": "Type the full location of the company file.",
+    "restore": "Restore a backup…",
+    "restored": "The backup was restored as a new company file. Enter its password to open it.",
+    "restoredSuffix": "(restored)",
+    "issues": {
+      "restore": {
+        "backup-missing": "The backup file was not found.",
+        "destination-exists": "A file with that name already exists. Choose another name.",
+        "same-file": "Choose a different file than the backup itself.",
+        "backup-is-open": "That backup is the company that is open now."
+      },
+      "path": {
+        "not-absolute": "Choose a full location for the file."
+      }
+    }
   },
   "openCompany": {
     "title": "Open {{name}}",
@@ -375,7 +399,8 @@
         "target-not-cash": "Choose another cash or bank account.",
         "target-not-usable": "Choose an account that takes entries and is active.",
         "target-unknown": "That account no longer exists.",
-        "type-differs": "Choose an account of the same type."
+        "type-differs": "Choose an account of the same type.",
+        "has-reconciled": "The entries of this account were checked against a bank statement. Undo those reconciliations first."
       }
     }
   },
@@ -383,27 +408,42 @@
     "title": {
       "Payment": "Payment voucher",
       "Receipt": "Receipt voucher",
-      "Journal": "Journal voucher"
+      "Journal": "Journal voucher",
+      "Transfer": "Transfer voucher",
+      "Opening": "Opening balances",
+      "Closing": "Closing entry"
     },
     "plural": {
       "Payment": "Payments",
       "Receipt": "Receipts",
-      "Journal": "Journal vouchers"
+      "Journal": "Journal vouchers",
+      "Transfer": "Transfers",
+      "Opening": "Opening balances",
+      "Closing": "Closing entries"
     },
     "new": {
       "Payment": "New payment",
       "Receipt": "New receipt",
-      "Journal": "New journal voucher"
+      "Journal": "New journal voucher",
+      "Transfer": "New transfer",
+      "Opening": "Opening balances",
+      "Closing": "Closing entry"
     },
     "emptyTitle": {
       "Payment": "No payments yet",
       "Receipt": "No receipts yet",
-      "Journal": "No journal vouchers yet"
+      "Journal": "No journal vouchers yet",
+      "Transfer": "No transfers yet",
+      "Opening": "No opening balances yet",
+      "Closing": "No closing entries yet"
     },
     "emptyBody": {
       "Payment": "Record money you pay out: rent, suppliers, salaries.",
       "Receipt": "Record money you receive: from customers, or any other income.",
-      "Journal": "Record any entry that is not cash coming in or going out."
+      "Journal": "Record any entry that is not cash coming in or going out.",
+      "Transfer": "Move money between your bank and cash accounts.",
+      "Opening": "Enter what the business had on the day you start.",
+      "Closing": "Closing entries are made by closing a fiscal year."
     },
     "emptySearch": "Nothing matches your search.",
     "newShort": "New",
@@ -463,7 +503,10 @@
         "party-inactive": "Line {{line}}: this customer or supplier is switched off.",
         "party-not-allowed": "Line {{line}}: only receivable and payable accounts take a customer or supplier.",
         "cost-center-unknown": "Line {{line}}: this cost center no longer exists.",
-        "cost-center-inactive": "Line {{line}}: this cost center is switched off."
+        "cost-center-inactive": "Line {{line}}: this cost center is switched off.",
+        "account-not-cash": "A transfer can only go to a bank or cash account.",
+        "account-same-as-source": "A transfer must go to a different account than it comes from.",
+        "account-not-balance-sheet": "Line {{line}}: opening balances take assets, liabilities and equity, not revenue or expenses."
       },
       "balance": {
         "unbalanced": "Debits and credits are not equal.",
@@ -486,9 +529,19 @@
         "base-must-be-one": "The rate for the company currency is always 1."
       },
       "voucher": {
-        "kind-cannot-change": "A voucher cannot change from one kind to another."
+        "kind-cannot-change": "A voucher cannot change from one kind to another.",
+        "reconciled": "This voucher has been checked against a bank statement, so it cannot be changed or deleted. Undo that reconciliation first.",
+        "system-generated": "This entry is made by Baba (closing a year) and cannot be changed or deleted by hand."
+      },
+      "transfer": {
+        "one-line-only": "A transfer goes to one account only."
+      },
+      "opening": {
+        "already-exists": "The opening balances already exist. Open them to change them."
       }
-    }
+    },
+    "closingNote": "This entry was made by closing the fiscal year. It cannot be changed here: reopen the year from Year-end if it was a mistake.",
+    "openingNote": "Enter each account's balance on the day you start. Customers and suppliers are entered one by one on their accounts. Debits and credits must be equal."
   },
   "reports": {
     "title": "Reports",
@@ -709,6 +762,162 @@
         "code-duplicate": "Another cost center already uses this code.",
         "name-required": "Enter a name.",
         "in-use": "This one has entries, so it cannot be deleted. Switch it off instead."
+      }
+    }
+  },
+  "transfer": {
+    "from": "Transfer from",
+    "to": "Transfer to",
+    "deleteTitle": "Delete transfer {{number}}?",
+    "deleteDraftBody": "The draft is removed."
+  },
+  "bank": {
+    "title": "Bank and cash",
+    "emptyTitle": "No bank or cash accounts",
+    "emptyBody": "Mark an account as \"Cash or bank\" in the chart of accounts to see it here.",
+    "balance": "Balance",
+    "reconciledTo": "Checked up to",
+    "neverReconciled": "Never reconciled",
+    "unreconciled": "To check",
+    "entriesToCheck": "{{count}} entries",
+    "allChecked": "All checked",
+    "reconcile": "Reconcile",
+    "statement": "Statement",
+    "reconcileTitle": "Bank reconciliation",
+    "statementDate": "Statement date",
+    "statementBalance": "Closing balance on the statement",
+    "statementBalanceHelp": "The balance the bank prints at the end of the statement.",
+    "openingBalance": "Already checked",
+    "tickedTotal": "Ticked now ({{count}})",
+    "calculatedBalance": "Balance in Baba",
+    "difference": "Difference",
+    "enterBalance": "Enter the statement balance",
+    "noDifference": "No difference",
+    "differenceHelp": "The ticked entries do not add up to the statement balance yet. Tick the entries that are on the statement, or check the balance you typed.",
+    "finish": "Finish reconciliation",
+    "autoMatch": "Tick suggested matches",
+    "importStatement": "Load statement from a file…",
+    "importIntro": "Choose the statement your bank gave you as a CSV or Excel file. Baba reads it and suggests which entries match which lines. Lines you loaded before are skipped.",
+    "tickAll": "Tick all",
+    "untickAll": "Untick all",
+    "tick": "Tick",
+    "moneyIn": "Money in",
+    "moneyOut": "Money out",
+    "nothingToCheck": "Nothing left to check up to this date.",
+    "entriesUpTo": "{{count}} entries up to the statement date",
+    "statementLines": "Lines of the loaded statement",
+    "match": "Match",
+    "matches": "Matches {{number}}",
+    "noMatch": "No match yet",
+    "lineReconciled": "Reconciled",
+    "clearLines": "Remove unused lines",
+    "clearTitle": "Remove the loaded statement lines?",
+    "clearBody": "Lines that were not used in a reconciliation are removed. The entries in your books are not touched.",
+    "cleared": "{{count}} lines removed.",
+    "history": "Earlier reconciliations",
+    "finishedOn": "Finished on",
+    "undoLast": "Undo the latest",
+    "undoTitle": "Undo the latest reconciliation?",
+    "undoBody": "Its entries become unchecked again and can be changed. You can reconcile again afterwards.",
+    "undone": "The reconciliation was undone.",
+    "reconciled": "Reconciliation finished.",
+    "issues": {
+      "reconciliation": {
+        "difference": "The ticked entries do not add up to the statement balance.",
+        "entry-unavailable": "One of the ticked entries is not available any more. Reload the page and tick again.",
+        "none-to-undo": "There is no reconciliation to undo."
+      },
+      "bank": {
+        "account-invalid": "This is not a bank or cash account."
+      }
+    }
+  },
+  "yearEnd": {
+    "title": "Year-end",
+    "intro": "Closing a year puts its profit or loss into retained earnings, locks its months, and saves a copy of your file first. Do it after the year has ended and everything is posted.",
+    "year": "Fiscal year",
+    "profit": "Profit (loss)",
+    "status": "Status",
+    "drafts": "Drafts",
+    "draftsCount": "{{count}} drafts",
+    "closedTag": "Closed",
+    "readyTag": "Ready to close",
+    "runningTag": "In progress",
+    "close": "Close year",
+    "reopen": "Reopen",
+    "viewEntry": "Closing entry",
+    "confirmCloseTitle": "Close fiscal year {{year}}?",
+    "confirmCloseBody": "Baba will:",
+    "stepProfit": "bring the year's revenue and expense accounts to zero and put the profit or loss into retained earnings,",
+    "stepLock": "lock the twelve months of the year, so nothing can be added to them,",
+    "stepBackup": "save a copy of your company file next to it, from just before the close.",
+    "canReopen": "You can reopen the year afterwards if you find a mistake.",
+    "closedTitle": "Year {{year}} is closed",
+    "closedBody": "The closing entry is {{number}}. A copy of the file from before the close was saved as {{path}}.",
+    "confirmReopenTitle": "Reopen fiscal year {{year}}?",
+    "confirmReopenBody": "The closing entry is deleted and the months of the year are unlocked, so vouchers can be changed again. Close the year again when you are done.",
+    "reopened": "Year {{year}} is open again.",
+    "issues": {
+      "year": {
+        "already-closed": "This year is already closed.",
+        "not-ended": "This year has not ended yet.",
+        "drafts-exist": "There are draft vouchers in this year. Post or delete them first.",
+        "no-retained-earnings": "There is no retained earnings account. Mark an equity account as \"Retained earnings\" in the chart of accounts.",
+        "nothing-to-close": "This year has no revenue or expenses to close.",
+        "not-closed": "This year is not closed.",
+        "later-year-closed": "A later year is closed. Reopen the latest closed year first."
+      }
+    }
+  },
+  "backups": {
+    "title": "Backups",
+    "intro": "A backup is a complete copy of your company in one file, protected by the same password.",
+    "automaticUpdate": "Baba saves a copy automatically before it updates your file to a newer version.",
+    "automaticYearEnd": "Baba saves a copy automatically before closing a fiscal year.",
+    "restore": "To go back to a backup, use \"Restore a backup\" on the start screen (close the company first)."
+  },
+  "import": {
+    "accountsButton": "Import…",
+    "accountsTitle": "Import the chart of accounts",
+    "accountsIntro": "Add accounts from a CSV or Excel file. The first row names the columns. Only the code and one name are needed; an account that is the parent of another becomes a group.",
+    "partiesButton": "Import…",
+    "partiesIntro": "Add them from a CSV or Excel file. The first row names the columns. Only the name is needed; codes are filled in for you.",
+    "customersTitle": "Import customers",
+    "suppliersTitle": "Import suppliers",
+    "columns": "Columns",
+    "choose": "Choose a file…",
+    "template": "Download a template",
+    "done": "{{count}} imported.",
+    "skipped": "{{count}} lines were already there and were skipped.",
+    "failed": "Nothing was imported. Fix these rows and choose the file again:",
+    "row": "Row {{row}}: {{problem}}",
+    "more": "… and {{count}} more.",
+    "issues": {
+      "import": {
+        "unreadable": "The file could not be read. Use a CSV or an Excel (.xlsx) file.",
+        "empty": "The file has no rows to import."
+      },
+      "statement": {
+        "date-column-missing": "There is no Date column.",
+        "amount-column-missing": "There is no Amount column (or Debit and Credit columns).",
+        "empty": "The statement has no lines.",
+        "date-invalid": "The date is not valid.",
+        "amount-invalid": "The amount is missing or not a number."
+      },
+      "accounts": {
+        "code-column-missing": "There is no Code column."
+      },
+      "parties": {
+        "name-column-missing": "There is no Name column."
+      },
+      "account": {
+        "type-required": "Enter the type (Asset, Liability, Equity, Revenue or Expense), or a parent to take it from.",
+        "type-unknown": "The type is not one of Asset, Liability, Equity, Revenue, Expense.",
+        "role-unknown": "The special use is not known."
+      },
+      "party": {
+        "kind-unknown": "The kind must be customer or supplier.",
+        "credit-limit-invalid": "The credit limit is not a number."
       }
     }
   }

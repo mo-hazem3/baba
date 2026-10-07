@@ -22,6 +22,12 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
     { key: '/vouchers/payment', label: t('nav.payments') },
     { key: '/vouchers/receipt', label: t('nav.receipts') },
     { key: '/vouchers/journal', label: t('nav.journal') },
+    ...(modules.has('bank-cash')
+      ? [
+          { key: '/bank', label: t('nav.bank') },
+          { key: '/vouchers/transfer', label: t('nav.transfers') },
+        ]
+      : []),
     ...(modules.has('customers-suppliers')
       ? [
           { key: '/customers', label: t('nav.customers') },
@@ -30,6 +36,8 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
       : []),
     ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
     { key: '/reports', label: t('nav.reports') },
+    { key: '/vouchers/opening', label: t('nav.opening') },
+    { key: '/year-end', label: t('nav.yearEnd') },
     { key: '/settings', label: t('nav.settings') },
   ]
   // A page deeper in a module (a voucher, a report) keeps its module highlighted.

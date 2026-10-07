@@ -34,6 +34,36 @@ public sealed class CompanyService(ICompanyFiles files, CountryPackRegistry coun
     public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default) =>
         files.BackupAsync(destinationPath, cancellationToken);
 
+    /// <summary>
+    /// Brings a backup back: copies the backup file to a new place so it can be opened like any company file. The backup itself is not
+    /// touched and keeps its password. Nothing is overwritten, and the company that is open cannot be the one restored.
+    /// </summary>
+    public string Restore(string backupPath, string destinationPath)
+    {
+        var issues = new List<ValidationIssue>();
+        if (string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
+            issues.Add(new("backup", "restore.backup-missing"));
+        if (string.IsNullOrWhiteSpace(destinationPath) || !Path.IsPathFullyQualified(destinationPath))
+            issues.Add(new("destination", "path.not-absolute"));
+        if (issues.Count > 0)
+            throw new ValidationException(issues);
+
+        var destination = WithBabaExtension(Path.GetFullPath(destinationPath));
+        var source = Path.GetFullPath(backupPath);
+        if (string.Equals(source, destination, StringComparison.OrdinalIgnoreCase))
+            issues.Add(new("destination", "restore.same-file"));
+        else if (File.Exists(destination))
+            issues.Add(new("destination", "restore.destination-exists"));
+        else if (files.Current is { } open && string.Equals(Path.GetFullPath(open.FilePath), source, StringComparison.OrdinalIgnoreCase))
+            issues.Add(new("backup", "restore.backup-is-open"));
+        if (issues.Count > 0)
+            throw new ValidationException(issues);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: false);
+        return destination;
+    }
+
     /// <summary>Company files always end in .baba, so double-clicking one opens Baba.</summary>
     private static string WithBabaExtension(string path) =>
         path.EndsWith(".baba", StringComparison.OrdinalIgnoreCase) ? path : path + ".baba";

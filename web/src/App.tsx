@@ -5,7 +5,11 @@ import { Navigate, Route, Routes } from 'react-router'
 import { useCurrentCompany } from './api/hooks'
 import { ChartOfAccountsPage } from './features/accounts/ChartOfAccountsPage'
 import { CostCentersPage } from './features/costcenters/CostCentersPage'
+import { BankPage } from './features/bank/BankPage'
+import { ReconcilePage } from './features/bank/ReconcilePage'
 import { PartiesPage } from './features/parties/PartiesPage'
+import { OpeningPage } from './features/vouchers/OpeningPage'
+import { YearEndPage } from './features/yearend/YearEndPage'
 import { NewCompanyWizard } from './features/company/NewCompanyWizard'
 import { ReportPage } from './features/reports/ReportPage'
 import { ReportsPage } from './features/reports/ReportsPage'
@@ -56,6 +60,11 @@ export function App() {
         <Route path="/vouchers/payment" element={<VoucherListPage kind="Payment" />} />
         <Route path="/vouchers/receipt" element={<VoucherListPage kind="Receipt" />} />
         <Route path="/vouchers/journal" element={<VoucherListPage kind="Journal" />} />
+        <Route path="/vouchers/transfer" element={<VoucherListPage kind="Transfer" />} />
+        <Route path="/vouchers/opening" element={<OpeningPage />} />
+        <Route path="/bank" element={<BankPage />} />
+        <Route path="/bank/:accountId/reconcile" element={<ReconcilePage />} />
+        <Route path="/year-end" element={<YearEndPage />} />
         <Route path="/vouchers/open/:id" element={<VoucherOpenPage />} />
         <Route path="/vouchers/:kind/:id" element={<VoucherFormPage />} />
         <Route path="/reports" element={<ReportsPage />} />

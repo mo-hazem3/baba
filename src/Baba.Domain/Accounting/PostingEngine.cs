@@ -83,10 +83,16 @@ public static class PostingEngine
             ValidateDimensions(voucher.Lines[i], i, context, issues);
         }
 
-        if (voucher.Kind is VoucherKind.Payment or VoucherKind.Receipt)
+        if (voucher.Kind.UsesCashAccount())
             ValidateCashAccount(voucher, context, issues);
 
-        if (voucher.Kind == VoucherKind.Journal && voucher.Lines.Count > 0)
+        if (voucher.Kind == VoucherKind.Transfer)
+            ValidateTransfer(voucher, context, issues);
+
+        if (voucher.Kind == VoucherKind.Opening)
+            ValidateOpening(voucher, context, issues);
+
+        if (voucher.Kind.HasFreeLines() && voucher.Lines.Count > 0)
         {
             if (voucher.Lines.Sum(l => l.DebitScaled) != voucher.Lines.Sum(l => l.CreditScaled))
                 issues.Add(new("balance", "balance.unbalanced"));
@@ -114,12 +120,12 @@ public static class PostingEngine
                 line.DebitScaled, line.CreditScaled, voucher.CurrencyCode, voucher.ExchangeRateScaled, baseDebit, baseCredit,
                 line.PartyId, line.CostCenterId));
 
-            totalScaled += voucher.Kind == VoucherKind.Payment ? line.DebitScaled : line.CreditScaled;
-            totalBaseScaled += voucher.Kind == VoucherKind.Payment ? baseDebit : baseCredit;
+            totalScaled += voucher.Kind.PaysOut() ? line.DebitScaled : line.CreditScaled;
+            totalBaseScaled += voucher.Kind.PaysOut() ? baseDebit : baseCredit;
         }
 
         // The bank or cash side is the total of the lines, in both currencies, so the voucher always balances exactly.
-        if (voucher.Kind == VoucherKind.Payment)
+        if (voucher.Kind.PaysOut())
         {
             entries.Add(LedgerEntry.Create(
                 voucher.CompanyId, voucher.Id, voucher.Date, voucher.CashAccountId!.Value, voucher.Memo, entries.Count,
@@ -172,7 +178,7 @@ public static class PostingEngine
 
         var wrongSide = kind switch
         {
-            VoucherKind.Payment => line.CreditScaled != 0,
+            VoucherKind.Payment or VoucherKind.Transfer => line.CreditScaled != 0,
             VoucherKind.Receipt => line.DebitScaled != 0,
             _ => false,
         };
@@ -219,6 +225,37 @@ public static class PostingEngine
                 issues.Add(new($"lines[{index}].costCenter", "line.cost-center-unknown"));
             else if (!costCenter.IsActive)
                 issues.Add(new($"lines[{index}].costCenter", "line.cost-center-inactive"));
+        }
+    }
+
+    /// <summary>A transfer moves money between two different bank or cash accounts, so it has exactly one line: the account it goes to.</summary>
+    private static void ValidateTransfer(Voucher voucher, PostingContext context, List<PostingIssue> issues)
+    {
+        if (voucher.Lines.Count > 1)
+            issues.Add(new("lines", "transfer.one-line-only"));
+
+        for (var i = 0; i < voucher.Lines.Count; i++)
+        {
+            var line = voucher.Lines[i];
+            if (!context.Accounts.TryGetValue(line.AccountId, out var account))
+                continue;
+            if (account.Role != AccountRole.CashOrBank)
+                issues.Add(new($"lines[{i}].account", "line.account-not-cash"));
+            else if (line.AccountId == voucher.CashAccountId)
+                issues.Add(new($"lines[{i}].account", "line.account-same-as-source"));
+        }
+    }
+
+    /// <summary>Opening balances are the balance sheet as it stood on the first day: assets, liabilities and equity only.</summary>
+    private static void ValidateOpening(Voucher voucher, PostingContext context, List<PostingIssue> issues)
+    {
+        for (var i = 0; i < voucher.Lines.Count; i++)
+        {
+            if (context.Accounts.TryGetValue(voucher.Lines[i].AccountId, out var account)
+                && account.Type is AccountType.Revenue or AccountType.Expense)
+            {
+                issues.Add(new($"lines[{i}].account", "line.account-not-balance-sheet"));
+            }
         }
     }
 

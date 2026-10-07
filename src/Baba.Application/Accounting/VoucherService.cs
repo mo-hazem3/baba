@@ -44,6 +44,7 @@ public sealed class VoucherService(
     IAccountStore accounts,
     IPartyStore parties,
     ICostCenterStore costCenters,
+    Banking.IReconciliationStore reconciliations,
     IPeriodStore periods,
     ICompanyFiles files,
     TimeProvider clock)
@@ -57,6 +58,7 @@ public sealed class VoucherService(
     /// <summary>Saves a new voucher (id null) or changes an existing one, as a draft. A posted voucher saved this way goes back to draft.</summary>
     public async Task<VoucherDto> SaveDraftAsync(Guid? id, VoucherInput input, CancellationToken cancellationToken = default)
     {
+        RefuseSystemKind(input.Kind);
         var (voucher, context, wasPosted, oldDate) = await PrepareAsync(id, input, cancellationToken);
         voucher.Status = VoucherStatus.Draft;
         voucher.PostedAt = null;
@@ -64,6 +66,7 @@ public sealed class VoucherService(
         var issues = PostingEngine.ValidateDraft(voucher, context).ToList();
         if (wasPosted)
             AddLockedPeriodIssue(issues, oldDate, context);
+        await AddOpeningAndReconciledIssuesAsync(issues, voucher, id, wasPosted, cancellationToken);
         Throw(issues);
 
         await vouchers.SaveAsync(voucher, [], cancellationToken);
@@ -73,26 +76,72 @@ public sealed class VoucherService(
     /// <summary>Saves (new or changed) and posts. Editing a posted voucher regenerates its ledger entries.</summary>
     public async Task<VoucherDto> SaveAndPostAsync(Guid? id, VoucherInput input, CancellationToken cancellationToken = default)
     {
+        RefuseSystemKind(input.Kind);
         var (voucher, context, wasPosted, oldDate) = await PrepareAsync(id, input, cancellationToken);
-        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, cancellationToken);
+        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
+    }
+
+    /// <summary>For the year-end close only: saves and posts a voucher of a kind that people cannot make by hand.</summary>
+    internal async Task<VoucherDto> SaveAndPostSystemAsync(VoucherInput input, CancellationToken cancellationToken = default)
+    {
+        var (voucher, context, wasPosted, oldDate) = await PrepareAsync(null, input, cancellationToken);
+        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, null, cancellationToken);
+    }
+
+    /// <summary>For the year-end close only: deletes a voucher of a kind that people cannot delete by hand.</summary>
+    internal async Task DeleteSystemAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
+        var issues = new List<PostingIssue>();
+        AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(cancellationToken));
+        Throw(issues);
+        await vouchers.DeleteAsync(id, cancellationToken);
+    }
+
+    /// <summary>The closing entry of a year is made by closing the year, so it cannot be saved or deleted like other vouchers.</summary>
+    private static void RefuseSystemKind(VoucherKind kind)
+    {
+        if (kind == VoucherKind.Closing)
+            throw new ValidationException([new ValidationIssue("kind", "voucher.system-generated")]);
+    }
+
+    /// <summary>
+    /// Only one opening-balances voucher may exist, and a posted voucher whose entries have been checked against a bank statement
+    /// cannot be changed until that reconciliation is undone.
+    /// </summary>
+    private async Task AddOpeningAndReconciledIssuesAsync(
+        List<PostingIssue> issues, Voucher voucher, Guid? id, bool wasPosted, CancellationToken cancellationToken)
+    {
+        if (voucher.Kind == VoucherKind.Opening && id is null
+            && (await vouchers.SearchAsync(new VoucherSearch(VoucherKind.Opening, Limit: 1), cancellationToken)).Count > 0)
+        {
+            issues.Add(new PostingIssue("kind", "opening.already-exists"));
+        }
+
+        if (wasPosted && id is { } existing && await reconciliations.HasReconciledEntriesAsync(existing, cancellationToken))
+            issues.Add(new PostingIssue("voucher", "voucher.reconciled"));
     }
 
     /// <summary>Posts a draft exactly as it was saved.</summary>
     public async Task<VoucherDto> PostAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
+        RefuseSystemKind(voucher.Kind);
         var context = await ContextAsync(cancellationToken);
-        return await PostPreparedAsync(voucher, context, voucher.Status == VoucherStatus.Posted, voucher.Date, cancellationToken);
+        return await PostPreparedAsync(voucher, context, voucher.Status == VoucherStatus.Posted, voucher.Date, id, cancellationToken);
     }
 
     /// <summary>Deletes a voucher and its ledger entries. A posted voucher in a locked period cannot be deleted.</summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
+        RefuseSystemKind(voucher.Kind);
         if (voucher.Status == VoucherStatus.Posted)
         {
             var issues = new List<PostingIssue>();
             AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(cancellationToken));
+            if (await reconciliations.HasReconciledEntriesAsync(id, cancellationToken))
+                issues.Add(new PostingIssue("voucher", "voucher.reconciled"));
             Throw(issues);
         }
 
@@ -100,13 +149,14 @@ public sealed class VoucherService(
     }
 
     private async Task<VoucherDto> PostPreparedAsync(
-        Voucher voucher, PostingContext context, bool wasPosted, DateOnly oldDate, CancellationToken cancellationToken)
+        Voucher voucher, PostingContext context, bool wasPosted, DateOnly oldDate, Guid? id, CancellationToken cancellationToken)
     {
         voucher.Status = VoucherStatus.Posted;
 
         var issues = PostingEngine.ValidateForPosting(voucher, context).ToList();
         if (wasPosted)
             AddLockedPeriodIssue(issues, oldDate, context); // the voucher's old date must be open too: its old entries are being replaced
+        await AddOpeningAndReconciledIssuesAsync(issues, voucher, id, wasPosted, cancellationToken);
         Throw(issues);
 
         voucher.PostedAt = clock.GetUtcNow().UtcDateTime;
@@ -140,7 +190,7 @@ public sealed class VoucherService(
         voucher.Date = input.Date;
         voucher.CurrencyCode = company.BaseCurrencyCode; // transaction currency = base currency until the multi-currency screens exist
         voucher.ExchangeRateScaled = FxRate.One;
-        voucher.CashAccountId = input.Kind == VoucherKind.Journal ? null : input.CashAccountId;
+        voucher.CashAccountId = input.Kind.UsesCashAccount() ? input.CashAccountId : null;
         voucher.Reference = Clean(input.Reference);
         voucher.Memo = Clean(input.Memo);
 

@@ -312,6 +312,36 @@
         }
       }
     },
+    "/api/company/restore": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "RestoreBackup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoredFile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/company/modules": {
       "post": {
         "tags": [
@@ -1170,6 +1200,359 @@
         }
       }
     },
+    "/api/bank/accounts": {
+      "get": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "ListBankAccounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BankAccountDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank/accounts/{accountId}/reconciliation": {
+      "get": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "GetReconciliation",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "statementDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "CompleteReconciliation",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteReconciliationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "UndoLastReconciliation",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/bank/accounts/{accountId}/reconciliations": {
+      "get": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "ListReconciliations",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReconciliationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank/accounts/{accountId}/statement": {
+      "put": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "ImportBankStatement",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bank and cash"
+        ],
+        "operationId": "ClearBankStatement",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearedStatement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/accounts": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportAccounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/parties/{kind}": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportParties",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/PartyKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fiscal-years": {
+      "get": {
+        "tags": [
+          "Year-end"
+        ],
+        "operationId": "ListFiscalYears",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalYearDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fiscal-years/{year}/close": {
+      "post": {
+        "tags": [
+          "Year-end"
+        ],
+        "operationId": "CloseFiscalYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseYearResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fiscal-years/{year}/reopen": {
+      "post": {
+        "tags": [
+          "Year-end"
+        ],
+        "operationId": "ReopenFiscalYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/periods": {
       "get": {
         "tags": [
@@ -1683,6 +2066,106 @@
           }
         }
       },
+      "BankAccountDto": {
+        "required": [
+          "accountId",
+          "code",
+          "nameAr",
+          "nameEn",
+          "isActive",
+          "balance",
+          "reconciledBalance",
+          "unreconciled",
+          "lastStatementDate",
+          "lastStatementBalance"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "number",
+            "format": "double"
+          },
+          "reconciledBalance": {
+            "type": "number",
+            "format": "double"
+          },
+          "unreconciled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastStatementDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "lastStatementBalance": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "BankEntry": {
+        "required": [
+          "entryId",
+          "date",
+          "voucherId",
+          "voucherNumber",
+          "description",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "voucherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "voucherNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "CalendarKind": {
         "enum": [
           "Gregorian",
@@ -1741,6 +2224,37 @@
           "accountCount": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ClearedStatement": {
+        "required": [
+          "removed"
+        ],
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CloseYearResult": {
+        "required": [
+          "year",
+          "voucherNumber",
+          "backupPath"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "$ref": "#/components/schemas/FiscalYearDto"
+          },
+          "voucherNumber": {
+            "type": "string"
+          },
+          "backupPath": {
+            "type": "string"
           }
         }
       },
@@ -1805,6 +2319,42 @@
           "None",
           "PreviousYear"
         ]
+      },
+      "CompleteReconciliationInput": {
+        "required": [
+          "statementDate",
+          "statementBalance",
+          "entryIds",
+          "statementLineIds"
+        ],
+        "type": "object",
+        "properties": {
+          "statementDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "statementBalance": {
+            "type": "number",
+            "format": "double"
+          },
+          "entryIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "statementLineIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
       },
       "CostCenterDto": {
         "required": [
@@ -2072,6 +2622,54 @@
           "Csv"
         ]
       },
+      "FiscalYearDto": {
+        "required": [
+          "year",
+          "start",
+          "end",
+          "hasEnded",
+          "isClosed",
+          "profit",
+          "draftVouchers",
+          "closingVoucherId"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "hasEnded": {
+            "type": "boolean"
+          },
+          "isClosed": {
+            "type": "boolean"
+          },
+          "profit": {
+            "type": "number",
+            "format": "double"
+          },
+          "draftVouchers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "closingVoucherId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "HostInfo": {
         "required": [
           "fileDialogs",
@@ -2088,6 +2686,46 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "ImportIssue": {
+        "required": [
+          "row",
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "ImportResult": {
+        "required": [
+          "imported",
+          "skipped",
+          "issues"
+        ],
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssue"
+            }
           }
         }
       },
@@ -2578,6 +3216,79 @@
           }
         }
       },
+      "ReconciliationDto": {
+        "required": [
+          "id",
+          "statementDate",
+          "statementBalance",
+          "completedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statementDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "statementBalance": {
+            "type": "number",
+            "format": "double"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReconciliationView": {
+        "required": [
+          "accountId",
+          "openingBalance",
+          "lastStatementDate",
+          "entries",
+          "statementLines",
+          "suggestions"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "openingBalance": {
+            "type": "number",
+            "format": "double"
+          },
+          "lastStatementDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankEntry"
+            }
+          },
+          "statementLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatementLineDto"
+            }
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuggestedMatch"
+            }
+          }
+        }
+      },
       "RemoveRecentFileRequest": {
         "required": [
           "path"
@@ -2789,6 +3500,32 @@
           }
         }
       },
+      "RestoredFile": {
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "RestoreRequest": {
+        "required": [
+          "backupPath",
+          "destinationPath"
+        ],
+        "type": "object",
+        "properties": {
+          "backupPath": {
+            "type": "string"
+          },
+          "destinationPath": {
+            "type": "string"
+          }
+        }
+      },
       "RowStyle": {
         "enum": [
           "Normal",
@@ -2865,6 +3602,63 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "StatementLineDto": {
+        "required": [
+          "id",
+          "date",
+          "description",
+          "reference",
+          "amount",
+          "reconciled"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "reconciled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SuggestedMatch": {
+        "required": [
+          "statementLineId",
+          "entryId"
+        ],
+        "type": "object",
+        "properties": {
+          "statementLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -3036,7 +3830,10 @@
         "enum": [
           "Payment",
           "Receipt",
-          "Journal"
+          "Journal",
+          "Transfer",
+          "Opening",
+          "Closing"
         ]
       },
       "VoucherLineDto": {
@@ -3232,6 +4029,15 @@
     },
     {
       "name": "Cost centers"
+    },
+    {
+      "name": "Bank and cash"
+    },
+    {
+      "name": "Import"
+    },
+    {
+      "name": "Year-end"
     },
     {
       "name": "Periods"

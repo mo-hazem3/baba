@@ -29,6 +29,9 @@ public sealed class CompanyDbContext(
     public DbSet<PrintSettings> PrintSettings => Set<PrintSettings>();
     public DbSet<Party> Parties => Set<Party>();
     public DbSet<CostCenter> CostCenters => Set<CostCenter>();
+    public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
+    public DbSet<ReconciledEntry> ReconciledEntries => Set<ReconciledEntry>();
+    public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -98,6 +101,32 @@ public sealed class CompanyDbContext(
         {
             costCenter.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
             costCenter.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<BankReconciliation>(reconciliation =>
+        {
+            reconciliation.Ignore(r => r.StatementBalance);
+            reconciliation.HasOne<Account>().WithMany().HasForeignKey(r => r.AccountId).OnDelete(DeleteBehavior.Restrict);
+            reconciliation.HasIndex(r => new { r.AccountId, r.StatementDate });
+            reconciliation.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<ReconciledEntry>(reconciled =>
+        {
+            reconciled.HasOne<BankReconciliation>().WithMany().HasForeignKey(r => r.ReconciliationId).OnDelete(DeleteBehavior.Cascade);
+            // An entry that has been checked against a statement cannot be removed from under it.
+            reconciled.HasOne<LedgerEntry>().WithMany().HasForeignKey(r => r.LedgerEntryId).OnDelete(DeleteBehavior.Restrict);
+            reconciled.HasIndex(r => r.LedgerEntryId).IsUnique();
+            reconciled.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<BankStatementLine>(line =>
+        {
+            line.Ignore(l => l.Amount);
+            line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<BankReconciliation>().WithMany().HasForeignKey(l => l.ReconciliationId).OnDelete(DeleteBehavior.SetNull);
+            line.HasIndex(l => new { l.AccountId, l.Date });
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
         });
 
         model.Entity<VoucherLine>(line =>

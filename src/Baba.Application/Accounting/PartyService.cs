@@ -135,7 +135,7 @@ public sealed class PartyService(IPartyStore parties, ILedgerQuery ledger)
     internal static decimal Balance(Party party, IReadOnlyDictionary<Guid, PartyTotal> totals) =>
         totals.TryGetValue(party.Id, out var t) ? (party.Kind == PartyKind.Customer ? t.Debit - t.Credit : t.Credit - t.Debit) : 0;
 
-    private static IReadOnlyList<PostingIssue> Validate(Party party, IReadOnlyList<Party> all)
+    internal static IReadOnlyList<PostingIssue> Validate(Party party, IReadOnlyList<Party> all)
     {
         var issues = new List<PostingIssue>();
         if (party.Code.Length == 0)

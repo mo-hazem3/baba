@@ -3,7 +3,7 @@ import { Button, Modal } from 'antd'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export type HelpTopic = 'start' | 'wizard' | 'summary' | 'settings' | 'accounts' | 'vouchers' | 'voucher' | 'reports' | 'report' | 'parties' | 'costCenters'
+export type HelpTopic = 'start' | 'wizard' | 'summary' | 'settings' | 'accounts' | 'vouchers' | 'voucher' | 'reports' | 'report' | 'parties' | 'costCenters' | 'transfer' | 'bank' | 'reconcile' | 'opening' | 'yearEnd'
 
 /** The "?" help link every screen has (brief section 7.5): a short explanation in the user's language. */
 export function HelpLink({ topic }: { topic: HelpTopic }) {

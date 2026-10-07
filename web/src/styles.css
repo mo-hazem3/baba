@@ -565,3 +565,32 @@ kbd {
     display: none;
   }
 }
+
+/* Bank reconciliation */
+
+.reconcile-summary {
+  margin-block-end: 16px;
+}
+
+.reconcile-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 40px;
+  margin: 0;
+}
+
+.reconcile-figures dt {
+  color: #444b57;
+  font-size: 0.9em;
+}
+
+.reconcile-figures dd {
+  margin: 0;
+  font-size: 1.25em;
+  font-weight: 700;
+}
+
+/* Ticked entries are marked with a light tint, so the figures on them stay easy to read. */
+.ant-table-tbody > tr.ant-table-row-selected > td {
+  background: #e3ecfb;
+}

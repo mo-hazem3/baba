@@ -391,6 +391,65 @@ public class PostingEngineTests
         Assert.Contains("line.cost-center-unknown", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
     }
 
+    // ---- Transfers, opening balances and the year-end entry ----
+
+    [Fact]
+    public void A_transfer_debits_the_account_it_goes_to_and_credits_the_account_it_comes_from()
+    {
+        var voucher = NewVoucher(VoucherKind.Transfer, (_bank, 400m, 0));
+        var context = Context();
+
+        Assert.Empty(PostingEngine.ValidateForPosting(voucher, context));
+        var entries = PostingEngine.GenerateEntries(voucher, context);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Equal((_bank.Id, 400m, 0m), (entries[0].AccountId, entries[0].BaseDebit, entries[0].BaseCredit));
+        Assert.Equal((_cash.Id, 0m, 400m), (entries[1].AccountId, entries[1].BaseDebit, entries[1].BaseCredit));
+    }
+
+    [Fact]
+    public void A_transfer_must_go_to_a_different_bank_or_cash_account_and_has_one_line()
+    {
+        var sameAccount = NewVoucher(VoucherKind.Transfer, (_cash, 400m, 0));
+        Assert.Contains(new PostingIssue("lines[0].account", "line.account-same-as-source"), PostingEngine.ValidateForPosting(sameAccount, Context()));
+
+        var toAnExpense = NewVoucher(VoucherKind.Transfer, (_rent, 400m, 0));
+        Assert.Contains(new PostingIssue("lines[0].account", "line.account-not-cash"), PostingEngine.ValidateForPosting(toAnExpense, Context()));
+
+        var twoLines = NewVoucher(VoucherKind.Transfer, (_bank, 100m, 0), (_bank, 50m, 0));
+        Assert.Contains("transfer.one-line-only", Codes(PostingEngine.ValidateForPosting(twoLines, Context())));
+
+        var withoutSource = NewVoucher(VoucherKind.Transfer, (_bank, 100m, 0));
+        withoutSource.CashAccountId = null;
+        Assert.Contains("cash-account.required", Codes(PostingEngine.ValidateForPosting(withoutSource, Context())));
+
+        var credit = NewVoucher(VoucherKind.Transfer, (_bank, 0, 100m));
+        Assert.Contains("line.amount-wrong-side", Codes(PostingEngine.ValidateForPosting(credit, Context())));
+    }
+
+    [Fact]
+    public void Opening_balances_balance_like_a_journal_but_only_on_balance_sheet_accounts()
+    {
+        var capital = Posting("3100", AccountType.Equity);
+        var context = new PostingContext(
+            new[] { _cash, _bank, _rent, capital }.ToDictionary(a => a.Id), Base, Base, _ => true);
+
+        var good = NewVoucher(VoucherKind.Opening, (_cash, 700m, 0), (capital, 0, 700m));
+        Assert.Empty(PostingEngine.ValidateForPosting(good, context));
+
+        var unbalanced = NewVoucher(VoucherKind.Opening, (_cash, 700m, 0), (capital, 0, 600m));
+        Assert.Contains("balance.unbalanced", Codes(PostingEngine.ValidateForPosting(unbalanced, context)));
+
+        var withExpense = NewVoucher(VoucherKind.Opening, (_rent, 50m, 0), (capital, 0, 50m));
+        Assert.Contains(new PostingIssue("lines[0].account", "line.account-not-balance-sheet"), PostingEngine.ValidateForPosting(withExpense, context));
+    }
+
+    [Fact]
+    public void Voucher_numbers_have_a_prefix_for_every_kind()
+    {
+        Assert.Equal(["PV", "RV", "JV", "TV", "OB", "CL"], Enum.GetValues<VoucherKind>().Select(VoucherNumber.Prefix));
+    }
+
     [Fact]
     public void Money_is_stored_in_exact_scaled_integers()
     {

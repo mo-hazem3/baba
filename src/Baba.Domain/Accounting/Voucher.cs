@@ -10,6 +10,15 @@ public enum VoucherKind
 
     /// <summary>قيد يومية: free debit and credit lines.</summary>
     Journal,
+
+    /// <summary>سند تحويل: money moved from one bank or cash account to another. One line (the account it goes to).</summary>
+    Transfer,
+
+    /// <summary>أرصدة افتتاحية: the balances of the balance sheet accounts on the day the books start. At most one per company.</summary>
+    Opening,
+
+    /// <summary>قيد إقفال: made by closing a fiscal year, which moves the year's profit into retained earnings. Never edited by hand.</summary>
+    Closing,
 }
 
 public enum VoucherStatus
@@ -105,4 +114,17 @@ public sealed class VoucherLine : Entity, ICompanyScoped
         get => Scaled.ToDecimal(CreditScaled);
         set => CreditScaled = Scaled.ToScaled(value);
     }
+}
+
+/// <summary>What each kind of voucher does, so the rules are written once instead of in every place that looks at the kind.</summary>
+public static class VoucherKindExtensions
+{
+    /// <summary>Paid from or received into one bank or cash account, named on the voucher.</summary>
+    public static bool UsesCashAccount(this VoucherKind kind) => kind is VoucherKind.Payment or VoucherKind.Receipt or VoucherKind.Transfer;
+
+    /// <summary>Money leaves the bank or cash account: the lines are debits and the account is credited for the total.</summary>
+    public static bool PaysOut(this VoucherKind kind) => kind is VoucherKind.Payment or VoucherKind.Transfer;
+
+    /// <summary>Lines are written as debits and credits that the user balances.</summary>
+    public static bool HasFreeLines(this VoucherKind kind) => kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing;
 }

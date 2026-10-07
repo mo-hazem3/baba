@@ -86,7 +86,7 @@ public sealed partial class ReportService(
 
     public Task<ReportResult> ProfitAndLossAsync(
         DateOnly? from, DateOnly? to, Comparison comparison = Comparison.None, CancellationToken cancellationToken = default) =>
-        ProfitAndLossCoreAsync(from, to, comparison, ReportLabels.ProfitAndLoss, (f, t) => ledger.TotalsAsync(f, t, cancellationToken), cancellationToken);
+        ProfitAndLossCoreAsync(from, to, comparison, ReportLabels.ProfitAndLoss, (f, t) => ledger.OperatingTotalsAsync(f, t, cancellationToken), cancellationToken);
 
     /// <summary>The profit and loss of the entries tagged with one cost center or project (brief section 10.2).</summary>
     public async Task<ReportResult> ProfitAndLossAsync(

@@ -73,7 +73,7 @@ export interface VoucherHeader {
 export const toVoucherInput = (kind: VoucherKind, header: VoucherHeader, rows: readonly LineRow[]): VoucherInput => ({
   kind,
   date: header.date,
-  cashAccountId: kind === 'Journal' ? null : (header.cashAccountId ?? null),
+  cashAccountId: usesCashAccount(kind) ? (header.cashAccountId ?? null) : null,
   reference: header.reference?.trim() ? header.reference.trim() : null,
   memo: header.memo?.trim() ? header.memo.trim() : null,
   lines: rowsToSend(rows).map((r) => ({
@@ -83,7 +83,7 @@ export const toVoucherInput = (kind: VoucherKind, header: VoucherHeader, rows: r
     partyId: r.partyId ?? null,
     costCenterId: r.costCenterId ?? null,
     debit: kind === 'Receipt' ? 0 : (r.debit ?? 0),
-    credit: kind === 'Payment' ? 0 : (r.credit ?? 0),
+    credit: kind === 'Payment' || kind === 'Transfer' ? 0 : (r.credit ?? 0),
   })),
 })
 
@@ -119,7 +119,24 @@ export const mapIssues = (issues: readonly ApiIssue[], sent: readonly LineRow[])
   return result
 }
 
-export const kindFromRoute = (segment: string | undefined): VoucherKind | undefined =>
-  segment === 'payment' ? 'Payment' : segment === 'receipt' ? 'Receipt' : segment === 'journal' ? 'Journal' : undefined
+const routeKinds: Record<string, VoucherKind> = {
+  payment: 'Payment',
+  receipt: 'Receipt',
+  journal: 'Journal',
+  transfer: 'Transfer',
+  opening: 'Opening',
+  closing: 'Closing',
+}
+
+export const kindFromRoute = (segment: string | undefined): VoucherKind | undefined => (segment ? routeKinds[segment] : undefined)
 
 export const routeOfKind = (kind: VoucherKind): string => kind.toLowerCase()
+
+/** Paid from, received into, or moved out of one bank or cash account that is named on the voucher. */
+export const usesCashAccount = (kind: VoucherKind): boolean => kind === 'Payment' || kind === 'Receipt' || kind === 'Transfer'
+
+/** Lines written as debits and credits that the user balances. */
+export const hasFreeLines = (kind: VoucherKind): boolean => kind === 'Journal' || kind === 'Opening' || kind === 'Closing'
+
+/** Where "back" and "after saving" go. The opening balances have no list: there is only ever one. */
+export const listPathOf = (kind: VoucherKind): string => (kind === 'Opening' ? '/' : `/vouchers/${routeOfKind(kind)}`)

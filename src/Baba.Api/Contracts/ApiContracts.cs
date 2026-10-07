@@ -13,6 +13,10 @@ public sealed record BackupRequest(string DestinationPath);
 
 public sealed record SetModulesRequest(IReadOnlyList<string> Modules);
 
+public sealed record RestoreRequest(string BackupPath, string DestinationPath);
+
+public sealed record RestoredFile(string Path);
+
 public sealed record SaveDialogRequest(string SuggestedFileName);
 
 public sealed record PathChoice(string? Path);

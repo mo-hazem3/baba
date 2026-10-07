@@ -40,6 +40,9 @@ public static class CompanyEndpoints
             })
             .WithName("CloseCompany");
 
+        company.MapPost("/restore", (RestoreRequest request, CompanyService service) => new RestoredFile(service.Restore(request.BackupPath, request.DestinationPath)))
+            .WithName("RestoreBackup");
+
         company.MapPost("/modules", (SetModulesRequest request, CompanyService service, CancellationToken cancellationToken) =>
                 service.SetEnabledModulesAsync(request.Modules, cancellationToken))
             .WithName("SetEnabledModules");

@@ -12,4 +12,7 @@ export const VoucherKind = {
   Payment: 'Payment',
   Receipt: 'Receipt',
   Journal: 'Journal',
+  Transfer: 'Transfer',
+  Opening: 'Opening',
+  Closing: 'Closing',
 } as const;

@@ -78,6 +78,99 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("Baba.Domain.Accounting.BankReconciliation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("StatementBalanceScaled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("StatementDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "StatementDate");
+
+                    b.ToTable("BankReconciliations");
+                });
+
+            modelBuilder.Entity("Baba.Domain.Accounting.BankStatementLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AmountScaled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReconciliationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReconciliationId");
+
+                    b.HasIndex("AccountId", "Date");
+
+                    b.ToTable("BankStatementLines");
+                });
+
             modelBuilder.Entity("Baba.Domain.Accounting.CostCenter", b =>
                 {
                     b.Property<Guid>("Id")
@@ -321,6 +414,31 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Periods");
+                });
+
+            modelBuilder.Entity("Baba.Domain.Accounting.ReconciledEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LedgerEntryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReconciliationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LedgerEntryId")
+                        .IsUnique();
+
+                    b.HasIndex("ReconciliationId");
+
+                    b.ToTable("ReconciledEntries");
                 });
 
             modelBuilder.Entity("Baba.Domain.Accounting.Voucher", b =>
@@ -653,6 +771,29 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("Baba.Domain.Accounting.BankReconciliation", b =>
+                {
+                    b.HasOne("Baba.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Baba.Domain.Accounting.BankStatementLine", b =>
+                {
+                    b.HasOne("Baba.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Baba.Domain.Accounting.BankReconciliation", null)
+                        .WithMany()
+                        .HasForeignKey("ReconciliationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("Baba.Domain.Accounting.LedgerEntry", b =>
                 {
                     b.HasOne("Baba.Domain.Account", null)
@@ -674,6 +815,21 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.HasOne("Baba.Domain.Accounting.Voucher", null)
                         .WithMany()
                         .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Baba.Domain.Accounting.ReconciledEntry", b =>
+                {
+                    b.HasOne("Baba.Domain.Accounting.LedgerEntry", null)
+                        .WithMany()
+                        .HasForeignKey("LedgerEntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Baba.Domain.Accounting.BankReconciliation", null)
+                        .WithMany()
+                        .HasForeignKey("ReconciliationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

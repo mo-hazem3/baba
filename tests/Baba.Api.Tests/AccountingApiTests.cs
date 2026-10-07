@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using Baba.Api.Contracts;
 using Baba.Api.Endpoints;
 using Baba.Api.Errors;
 using Baba.Application.Accounting;
@@ -335,6 +336,130 @@ public class AccountingApiTests : ApiFixture
 
         Assert.Equal(HttpStatusCode.BadRequest, (await Http.DeleteAsync($"/api/cost-centers/{costCenter.Id}")).StatusCode);
         Assert.False((await ReadAsync<CostCenterDto>(await PostAsync($"/api/cost-centers/{costCenter.Id}/active", new SetActiveRequest(false)))).IsActive);
+    }
+
+    // ------------------------------------------------------------------ Bank and cash
+
+    [Fact]
+    public async Task A_bank_statement_can_be_loaded_matched_and_reconciled_over_http()
+    {
+        await StartCompanyAsync();
+        var bank = Id("112");
+        await PostVoucherAsync(new VoucherInput(VoucherKind.Receipt, Oct6, bank, null, null, [new VoucherLineInput(null, Id("31"), null, 0, 2_000m)]));
+
+        var accounts = await ReadAsync<List<Baba.Application.Banking.BankAccountDto>>(await Http.GetAsync("/api/bank/accounts"));
+        Assert.Equal((2_000m, 1), (accounts.Single(a => a.AccountId == bank).Balance, accounts.Single(a => a.AccountId == bank).Unreconciled));
+
+        // The statement goes up as the request body, with its name in a header.
+        var upload = new ByteArrayContent(Encoding.UTF8.GetBytes("Date,Description,Amount\n2026-10-07,Capital,2000"));
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/bank/accounts/{bank}/statement") { Content = upload };
+        request.Headers.Add("X-File-Name", "october.csv");
+        var imported = await ReadAsync<Baba.Application.Importing.ImportResult>(await Http.SendAsync(request));
+        Assert.Equal((1, 0), (imported.Imported, imported.Skipped));
+
+        var view = await ReadAsync<Baba.Application.Banking.ReconciliationView>(await Http.GetAsync($"/api/bank/accounts/{bank}/reconciliation?statementDate=2026-10-31"));
+        Assert.Single(view.Suggestions);
+        Assert.Equal(2_000m, view.Entries.Single().Amount);
+
+        var wrong = await PostAsync($"/api/bank/accounts/{bank}/reconciliation",
+            new Baba.Application.Banking.CompleteReconciliationInput(new DateOnly(2026, 10, 31), 1_999m, [view.Entries.Single().EntryId], null));
+        Assert.Equal(HttpStatusCode.BadRequest, wrong.StatusCode);
+        Assert.Contains((await ReadAsync<ApiProblem>(wrong)).Issues!, i => i is { Field: "statementBalance", Code: "reconciliation.difference" });
+
+        var done = await PostAsync($"/api/bank/accounts/{bank}/reconciliation",
+            new Baba.Application.Banking.CompleteReconciliationInput(new DateOnly(2026, 10, 31), 2_000m, [view.Entries.Single().EntryId], view.Suggestions.Select(s => s.StatementLineId).ToList()));
+        Assert.Equal(HttpStatusCode.OK, done.StatusCode);
+
+        var history = await ReadAsync<List<Baba.Application.Banking.ReconciliationDto>>(await Http.GetAsync($"/api/bank/accounts/{bank}/reconciliations"));
+        Assert.Equal(2_000m, history.Single().StatementBalance);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await Http.DeleteAsync($"/api/bank/accounts/{bank}/reconciliation")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Http.DeleteAsync($"/api/bank/accounts/{bank}/reconciliation")).StatusCode); // nothing left to undo
+
+        var notBank = await Http.GetAsync($"/api/bank/accounts/{Id("511")}/reconciliation?statementDate=2026-10-31");
+        Assert.Equal(HttpStatusCode.BadRequest, notBank.StatusCode);
+    }
+
+    // ------------------------------------------------------------------ Year-end, import, modules
+
+    [Fact]
+    public async Task The_fiscal_years_are_listed_and_a_year_that_has_not_ended_cannot_be_closed()
+    {
+        await StartCompanyAsync();
+        await PostVoucherAsync(Payment(Oct6, ("422", 80m)));
+
+        var years = await ReadAsync<List<FiscalYearDto>>(await Http.GetAsync("/api/fiscal-years"));
+        var current = years.Single(y => y.Year == 2026);
+        Assert.Equal((false, false, -80m), (current.HasEnded, current.IsClosed, current.Profit));
+
+        var refused = await PostAsync("/api/fiscal-years/2026/close", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains((await ReadAsync<ApiProblem>(refused)).Issues!, i => i.Code == "year.not-ended");
+        Assert.Equal(HttpStatusCode.BadRequest, (await PostAsync("/api/fiscal-years/2026/reopen", new { })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Accounts_and_customers_can_be_imported_from_a_csv_over_http_and_a_bad_file_is_explained()
+    {
+        await StartCompanyAsync();
+
+        async Task<Baba.Application.Importing.ImportResult> Upload(string url, string csv)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Put, url) { Content = new ByteArrayContent(Encoding.UTF8.GetBytes(csv)) };
+            request.Headers.Add("X-File-Name", "list.csv");
+            return await ReadAsync<Baba.Application.Importing.ImportResult>(await Http.SendAsync(request));
+        }
+
+        var accounts = await Upload("/api/import/accounts", "Code,Name,Parent,Type\n9,Other,,Asset\n91,Safe,9,");
+        Assert.Equal(2, accounts.Imported);
+        Assert.Contains(await ReadAsync<List<AccountDto>>(await Http.GetAsync("/api/accounts")), a => a.Code == "91");
+
+        var customers = await Upload("/api/import/parties/Customer", "Name,Payment terms\nImported Customer,20");
+        Assert.Equal(1, customers.Imported);
+        var list = await ReadAsync<List<PartyDto>>(await Http.GetAsync("/api/parties?kind=Customer"));
+        Assert.Equal((1, 20), (list.Count, list.Single().PaymentTermsDays));
+
+        var bad = await Upload("/api/import/accounts", "Code,Name,Type\n9,Duplicate,Asset");
+        Assert.Equal((0, 2, "account.code-duplicate"), (bad.Imported, bad.Issues.Single().Row, bad.Issues.Single().Code));
+    }
+
+    [Fact]
+    public async Task Modules_can_be_switched_over_http_and_an_unknown_one_is_refused()
+    {
+        await StartCompanyAsync();
+
+        var changed = await PostAsync("/api/company/modules", new SetModulesRequest(["cost-centers", "bank-cash"]));
+        Assert.Equal(["bank-cash", "cost-centers"], (await ReadAsync<Baba.Application.Companies.CompanyInfo>(changed)).EnabledModules);
+
+        var current = await ReadAsync<Baba.Application.Companies.CompanyInfo>(await Http.GetAsync("/api/company"));
+        Assert.Equal(["bank-cash", "cost-centers"], current.EnabledModules);
+
+        var refused = await PostAsync("/api/company/modules", new SetModulesRequest(["warp-drive"]));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_backup_can_be_restored_to_a_new_file_over_http()
+    {
+        await StartCompanyAsync();
+        var folder = Path.Combine(Path.GetTempPath(), "baba-api-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var backup = Path.Combine(folder, "backup.baba");
+            Assert.Equal(HttpStatusCode.NoContent, (await PostAsync("/api/company/backup", new { destinationPath = backup })).StatusCode);
+
+            var restored = await ReadAsync<RestoredFile>(await PostAsync("/api/company/restore", new RestoreRequest(backup, Path.Combine(folder, "restored"))));
+
+            Assert.True(File.Exists(restored.Path));
+            Assert.EndsWith("restored.baba", restored.Path);
+            var again = await PostAsync("/api/company/restore", new RestoreRequest(backup, restored.Path));
+            Assert.Contains((await ReadAsync<ApiProblem>(again)).Issues!, i => i.Code == "restore.destination-exists");
+        }
+        finally
+        {
+            try { Directory.Delete(folder, recursive: true); } catch (IOException) { /* best effort */ }
+        }
     }
 
     [Fact]

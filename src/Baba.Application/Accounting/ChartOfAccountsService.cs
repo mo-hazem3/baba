@@ -108,6 +108,8 @@ public sealed class ChartOfAccountsService(IAccountStore accounts)
             issues.Add(new("target", "move.type-differs"));
         else if (from.Role == AccountRole.CashOrBank && to.Role != AccountRole.CashOrBank)
             issues.Add(new("target", "move.target-not-cash")); // vouchers pay from and receive into these
+        else if (await accounts.HasReconciledEntriesAsync(fromId, cancellationToken))
+            issues.Add(new("target", "move.has-reconciled")); // the bank statement was checked against these entries: undo that first
         Throw(issues);
 
         return await accounts.MoveEntriesAsync(fromId, toId, cancellationToken);

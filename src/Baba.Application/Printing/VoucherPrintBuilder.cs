@@ -37,6 +37,9 @@ public static class VoucherPrintBuilder
         {
             VoucherKind.Payment => ("Payment voucher — money paid", "سند صرف", "Paid from", "مدفوع من"),
             VoucherKind.Receipt => ("Receipt voucher — money received", "سند قبض", "Received into", "مستلم في"),
+            VoucherKind.Transfer => ("Transfer voucher — money moved between accounts", "سند تحويل", "Transferred from", "محوَّل من"),
+            VoucherKind.Opening => ("Opening balances", "أرصدة افتتاحية", "", ""),
+            VoucherKind.Closing => ("Year-end closing entry", "قيد إقفال السنة المالية", "", ""),
             _ => ("Journal voucher", "قيد يومية", "", ""),
         };
         var numberText = voucher.Number is null ? L("Draft", "مسودة") : PrintHtml.E(PrintHtml.Digits(voucher.Number, layout, ai));
@@ -52,10 +55,10 @@ public static class VoucherPrintBuilder
         html.Append(PrintHtml.Header(layout, settings, data.CompanyNameEn, data.CompanyNameAr, logoDataUrl, facts.ToString()));
         html.Append($"<h1>{L(titleEn, titleAr)}{(voucher.Status == VoucherStatus.Draft ? $" <span class=\"badge\">{L("DRAFT", "مسودة")}</span>" : "")}</h1>");
 
-        if (voucher.Kind != VoucherKind.Journal && voucher.CashAccountId is { } cashId)
+        if (voucher.Kind.UsesCashAccount() && voucher.CashAccountId is { } cashId)
             html.Append($"<div><strong>{L(cashEn, cashAr)}:</strong> {AccountName(cashId)}</div>");
 
-        var journal = voucher.Kind == VoucherKind.Journal;
+        var journal = voucher.Kind.HasFreeLines();
         html.Append("<table><thead><tr>")
             .Append($"<th>#</th><th>{L("Account", "الحساب")}</th><th>{L("Description", "البيان")}</th>");
         html.Append(journal
@@ -101,6 +104,7 @@ public static class VoucherPrintBuilder
             {
                 VoucherKind.Payment => (("Prepared by", "إعداد"), ("Approved by", "اعتماد"), ("Received by", "توقيع المستلم")),
                 VoucherKind.Receipt => (("Prepared by", "إعداد"), ("Approved by", "اعتماد"), ("Paid by", "توقيع الدافع")),
+                VoucherKind.Transfer => (("Prepared by", "إعداد"), ("Approved by", "اعتماد"), ("Received by", "توقيع المستلم")),
                 _ => (("Prepared by", "إعداد"), ("Reviewed by", "مراجعة"), ("Approved by", "اعتماد")),
             };
 

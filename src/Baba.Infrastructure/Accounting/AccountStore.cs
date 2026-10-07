@@ -46,6 +46,16 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> HasReconciledEntriesAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        return await (
+            from r in context.ReconciledEntries.AsNoTracking()
+            join e in context.LedgerEntries.AsNoTracking() on r.LedgerEntryId equals e.Id
+            where e.AccountId == accountId
+            select r.Id).AnyAsync(cancellationToken);
+    }
+
     public async Task<int> MoveEntriesAsync(Guid fromAccountId, Guid toAccountId, CancellationToken cancellationToken = default)
     {
         await using var context = contexts.Create();

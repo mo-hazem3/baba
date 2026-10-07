@@ -1,5 +1,5 @@
 import { exportReport } from '../../api/generated/baba'
-import type { ExportFormat, PrintLayout } from '../../api/generated/model'
+import type { ExportFormat, PrintLayout, VoucherKind } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
 import { downloadBlob, fileNameFrom, openPdf } from '../../utils/download'
 
@@ -9,7 +9,7 @@ export interface ReportParams {
   AsOf?: string
   AccountId?: string
   Comparison?: 'None' | 'PreviousYear'
-  Kind?: 'Payment' | 'Receipt' | 'Journal'
+  Kind?: VoucherKind
   Status?: 'Draft' | 'Posted'
   PartyId?: string
   CostCenterId?: string

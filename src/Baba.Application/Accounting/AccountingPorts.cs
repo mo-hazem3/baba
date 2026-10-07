@@ -15,6 +15,9 @@ public interface IAccountStore
     Task UpdateAsync(Account account, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid accountId, CancellationToken cancellationToken = default);
 
+    /// <summary>True when any ledger entry of the account has been checked against a bank statement.</summary>
+    Task<bool> HasReconciledEntriesAsync(Guid accountId, CancellationToken cancellationToken = default);
+
     /// <summary>Points every voucher line, ledger entry and voucher bank account of one account at another. Returns how many vouchers were touched.</summary>
     Task<int> MoveEntriesAsync(Guid fromAccountId, Guid toAccountId, CancellationToken cancellationToken = default);
 }
@@ -105,6 +108,12 @@ public interface ILedgerQuery
 {
     /// <summary>The sum of debits and credits per account over a date range (inclusive). Open ends mean "from the beginning" / "to the end".</summary>
     Task<IReadOnlyList<AccountTotal>> TotalsAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Like <see cref="TotalsAsync"/> but without the year-end closing entries, so the profit and loss of a closed year still shows its
+    /// revenue and expenses instead of zeros.
+    /// </summary>
+    Task<IReadOnlyList<AccountTotal>> OperatingTotalsAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 
     /// <summary>The entries, in date, voucher number and position order, for some accounts (or all when null).</summary>
     Task<IReadOnlyList<LedgerLine>> LinesAsync(

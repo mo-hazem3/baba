@@ -9,6 +9,8 @@ import {
   useGetHostInfo,
   useGetPrintSettings,
   useListAccounts,
+  useListBankAccounts,
+  useListFiscalYears,
   useListCostCenters,
   useListCountries,
   useListCurrencies,
@@ -56,6 +58,10 @@ export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck 
 export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
 
 export const useParties = (params?: ListPartiesParams) => useListParties(params, { query: { select: (r) => r.data } })
+
+export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
+
+export const useFiscalYears = () => useListFiscalYears({ query: { select: (r) => r.data } })
 
 export const useCostCenters = () => useListCostCenters({ query: { select: (r) => r.data } })
 

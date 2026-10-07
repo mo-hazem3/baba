@@ -116,7 +116,7 @@ async function main() {
     } else {
       log('NO-NATIVE mode: the company is created through the API (the wizard and its native Save dialog were not driven in this run)')
       const created = await page.evaluate(async ({ path, password, year }) => {
-        const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة النافذة الحقيقية', nameEn: 'Real Window Trading', countryCode: 'KW', baseCurrencyCode: 'KWD', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: {}, address: null, chartTemplateKey: 'default', enabledModules: [] } }) })
+        const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة النافذة الحقيقية', nameEn: 'Real Window Trading', countryCode: 'KW', baseCurrencyCode: 'KWD', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: {}, address: null, chartTemplateKey: 'default', enabledModules: ['bank-cash', 'customers-suppliers', 'cost-centers'] } }) })
         return response.status
       }, { path: companyFile, password, year: new Date().getFullYear() })
       if (created !== 200) throw new Error('Creating the company through the API returned ' + created)
@@ -232,25 +232,10 @@ async function main() {
     await page.screenshot({ path: path.join(shots, '8-trial-balance.png') })
     log('trial balance: debits = credits = 1,500.000')
 
-    if (native) {
-      // Excel and CSV: the host asks where to save with the normal Windows dialog.
-      const xlsxFile = path.join(dataDir, 'trial-balance.xlsx')
-      const csvFile = path.join(dataDir, 'trial-balance.csv')
-      typeIntoDialog(xlsxFile)
-      await page.getByRole('button', { name: /^Export/ }).click()
-      await page.getByRole('menuitem', { name: 'Excel' }).click()
-      for (let i = 0; i < 60 && !fs.existsSync(xlsxFile); i++) await sleep(500)
-      if (!fs.existsSync(xlsxFile) || fs.readFileSync(xlsxFile).subarray(0, 2).toString() !== 'PK') throw new Error('The Excel export was not saved as a real .xlsx file')
-      log('Excel saved through the native dialog:', fs.statSync(xlsxFile).size, 'bytes')
-
-      typeIntoDialog(csvFile)
-      await page.getByRole('button', { name: /^Export/ }).click()
-      await page.getByRole('menuitem', { name: 'CSV' }).click()
-      for (let i = 0; i < 60 && !fs.existsSync(csvFile); i++) await sleep(500)
-      if (!fs.existsSync(csvFile) || !fs.readFileSync(csvFile, 'utf8').includes('Cash on hand')) throw new Error('The CSV export is missing or has no accounts in it')
-      log('CSV saved through the native dialog:', fs.statSync(csvFile).size, 'bytes')
-
-    } else {
+    // Excel and CSV. The harness cannot drive the Save dialog for downloads: attached over the DevTools protocol, Playwright takes
+    // the download itself, so WebView2 never raises its DownloadStarting event. The host's download handler is checked by the desktop
+    // smoke test instead (a real download reaches it and is saved); here the files themselves are checked, fetched from the page.
+    {
       // The native Save dialog was not driven; at least the files themselves are checked, fetched from the page.
       const { xlsx, csv } = await page.evaluate(async () => {
         const q = new URLSearchParams(location.search)
@@ -260,7 +245,7 @@ async function main() {
       })
       if (xlsx.status !== 200 || xlsx.head !== 'PK') throw new Error('The Excel export is not a real .xlsx file')
       if (csv.status !== 200 || !csv.text.includes('Cash on hand')) throw new Error('The CSV export has no accounts in it')
-      log('NO-NATIVE mode: Excel (' + xlsx.size + ' bytes, PK header) and CSV (' + csv.size + ' bytes) fetched OK; the native Save dialog for downloads was NOT driven')
+      log('Excel (' + xlsx.size + ' bytes, PK header) and CSV (' + csv.size + ' bytes) fetched OK; the Save dialog for downloads is covered by the smoke test, not driven here')
     }
 
     // Logo upload, then a voucher PDF in the viewer window.
@@ -293,6 +278,91 @@ async function main() {
     await menu('Summary')
     await expect(page.getByText('Cash and bank')).toBeVisible()
     await page.screenshot({ path: path.join(shots, '11-summary-dashboard.png') })
+
+    // ---- Phase 2: bank and cash, transfer, reconciliation with a loaded statement, customers, opening balances, year-end, import ----
+    const csvFile = (text, name = 'file.csv') => ({ name, mimeType: 'text/csv', buffer: Buffer.from(text, 'utf8') })
+
+    await menu('Transfers')
+    await page.getByRole('button', { name: 'New transfer' }).click()
+    await pickAccount('Transfer from', '111')
+    await pickAccount('Transfer to', '112')
+    await page.getByLabel('Amount', { exact: true }).fill('100')
+    await page.getByRole('button', { name: 'Save and post' }).click()
+    await expect(page.getByText(/Posted as TV-\d{4}-0001/)).toBeVisible()
+    log('transfer of 100 from cash to bank posted')
+
+    await menu('Bank and cash')
+    await expect(page.getByRole('row', { name: /112/ })).toContainText('600.000') // 500 from the journal voucher + 100 transferred
+    await page.screenshot({ path: path.join(shots, '12-bank.png') })
+    await page.getByRole('button', { name: 'Reconcile 112' }).click()
+    await page.getByRole('button', { name: 'Load statement from a file…' }).click()
+    const statementDay = new Date().toISOString().slice(0, 10)
+    await page.getByTestId('import-file').setInputFiles(csvFile(`Date,Description,Amount\n${statementDay},Journal,500\n${statementDay},Transfer,100`))
+    await expect(page.getByText('2 imported.').first()).toBeVisible()
+    await page.getByRole('button', { name: 'Close' }).last().click()
+    await page.getByRole('button', { name: 'Tick suggested matches' }).click()
+    await page.getByLabel('Closing balance on the statement').fill('600')
+    await expect(page.locator('.reconcile-figures')).toContainText('No difference')
+    await page.screenshot({ path: path.join(shots, '13-reconcile.png') })
+    await page.getByRole('button', { name: 'Finish reconciliation' }).click()
+    await expect(page.getByText('Reconciliation finished.')).toBeVisible()
+    log('bank reconciled against a loaded statement: difference 0')
+
+    await menu('Customers')
+    await page.getByRole('button', { name: 'New customer' }).click()
+    await page.getByLabel('Name (English)').fill('Window Customer')
+    await page.getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByRole('cell', { name: 'Window Customer' })).toBeVisible()
+    await menu('Journal vouchers')
+    await page.getByRole('button', { name: 'New journal voucher' }).click()
+    await pickAccount('Account 1', '113')
+    await pickAccount('Customer / supplier 1', 'Window')
+    await page.getByLabel('Debit 1').fill('250')
+    await pickAccount('Account 2', '511')
+    await page.getByLabel('Credit 2').fill('250')
+    await page.getByRole('button', { name: 'Save and post' }).click()
+    await expect(page.getByText(/Posted as JV-\d{4}-0002/)).toBeVisible()
+    await menu('Reports')
+    await page.getByRole('button', { name: 'Open Customers aging' }).click()
+    await expect(page.getByRole('row', { name: /Window Customer/ })).toContainText('250.000')
+    await page.screenshot({ path: path.join(shots, '14-aging.png') })
+    log('customer created, invoiced on credit, shown in the aging report')
+
+    await menu('Opening balances')
+    await expect(page.getByRole('heading', { name: 'Opening balances' })).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '15-opening.png') })
+    await menu('Year-end')
+    await expect(page.getByRole('row', { name: /In progress/ })).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '16-year-end.png') })
+    log('opening balances and year-end screens open')
+
+    await menu('Chart of accounts')
+    await page.getByRole('button', { name: 'Import…' }).click()
+    await page.getByTestId('import-file').setInputFiles(csvFile('Code,Name,Parent code,Type\n9,Other assets,,Asset\n91,Safe,9,'))
+    await expect(page.getByText('2 imported.').first()).toBeVisible()
+    await page.getByRole('button', { name: 'Close' }).last().click()
+    log('chart of accounts imported from a CSV file')
+    await menu('Summary')
+
+    // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).
+    if (native) {
+      await page.getByRole('button', { name: /Menu/ }).click()
+      await page.getByText('Close company', { exact: true }).click()
+      await page.getByRole('button', { name: 'Close company' }).last().click()
+      await expect(page.getByRole('heading', { name: 'Welcome to Baba' })).toBeVisible()
+      const restoredFile = path.join(dataDir, 'RealWindow-restored.baba')
+      typeIntoDialog(backupFile, 3500) // first dialog: which backup
+      typeIntoDialog(restoredFile, 12000) // second dialog: where the restored company goes
+      await page.getByRole('button', { name: 'Restore a backup…' }).click()
+      await expect(page.getByRole('dialog').getByText('Open RealWindow-restored')).toBeVisible({ timeout: 60000 })
+      if (!fs.existsSync(restoredFile)) throw new Error('The restored company file was not created')
+      log('backup restored through the native dialogs:', fs.statSync(restoredFile).size, 'bytes')
+      await page.getByLabel('File password').fill(password)
+      await page.getByRole('button', { name: 'Open company', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible({ timeout: 60000 })
+    } else {
+      log('NO-NATIVE mode: restoring a backup (native dialogs) was NOT driven')
+    }
 
     if (native) {
       // Close-window warning: with a half-filled new company the window asks first. Default button = keep working.

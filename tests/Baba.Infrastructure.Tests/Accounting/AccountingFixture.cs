@@ -41,7 +41,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         PartyService Parties,
         CostCenterService CostCenters,
         Guid Customer,
-        Guid Supplier)
+        Guid Supplier,
+        Baba.Application.Banking.BankService Bank,
+        FiscalYearService Years)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -87,7 +89,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var chart = new ChartOfAccountsService(accounts);
         var partyStore = new PartyStore(files);
         var costCenterStore = new CostCenterStore(files);
-        var vouchers = new VoucherService(new VoucherStore(files), accounts, partyStore, costCenterStore, new PeriodStore(files), files, Clock);
+        var reconciliationStore = new ReconciliationStore(files);
+        var vouchers = new VoucherService(new VoucherStore(files), accounts, partyStore, costCenterStore, reconciliationStore, new PeriodStore(files), files, Clock);
         var periods = new PeriodService(new PeriodStore(files), files);
         var byCode = (await chart.ListAsync()).ToDictionary(a => a.Code);
         var ledger = new LedgerQuery(files);
@@ -106,7 +109,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
             new Baba.Application.Printing.BrandingService(brandingStore),
             new Baba.Application.Reporting.ListingService(chart, vouchers, files),
             new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
-            documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id);
+            documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id,
+            new Baba.Application.Banking.BankService(accounts, reconciliationStore, ledger, new Baba.Infrastructure.Printing.TabularReader(), Clock),
+            new FiscalYearService(accounts, ledger, new VoucherStore(files), new PeriodStore(files), vouchers, files, Clock));
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

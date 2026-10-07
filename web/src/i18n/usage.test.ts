@@ -47,13 +47,27 @@ describe('translation keys used in the code', () => {
       'line.account-inactive', 'line.account-not-posting', 'line.account-required', 'line.account-unknown', 'line.amount-both-sides',
       'line.amount-decimals', 'line.amount-negative', 'line.amount-required', 'line.amount-wrong-side', 'lines.required',
       'voucher.kind-cannot-change', 'line.party-required', 'line.party-unknown', 'line.party-inactive', 'line.party-not-allowed',
-      'line.cost-center-unknown', 'line.cost-center-inactive',
+      'line.cost-center-unknown', 'line.cost-center-inactive', 'transfer.one-line-only', 'line.account-not-cash',
+      'line.account-same-as-source', 'line.account-not-balance-sheet', 'opening.already-exists', 'voucher.reconciled', 'voucher.system-generated',
     ]
+    const bankCodes = ['reconciliation.difference', 'reconciliation.entry-unavailable', 'reconciliation.none-to-undo', 'bank.account-invalid']
+    const yearCodes = ['year.already-closed', 'year.not-ended', 'year.drafts-exist', 'year.no-retained-earnings', 'year.nothing-to-close', 'year.not-closed', 'year.later-year-closed']
+    const importCodes = [
+      'import.unreadable', 'import.empty', 'statement.date-column-missing', 'statement.amount-column-missing', 'statement.empty', 'statement.date-invalid',
+      'statement.amount-invalid', 'accounts.code-column-missing', 'parties.name-column-missing', 'account.type-required', 'account.type-unknown',
+      'account.role-unknown', 'party.kind-unknown', 'party.credit-limit-invalid',
+    ]
+    const restoreCodes = ['restore.backup-missing', 'restore.destination-exists', 'restore.same-file', 'restore.backup-is-open']
     const partyCodes = ['party.code-required', 'party.code-duplicate', 'party.name-required', 'party.credit-limit-negative', 'party.terms-invalid', 'party.kind-in-use', 'party.in-use']
     const costCenterCodes = ['cost-center.code-required', 'cost-center.code-duplicate', 'cost-center.name-required', 'cost-center.in-use']
     const missing = [
       ...accountCodes.map((code) => `accounts.issues.${code}`),
       ...voucherCodes.map((code) => `voucher.issues.${code}`),
+      ...bankCodes.map((code) => `bank.issues.${code}`),
+      ...yearCodes.map((code) => `yearEnd.issues.${code}`),
+      ...importCodes.map((code) => `import.issues.${code}`),
+      ...restoreCodes.map((code) => `start.issues.${code}`),
+      'accounts.issues.move.has-reconciled',
       ...partyCodes.map((code) => `parties.issues.${code}`),
       ...costCenterCodes.map((code) => `costCenters.issues.${code}`),
       ...['image.required', 'image.too-large', 'image.unsupported-type'].map((code) => `branding.issues.${code}`),
@@ -65,10 +79,10 @@ describe('translation keys used in the code', () => {
   it('name every report, voucher kind, account type and special use', () => {
     const missing = [
       ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
-      ...['Payment', 'Receipt', 'Journal'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
+      ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd'].map((h) => `help.${h}`),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])
   })
