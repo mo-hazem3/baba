@@ -16,7 +16,9 @@ public sealed record TradePrintData(
     Currency Currency,
     string BaseCurrencyCode,
     CurrencyWords Words,
-    IReadOnlyList<(string En, string Ar, string Value)> CompanyTaxNumbers);
+    IReadOnlyList<(string En, string Ar, string Value)> CompanyTaxNumbers,
+    /// <summary>The e-invoice QR code as an image address, when the country has one and the invoice is issued.</summary>
+    string? QrDataUrl = null);
 
 /// <summary>
 /// The printed quote, order, delivery note, invoice, credit or debit note (brief section 10.3): logo, company name, number and date,
@@ -136,6 +138,9 @@ public static class TradePrintBuilder
         if (!string.IsNullOrWhiteSpace(document.Memo))
             html.Append($"<div class=\"box\"><strong>{L("Notes", "ملاحظات")}:</strong> {PrintHtml.E(document.Memo)}</div>");
 
+        if (data.QrDataUrl is not null)
+            html.Append($"<div class=\"qr\"><img src=\"{data.QrDataUrl}\" alt=\"QR\" width=\"120\" height=\"120\"></div>");
+
         if (settings.ShowSignatures || (settings.ShowStamp && stampDataUrl is not null))
         {
             var third = document.Kind switch
@@ -167,7 +172,8 @@ public sealed class TradePrintService(
     IBrandingStore branding,
     DocumentService documents,
     PartyService parties,
-    CountryPackRegistry countryPacks)
+    CountryPackRegistry countryPacks,
+    IQrImageMaker qrImages)
 {
     public bool IsAvailable => renderer is not null;
 
@@ -190,8 +196,22 @@ public sealed class TradePrintService(
             .Select(n => (n.Rule?.NameEn ?? n.Key, n.Rule?.NameAr ?? n.Key, n.Value))
             .ToList();
 
+        // The QR code of an e-invoice: on issued sales invoices and credit notes in the company's own currency, when the country has one.
+        string? qr = null;
+        var pack = countryPacks.Find(company.CountryCode);
+        if (pack?.EInvoicing is { } provider
+            && document is { Status: DocumentStatus.Issued, IssuedAt: { } issuedAt }
+            && document.Kind is DocumentKind.SalesInvoice or DocumentKind.SalesCreditNote
+            && document.CurrencyCode == company.BaseCurrencyCode
+            && company.TaxNumbers?.GetValueOrDefault(provider.SellerTaxNumberKey) is { Length: > 0 } sellerNumber)
+        {
+            var text = provider.BuildQrCode(new EInvoiceFacts(
+                company.NameEn, company.NameAr, sellerNumber, new DateTimeOffset(DateTime.SpecifyKind(issuedAt, DateTimeKind.Utc)), document.Total, document.TaxTotal));
+            qr = text is null ? null : qrImages.SvgDataUrl(text);
+        }
+
         var html = TradePrintBuilder.Build(
-            new TradePrintData(document, party, company.NameEn, company.NameAr, currency, company.BaseCurrencyCode, words, numbers),
+            new TradePrintData(document, party, company.NameEn, company.NameAr, currency, company.BaseCurrencyCode, words, numbers, qr),
             layout ?? settings.DefaultLayout, settings, fonts.CssFontFaces(), fonts.FontFamily,
             await ImageAsync(BrandingImage.Logo, cancellationToken), await ImageAsync(BrandingImage.Stamp, cancellationToken));
 
@@ -202,4 +222,11 @@ public sealed class TradePrintService(
         await branding.GetImageAsync(image, cancellationToken) is { } file
             ? $"data:{file.ContentType};base64,{Convert.ToBase64String(file.Content)}"
             : null;
+}
+
+/// <summary>Draws a QR code. Implemented by Infrastructure.</summary>
+public interface IQrImageMaker
+{
+    /// <summary>The QR code of a text as an image address (a data URL) that can sit in a printout.</summary>
+    string SvgDataUrl(string text);
 }

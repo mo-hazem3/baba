@@ -111,7 +111,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   })
   const outstanding = standing.data?.find((o) => o.documentId === initial?.id)?.outstanding
   const settled = outstanding !== undefined && initial !== undefined && outstanding < initial.total
-  const readOnly = converted || settled
+  const readOnly = converted || settled || initial?.immutable === true // locked by the country's e-invoicing rules
 
   const [partyId, setPartyId] = useState<string | undefined>(initial?.partyId)
   const [date, setDate] = useState(initial?.date ?? toIsoDate(new Date()))
@@ -347,6 +347,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
     >
       {converted && <Alert type="info" showIcon className="form-alert" message={t('trade.convertedNote')} />}
       {settled && <Alert type="info" showIcon className="form-alert" message={t('trade.settledNote')} />}
+      {initial?.immutable && <Alert type="info" showIcon className="form-alert" message={t('trade.immutableNote')} />}
       {issued && !converted && posts(kind) && <Alert type="info" showIcon className="form-alert" message={t('trade.postedNote')} />}
       {issues && issues.list.length > 0 && (
         <Alert

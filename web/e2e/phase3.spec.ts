@@ -317,6 +317,13 @@ test('English: VAT is added to an invoice, posted, and shows up in the tax retur
   await expect(page.getByText(/Issued as SI-\d{4}-0001/)).toBeVisible()
   await expect(page.getByRole('row', { name: /SI-/ })).toContainText('1,150.00')
 
+  // Under the country's e-invoicing rules an issued invoice is locked; it is reversed with a credit note.
+  await page.getByRole('link', { name: /SI-/ }).click()
+  await expect(page.getByText(/cannot be changed or deleted once it is issued/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Credit note' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Delete' })).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/en-invoice-locked.png' })
+
   // The books: customers owe 1,150, revenue 1,000, tax payable 150.
   await page.goto('/reports/trial-balance')
   await expect(page.getByRole('row', { name: /Accounts receivable/ })).toContainText('1,150.00')
@@ -357,7 +364,7 @@ test('Arabic: the tax codes page and the tax return read right-to-left', async (
 
 // ---------------------------------------------------------------- Excel/CSV import of products and journal entries
 
-test('English: products and journal entries are imported from files, and a template can be downloaded', async ({ page, request }) => {
+test('English: products and journal entries are imported from files', async ({ page, request }) => {
   await createVatCompany(request, 'p3-import')
   await page.goto('/')
   await setLanguage(page, 'en')
@@ -365,9 +372,6 @@ test('English: products and journal entries are imported from files, and a templ
 
   await menu(page, 'Products and prices').click()
   await page.getByRole('button', { name: 'Import…' }).click()
-  const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Download a template' }).click()
-  expect((await download).suggestedFilename()).toBe('products-template.xlsx')
 
   // A wrong file imports nothing and names the row; the corrected file goes in.
   await page.getByTestId('import-file').setInputFiles(csv('Code,Name,Sale price,Revenue account,Tax code\nA1,Widget,10,511,SA-VAT-STD\nA2,Gadget,abc,511,\n', 'products.csv'))
@@ -385,4 +389,15 @@ test('English: products and journal entries are imported from files, and a templ
   await page.getByRole('button', { name: 'Close' }).last().click()
   await expect(page.getByRole('link', { name: /JV-/ })).toHaveCount(2)
   await page.screenshot({ path: 'test-results/en-journal-import.png' })
+})
+
+test('English: an import template downloads as an Excel file', async ({ page, request }) => {
+  await createVatCompany(request, 'p3-template')
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await menu(page, 'Products and prices').click()
+  await page.getByRole('button', { name: 'Import…' }).click()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download a template' }).click()
+  expect((await download).suggestedFilename()).toBe('products-template.xlsx')
 })

@@ -56,7 +56,9 @@ public sealed record DocumentDto(
     Guid? ConvertedToId,
     Guid? VoucherId,
     decimal Net = 0,
-    decimal TaxTotal = 0);
+    decimal TaxTotal = 0,
+    DateTime? IssuedAt = null,
+    bool Immutable = false);
 
 /// <summary>One row of a document list.</summary>
 public sealed record DocumentSummary(
@@ -78,6 +80,7 @@ public sealed class DocumentService(
     ICurrencyRateStore currencyRates,
     IAllocationStore allocations,
     VoucherService vouchers,
+    CountryPackRegistry countryPacks,
     ICompanyFiles files,
     TimeProvider clock)
 {
@@ -116,7 +119,10 @@ public sealed class DocumentService(
     {
         var existing = await FindForEditAsync(id, cancellationToken);
         if (existing is { Status: DocumentStatus.Issued })
+        {
+            RefuseIfImmutable(existing);
             await RefuseIfSettledAsync(existing, cancellationToken);
+        }
         var (document, issues) = await BuildAsync(existing, input, cancellationToken);
         Throw(issues);
         await IssueBuiltAsync(document, cancellationToken);
@@ -192,6 +198,7 @@ public sealed class DocumentService(
         }
 
         document.Status = DocumentStatus.Issued;
+        document.IssuedAt ??= clock.GetUtcNow().UtcDateTime;
         await documents.SaveAsync([document], cancellationToken);
     }
 
@@ -325,6 +332,7 @@ public sealed class DocumentService(
         var document = await documents.FindAsync(id, cancellationToken) ?? throw new NotFoundException("document");
         if (document.Status == DocumentStatus.Converted)
             throw Refused("document", "document.converted");
+        RefuseIfImmutable(document);
         await RefuseIfSettledAsync(document, cancellationToken);
 
         if (document.VoucherId is { } voucherId)
@@ -343,6 +351,20 @@ public sealed class DocumentService(
     }
 
     // ---------------------------------------------------------------- Building and checking
+
+    /// <summary>
+    /// In a country whose e-invoicing rules say so, an invoice or note that was issued (that is, sent to the authority) is never changed or
+    /// deleted: it is reversed with a credit or debit note. (Brief section 8.)
+    /// </summary>
+    private bool IsImmutable(Document document) =>
+        document.Kind.Posts() && document.Status == DocumentStatus.Issued
+        && countryPacks.Find(Company().CountryCode)?.DocumentRules.SubmittedDocumentsAreImmutable == true;
+
+    private void RefuseIfImmutable(Document document)
+    {
+        if (IsImmutable(document))
+            throw Refused("document", "document.immutable");
+    }
 
     /// <summary>An invoice that has been paid (even in part) or credited is fixed: take the payment or the note away first.</summary>
     private async Task RefuseIfSettledAsync(Document document, CancellationToken cancellationToken)
@@ -504,7 +526,7 @@ public sealed class DocumentService(
         return new DocumentDto(
             d.Id, d.Kind, d.Number, d.Date, d.DueDate, d.Status, d.PartyId, d.CurrencyCode, d.ExchangeRate, d.Reference, d.Memo, d.DiscountPercent,
             ordered.Select((l, i) => new DocumentLineDto(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, totals.LineAmounts[i], l.TaxCodeId, l.TaxRate, totals.TaxAmounts[i])).ToList(),
-            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId, totals.Net, totals.TaxTotal);
+            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId, totals.Net, totals.TaxTotal, d.IssuedAt, IsImmutable(d));
     }
 
     private CompanyInfo Company() => files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");

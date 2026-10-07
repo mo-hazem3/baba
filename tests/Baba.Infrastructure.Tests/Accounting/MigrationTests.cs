@@ -94,9 +94,10 @@ public class MigrationTests : AccountingFixture
     public async Task A_file_that_is_already_up_to_date_is_not_backed_up_on_every_open()
     {
         var env = await NewEnvAsync();
+        var path = env.Files.Current!.FilePath;
         env.Files.Close();
 
-        await NewManager().OpenAsync(Path.Combine(Folder, "Company.baba"), Password);
+        await NewManager().OpenAsync(path, Password);
 
         Assert.Empty(Directory.GetFiles(Folder, "*.before-update-*"));
     }

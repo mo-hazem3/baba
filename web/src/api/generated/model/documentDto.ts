@@ -37,4 +37,7 @@ export interface DocumentDto {
   voucherId: string | null;
   net?: number;
   taxTotal?: number;
+  /** @nullable */
+  issuedAt?: string | null;
+  immutable?: boolean;
 }

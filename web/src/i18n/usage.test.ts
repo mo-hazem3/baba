@@ -71,7 +71,7 @@ describe('translation keys used in the code', () => {
       'product.name-required', 'product.price-negative', 'product.account-invalid', 'product.in-use', 'price-list.name-required',
       'price-list.currency-unknown', 'price-list.product-unknown', 'price-list.product-twice', 'price-list.price-negative', 'price-list.in-use',
       'line.tax-code-unknown', 'line.tax-code-inactive', 'line.tax-code-not-effective', 'line.tax-account-missing', 'product.tax-code-unknown',
-      'document.has-payments', 'document.has-notes', 'settlement.amount-invalid', 'settlement.document-unavailable', 'settlement.amount-too-high',
+      'document.has-payments', 'document.has-notes', 'document.immutable', 'settlement.amount-invalid', 'settlement.document-unavailable', 'settlement.amount-too-high',
       'settlement.nothing-to-settle', 'settlement.mixed-currencies', 'settlement.currency-mismatch', 'fx.account-required',
     ]
     const recurringCodes = ['recurring.name-required', 'recurring.next-date-required', 'recurring.end-before-next', 'recurring.template-unavailable', 'recurring.failed']

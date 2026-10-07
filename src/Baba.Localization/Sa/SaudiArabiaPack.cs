@@ -35,6 +35,8 @@ public sealed class SaudiArabiaPack : CountryPackBase
         new("commercial-registration", "Commercial registration (CR) number", "رقم السجل التجاري", @"^\d{10}$", RequiredForCompany: false),
     ];
 
+    public override IEInvoicingProvider? EInvoicing { get; } = new ZatcaEInvoicing();
+
     public override DocumentRules DocumentRules { get; } = new(
         SubmittedDocumentsAreImmutable: true,
         BilingualPrintRequired: true);

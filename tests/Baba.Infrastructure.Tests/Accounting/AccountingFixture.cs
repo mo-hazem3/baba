@@ -92,7 +92,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
     protected async Task<Env> NewEnvAsync(string user = "accountant", string countryCode = "XX")
     {
         var files = NewManager(user);
-        await files.CreateAsync(NewPath(), Password, NewCompany(countryCode: countryCode));
+        await files.CreateAsync(NewPath("Company-" + Guid.NewGuid().ToString("N")), Password, NewCompany(countryCode: countryCode));
 
         var accounts = new AccountStore(files);
         var chart = new ChartOfAccountsService(accounts);
@@ -115,7 +115,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var priceListStore = new Trade.PriceListStore(files);
         var taxStore = new Trade.TaxCodeStore(files);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
-        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, files, Clock);
+        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), files, Clock);
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();
@@ -137,7 +137,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
             new Baba.Application.Trade.PricingService(productStore, priceListStore, partyStore, files),
             new Baba.Application.Trade.SettlementService(documentStore, partyStore, accounts, allocationStore, vouchers, ledger, rateStore, files),
             new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock),
-            new Baba.Application.Printing.TradePrintService(renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, trade, parties, Baba.Localization.CountryPackRegistry.Discover()),
+            new Baba.Application.Printing.TradePrintService(renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, trade, parties, Baba.Localization.CountryPackRegistry.Discover(), new Printing.QrImageMaker()),
             tax);
     }
 

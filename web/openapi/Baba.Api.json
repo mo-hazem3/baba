@@ -4244,6 +4244,17 @@
             "type": "number",
             "format": "double",
             "default": 0
+          },
+          "issuedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "immutable": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

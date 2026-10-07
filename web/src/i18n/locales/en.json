@@ -1138,7 +1138,8 @@
         "total-not-positive": "The total must be more than zero.",
         "control-account-missing": "There is no active customers or suppliers account to post to. Check the chart of accounts.",
         "has-payments": "This invoice has a payment against it. Delete the receipt or payment first.",
-        "has-notes": "This invoice has a credit or debit note. Delete the note first."
+        "has-notes": "This invoice has a credit or debit note. Delete the note first.",
+        "immutable": "Under the e-invoicing rules of your country an issued invoice cannot be changed or deleted. Make a credit note instead."
       },
       "line": {
         "product-unknown": "That product no longer exists.",
@@ -1204,7 +1205,8 @@
     "taxCode": "Tax",
     "netTotal": "Total before tax",
     "taxTotal": "Tax",
-    "productTaxHelp": "Lines of this product start with this tax code."
+    "productTaxHelp": "Lines of this product start with this tax code.",
+    "immutableNote": "Under the e-invoicing rules of your country this invoice cannot be changed or deleted once it is issued. To correct it, make a credit note from it."
   },
   "recurring": {
     "title": "Recurring invoices and entries",

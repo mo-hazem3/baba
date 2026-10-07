@@ -104,7 +104,31 @@ public interface ITaxReturnDefinition
 
 public sealed record TaxReturnDefinition(string NameEn, string NameAr, TaxReturnFrequency Frequency) : ITaxReturnDefinition;
 
-public interface IEInvoicingProvider { }
+/// <summary>What a country's e-invoicing needs to know about an invoice that was issued.</summary>
+public sealed record EInvoiceFacts(
+    string SellerNameEn,
+    string SellerNameAr,
+    string SellerTaxNumber,
+    DateTimeOffset IssuedAt,
+    decimal TotalWithTax,
+    decimal TaxTotal);
+
+/// <summary>
+/// A country's e-invoicing (the authority's electronic invoice rules). <see cref="BuildQrCode"/> makes the text printed as a QR code on
+/// a tax invoice. Submitting invoices to the authority is added to a country's provider when it can be checked against the authority's
+/// own test system.
+/// </summary>
+public interface IEInvoicingProvider
+{
+    string NameEn { get; }
+    string NameAr { get; }
+
+    /// <summary>Which of the company's tax numbers (a <see cref="TaxRegistrationRule.Key"/>) is the seller's number on the invoice.</summary>
+    string SellerTaxNumberKey { get; }
+
+    /// <summary>The text of the QR code of an issued invoice, or null when it cannot be made (a field is missing).</summary>
+    string? BuildQrCode(EInvoiceFacts facts);
+}
 
 public interface IWithholdingRules { }
 

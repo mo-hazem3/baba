@@ -128,6 +128,9 @@ public sealed class Document : Entity, ICompanyScoped, IAuditable
     /// <summary>The voucher an invoice or note posts through.</summary>
     public Guid? VoucherId { get; set; }
 
+    /// <summary>When the document was first issued (UTC). An e-invoice's QR code carries it, so it never changes once set.</summary>
+    public DateTime? IssuedAt { get; set; }
+
     public List<DocumentLine> Lines { get; set; } = [];
 
     public DateTime CreatedAt { get; set; }

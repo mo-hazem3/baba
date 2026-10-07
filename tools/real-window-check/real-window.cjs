@@ -413,6 +413,71 @@ async function main() {
     log('invoice set to repeat monthly; the schedule is listed')
     await menu('Summary')
 
+    // ---- Phase 4: tax and e-invoicing, in a company whose country has VAT (the company above has none: no tax screens there) ----
+    await expect(page.getByRole('menuitem', { name: 'Tax codes', exact: true })).toHaveCount(0)
+    log('a company in a country without VAT shows no tax screens')
+
+    // Excel exports of the Phase 3 and 4 lists are real .xlsx files (fetched, as the Save dialog cannot be driven).
+    {
+      const heads = await page.evaluate(async () => {
+        const out = {}
+        for (const key of ['documents', 'products', 'parties', 'exchange-rates', 'recurring']) {
+          const r = await fetch('/api/reports/' + key + '/export?format=Xlsx&layout=Both')
+          const b = new Uint8Array(await r.arrayBuffer())
+          out[key] = r.status + ':' + String.fromCharCode(...b.slice(0, 2))
+        }
+        return out
+      })
+      for (const [key, value] of Object.entries(heads)) if (value !== '200:PK') throw new Error('The Excel export of ' + key + ' is wrong: ' + value)
+      log('Excel exports of documents, products, parties, exchange rates and recurring schedules are real .xlsx files')
+    }
+
+    const vatFile = path.join(dataDir, 'RealWindowVat.baba')
+    const vat = await page.evaluate(async ({ path, password, year }) => {
+      await fetch('/api/company/close', { method: 'POST' })
+      const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة الضريبة الحقيقية', nameEn: 'Real Vat Trading', countryCode: 'SA', baseCurrencyCode: 'SAR', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: { 'vat-number': '300000000000003' }, address: null, chartTemplateKey: 'default', enabledModules: ['bank-cash', 'customers-suppliers', 'sales', 'purchases'] } }) })
+      return response.status
+    }, { path: vatFile, password, year: new Date().getFullYear() })
+    if (vat !== 200) throw new Error('Creating the VAT company returned ' + vat)
+    await page.goto(new URL('/', page.url()).toString())
+    await expect(page.locator('.company-details')).toContainText('Real Vat Trading', { timeout: 60000 })
+
+    await menu('Tax codes')
+    await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('Default')
+    await page.screenshot({ path: path.join(shots, '22-tax-codes.png') })
+
+    await page.evaluate(async () => {
+      await fetch('/api/parties', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'Customer', code: 'C100', nameAr: '', nameEn: 'Riyadh Stores', phone: null, email: null, address: null, taxNumber: '300111111111113', creditLimit: 0, paymentTermsDays: 30, notes: null, priceListId: null }) })
+    })
+    await menu('Sales')
+    await page.getByRole('button', { name: 'New invoice' }).click()
+    await pickAccount('Customer', 'Riyadh')
+    await pickAccount('Account 1', '511')
+    await page.getByLabel('Quantity 1').fill('1')
+    await page.getByLabel('Price 1').fill('1000')
+    await expect(page.locator('.doc-totals')).toContainText('1,150.00')
+    await page.screenshot({ path: path.join(shots, '23-invoice-vat.png') })
+    await page.getByRole('button', { name: 'Issue and post' }).click()
+    await expect(page.getByText(/Issued as SI-\d{4}-0001/)).toBeVisible()
+    log('invoice with 15% VAT issued: total 1,150.00')
+
+    await page.getByRole('link', { name: /SI-\d{4}-0001/ }).click()
+    await expect(page.getByText(/cannot be changed or deleted once it is issued/)).toBeVisible()
+    const taxInvoicePopup = context.waitForEvent('page', { timeout: 60000 })
+    await page.getByRole('button', { name: 'Print', exact: true }).click()
+    const taxInvoicePdf = await taxInvoicePopup
+    await sleep(2500)
+    log('tax invoice with its QR code opened as a PDF | title:', await taxInvoicePdf.title(), '| the issued invoice is locked')
+    await Promise.race([page.bringToFront().catch(() => {}), sleep(5000)])
+
+    await menu('Reports')
+    await page.getByRole('button', { name: 'Open Tax return' }).click()
+    await expect(page.getByRole('row', { name: /Tax on sales/ })).toContainText('150.00')
+    await expect(page.locator('.check-bad')).toHaveCount(0)
+    await page.screenshot({ path: path.join(shots, '24-tax-return.png') })
+    log('tax return: 150.00 tax on sales, and it agrees with the ledger')
+    await menu('Summary')
+
     // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).
     if (native) {
       await page.getByRole('button', { name: /Menu/ }).click()

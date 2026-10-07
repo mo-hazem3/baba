@@ -8739,6 +8739,440 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getImportPartiesMutationOptions(options), queryClient);
     }
 
+export type getImportTemplateResponse200 = {
+  data: void
+  status: 200
+}
+
+export type getImportTemplateResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getImportTemplateResponseSuccess = (getImportTemplateResponse200) & {
+  headers: Headers;
+};
+export type getImportTemplateResponseError = (getImportTemplateResponse404) & {
+  headers: Headers;
+};
+
+export type getImportTemplateResponse = (getImportTemplateResponseSuccess | getImportTemplateResponseError)
+
+export const getGetImportTemplateUrl = (key: string,) => {
+
+
+
+
+  return `/api/import/templates/${key}`
+}
+
+export const getImportTemplate = async (key: string, options?: Parameters<typeof http>[1]): Promise<getImportTemplateResponse> => {
+
+  return http<getImportTemplateResponse>(getGetImportTemplateUrl(key),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportTemplateQueryKey = (key: string,) => {
+    return [
+    `/api/import/templates/${key}`
+    ] as const;
+    }
+
+
+export const getGetImportTemplateQueryOptions = <TData = Awaited<ReturnType<typeof getImportTemplate>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportTemplateQueryKey(key);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportTemplate>>> = ({ signal }) => getImportTemplate(key, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetImportTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof getImportTemplate>>>
+export type GetImportTemplateQueryError = void
+
+
+export function useGetImportTemplate<TData = Awaited<ReturnType<typeof getImportTemplate>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getImportTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getImportTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetImportTemplate<TData = Awaited<ReturnType<typeof getImportTemplate>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getImportTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getImportTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetImportTemplate<TData = Awaited<ReturnType<typeof getImportTemplate>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetImportTemplate<TData = Awaited<ReturnType<typeof getImportTemplate>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportTemplate>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetImportTemplateQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type importProductsResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importProductsResponseSuccess = (importProductsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importProductsResponse = (importProductsResponseSuccess)
+
+export const getImportProductsUrl = () => {
+
+
+
+
+  return `/api/import/products`
+}
+
+export const importProducts = async ( options?: Parameters<typeof http>[1]): Promise<importProductsResponse> => {
+
+  return http<importProductsResponse>(getImportProductsUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportProductsMutationKey = () => ['importProducts'] as const;
+
+export const getImportProductsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importProducts>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importProducts>>, TError,void, TContext> => {
+
+const mutationKey = getImportProductsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importProducts>>, void> = () => {
+
+
+          return  importProducts(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportProductsMutationResult = NonNullable<Awaited<ReturnType<typeof importProducts>>>
+
+    export type ImportProductsMutationError = unknown
+
+
+    export const useImportProducts = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importProducts>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importProducts>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportProductsMutationOptions(options), queryClient);
+    }
+
+export type importExchangeRatesResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importExchangeRatesResponseSuccess = (importExchangeRatesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importExchangeRatesResponse = (importExchangeRatesResponseSuccess)
+
+export const getImportExchangeRatesUrl = () => {
+
+
+
+
+  return `/api/import/exchange-rates`
+}
+
+export const importExchangeRates = async ( options?: Parameters<typeof http>[1]): Promise<importExchangeRatesResponse> => {
+
+  return http<importExchangeRatesResponse>(getImportExchangeRatesUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportExchangeRatesMutationKey = () => ['importExchangeRates'] as const;
+
+export const getImportExchangeRatesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importExchangeRates>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importExchangeRates>>, TError,void, TContext> => {
+
+const mutationKey = getImportExchangeRatesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importExchangeRates>>, void> = () => {
+
+
+          return  importExchangeRates(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportExchangeRatesMutationResult = NonNullable<Awaited<ReturnType<typeof importExchangeRates>>>
+
+    export type ImportExchangeRatesMutationError = unknown
+
+
+    export const useImportExchangeRates = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importExchangeRates>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importExchangeRates>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportExchangeRatesMutationOptions(options), queryClient);
+    }
+
+export type importJournalResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importJournalResponseSuccess = (importJournalResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importJournalResponse = (importJournalResponseSuccess)
+
+export const getImportJournalUrl = () => {
+
+
+
+
+  return `/api/import/journal`
+}
+
+export const importJournal = async ( options?: Parameters<typeof http>[1]): Promise<importJournalResponse> => {
+
+  return http<importJournalResponse>(getImportJournalUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportJournalMutationKey = () => ['importJournal'] as const;
+
+export const getImportJournalMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importJournal>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importJournal>>, TError,void, TContext> => {
+
+const mutationKey = getImportJournalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importJournal>>, void> = () => {
+
+
+          return  importJournal(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportJournalMutationResult = NonNullable<Awaited<ReturnType<typeof importJournal>>>
+
+    export type ImportJournalMutationError = unknown
+
+
+    export const useImportJournal = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importJournal>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importJournal>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportJournalMutationOptions(options), queryClient);
+    }
+
+export type importOpeningBalancesResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importOpeningBalancesResponseSuccess = (importOpeningBalancesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importOpeningBalancesResponse = (importOpeningBalancesResponseSuccess)
+
+export const getImportOpeningBalancesUrl = () => {
+
+
+
+
+  return `/api/import/opening-balances`
+}
+
+export const importOpeningBalances = async ( options?: Parameters<typeof http>[1]): Promise<importOpeningBalancesResponse> => {
+
+  return http<importOpeningBalancesResponse>(getImportOpeningBalancesUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportOpeningBalancesMutationKey = () => ['importOpeningBalances'] as const;
+
+export const getImportOpeningBalancesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importOpeningBalances>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importOpeningBalances>>, TError,void, TContext> => {
+
+const mutationKey = getImportOpeningBalancesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importOpeningBalances>>, void> = () => {
+
+
+          return  importOpeningBalances(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportOpeningBalancesMutationResult = NonNullable<Awaited<ReturnType<typeof importOpeningBalances>>>
+
+    export type ImportOpeningBalancesMutationError = unknown
+
+
+    export const useImportOpeningBalances = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importOpeningBalances>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importOpeningBalances>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportOpeningBalancesMutationOptions(options), queryClient);
+    }
+
 export type listFiscalYearsResponse200 = {
   data: FiscalYearDto[]
   status: 200
