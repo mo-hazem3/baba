@@ -49,7 +49,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Trade.ProductService Products,
         Baba.Application.Trade.PriceListService PriceLists,
         Baba.Application.Trade.PricingService Pricing,
-        Baba.Application.Trade.SettlementService Settlements)
+        Baba.Application.Trade.SettlementService Settlements,
+        Baba.Application.Trade.RecurringService Recurring,
+        Baba.Application.Printing.TradePrintService TradePrint)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -130,7 +132,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
             new Baba.Application.Trade.ProductService(productStore, documentStore, accounts),
             new Baba.Application.Trade.PriceListService(priceListStore, productStore, files),
             new Baba.Application.Trade.PricingService(productStore, priceListStore, partyStore, files),
-            new Baba.Application.Trade.SettlementService(documentStore, partyStore, accounts, allocationStore, vouchers, ledger, rateStore, files));
+            new Baba.Application.Trade.SettlementService(documentStore, partyStore, accounts, allocationStore, vouchers, ledger, rateStore, files),
+            new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock),
+            new Baba.Application.Printing.TradePrintService(renderer, new Printing.EmbeddedPrintFonts(), files, brandingStore, trade, parties));
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

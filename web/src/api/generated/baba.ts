@@ -37,6 +37,7 @@ import type {
   CostCenterInput,
   CountryDto,
   CreateCompanyRequest,
+  CreateRecurringRequest,
   CurrencyDto,
   CurrencyRateDto,
   CurrencyRateInput,
@@ -63,6 +64,7 @@ import type {
   MoveEntriesResult,
   OpenCompanyRequest,
   OutstandingInvoice,
+  OverdueSummary,
   PartyDto,
   PartyInput,
   PartyKind,
@@ -70,6 +72,7 @@ import type {
   PeriodDto,
   PriceListDto,
   PriceListInput,
+  PrintDocumentParams,
   PrintSettingsDto,
   PrintSettingsInput,
   PrintVoucherParams,
@@ -80,6 +83,9 @@ import type {
   RecentFileDto,
   ReconciliationDto,
   ReconciliationView,
+  RecurringDto,
+  RecurringInput,
+  RecurringRunResult,
   RemoveRecentFileRequest,
   ReportResult,
   RestoreRequest,
@@ -5587,6 +5593,135 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getConvertDocumentMutationOptions(options), queryClient);
     }
 
+export type printDocumentResponse200 = {
+  data: void
+  status: 200
+}
+
+export type printDocumentResponse501 = {
+  data: void
+  status: 501
+}
+
+export type printDocumentResponseSuccess = (printDocumentResponse200) & {
+  headers: Headers;
+};
+export type printDocumentResponseError = (printDocumentResponse501) & {
+  headers: Headers;
+};
+
+export type printDocumentResponse = (printDocumentResponseSuccess | printDocumentResponseError)
+
+export const getPrintDocumentUrl = (id: string,
+    params?: PrintDocumentParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/documents/${id}/pdf?${stringifiedParams}` : `/api/documents/${id}/pdf`
+}
+
+export const printDocument = async (id: string,
+    params?: PrintDocumentParams, options?: Parameters<typeof http>[1]): Promise<printDocumentResponse> => {
+
+  return http<printDocumentResponse>(getPrintDocumentUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrintDocumentQueryKey = (id: string,
+    params?: PrintDocumentParams,) => {
+    return [
+    `/api/documents/${id}/pdf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPrintDocumentQueryOptions = <TData = Awaited<ReturnType<typeof printDocument>>, TError = void>(id: string,
+    params?: PrintDocumentParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPrintDocumentQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof printDocument>>> = ({ signal }) => printDocument(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PrintDocumentQueryResult = NonNullable<Awaited<ReturnType<typeof printDocument>>>
+export type PrintDocumentQueryError = void
+
+
+export function usePrintDocument<TData = Awaited<ReturnType<typeof printDocument>>, TError = void>(
+ id: string,
+    params: undefined |  PrintDocumentParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printDocument>>,
+          TError,
+          Awaited<ReturnType<typeof printDocument>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintDocument<TData = Awaited<ReturnType<typeof printDocument>>, TError = void>(
+ id: string,
+    params?: PrintDocumentParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printDocument>>,
+          TError,
+          Awaited<ReturnType<typeof printDocument>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintDocument<TData = Awaited<ReturnType<typeof printDocument>>, TError = void>(
+ id: string,
+    params?: PrintDocumentParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePrintDocument<TData = Awaited<ReturnType<typeof printDocument>>, TError = void>(
+ id: string,
+    params?: PrintDocumentParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPrintDocumentQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listOutstandingInvoicesResponse200 = {
   data: OutstandingInvoice[]
   status: 200
@@ -5701,6 +5836,113 @@ export function useListOutstandingInvoices<TData = Awaited<ReturnType<typeof lis
 
 
 
+export type getOverdueResponse200 = {
+  data: OverdueSummary
+  status: 200
+}
+
+export type getOverdueResponseSuccess = (getOverdueResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getOverdueResponse = (getOverdueResponseSuccess)
+
+export const getGetOverdueUrl = () => {
+
+
+
+
+  return `/api/settlements/overdue`
+}
+
+export const getOverdue = async ( options?: Parameters<typeof http>[1]): Promise<getOverdueResponse> => {
+
+  return http<getOverdueResponse>(getGetOverdueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOverdueQueryKey = () => {
+    return [
+    `/api/settlements/overdue`
+    ] as const;
+    }
+
+
+export const getGetOverdueQueryOptions = <TData = Awaited<ReturnType<typeof getOverdue>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOverdueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOverdue>>> = ({ signal }) => getOverdue({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOverdueQueryResult = NonNullable<Awaited<ReturnType<typeof getOverdue>>>
+export type GetOverdueQueryError = unknown
+
+
+export function useGetOverdue<TData = Awaited<ReturnType<typeof getOverdue>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOverdue>>,
+          TError,
+          Awaited<ReturnType<typeof getOverdue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOverdue<TData = Awaited<ReturnType<typeof getOverdue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOverdue>>,
+          TError,
+          Awaited<ReturnType<typeof getOverdue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOverdue<TData = Awaited<ReturnType<typeof getOverdue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetOverdue<TData = Awaited<ReturnType<typeof getOverdue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOverdue>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOverdueQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type settleInvoicesResponse200 = {
   data: SettlementResult
   status: 200
@@ -5793,6 +6035,651 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSettleInvoicesMutationOptions(options), queryClient);
+    }
+
+export type listRecurringResponse200 = {
+  data: RecurringDto[]
+  status: 200
+}
+
+export type listRecurringResponseSuccess = (listRecurringResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listRecurringResponse = (listRecurringResponseSuccess)
+
+export const getListRecurringUrl = () => {
+
+
+
+
+  return `/api/recurring`
+}
+
+export const listRecurring = async ( options?: Parameters<typeof http>[1]): Promise<listRecurringResponse> => {
+
+  return http<listRecurringResponse>(getListRecurringUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRecurringQueryKey = () => {
+    return [
+    `/api/recurring`
+    ] as const;
+    }
+
+
+export const getListRecurringQueryOptions = <TData = Awaited<ReturnType<typeof listRecurring>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRecurringQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRecurring>>> = ({ signal }) => listRecurring({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListRecurringQueryResult = NonNullable<Awaited<ReturnType<typeof listRecurring>>>
+export type ListRecurringQueryError = unknown
+
+
+export function useListRecurring<TData = Awaited<ReturnType<typeof listRecurring>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRecurring>>,
+          TError,
+          Awaited<ReturnType<typeof listRecurring>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRecurring<TData = Awaited<ReturnType<typeof listRecurring>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRecurring>>,
+          TError,
+          Awaited<ReturnType<typeof listRecurring>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRecurring<TData = Awaited<ReturnType<typeof listRecurring>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListRecurring<TData = Awaited<ReturnType<typeof listRecurring>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRecurring>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListRecurringQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createRecurringFromDocumentResponse200 = {
+  data: RecurringDto
+  status: 200
+}
+
+export type createRecurringFromDocumentResponseSuccess = (createRecurringFromDocumentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createRecurringFromDocumentResponse = (createRecurringFromDocumentResponseSuccess)
+
+export const getCreateRecurringFromDocumentUrl = () => {
+
+
+
+
+  return `/api/recurring/from-document`
+}
+
+export const createRecurringFromDocument = async (createRecurringRequest: CreateRecurringRequest, options?: Parameters<typeof http>[1]): Promise<createRecurringFromDocumentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createRecurringFromDocumentResponse>(getCreateRecurringFromDocumentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecurringRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateRecurringFromDocumentMutationKey = () => ['createRecurringFromDocument'] as const;
+
+export const getCreateRecurringFromDocumentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromDocument>>, TError,CreateRecurringFromDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromDocument>>, TError,CreateRecurringFromDocumentMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecurringFromDocumentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecurringFromDocument>>, CreateRecurringFromDocumentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRecurringFromDocument(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecurringFromDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof createRecurringFromDocument>>>
+    export type CreateRecurringFromDocumentMutationBody = CreateRecurringRequest
+    export type CreateRecurringFromDocumentMutationError = unknown
+    export type CreateRecurringFromDocumentMutationVariables = {data: CreateRecurringRequest}
+
+    export const useCreateRecurringFromDocument = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromDocument>>, TError,CreateRecurringFromDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecurringFromDocument>>,
+        TError,
+        CreateRecurringFromDocumentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecurringFromDocumentMutationOptions(options), queryClient);
+    }
+
+export type createRecurringFromVoucherResponse200 = {
+  data: RecurringDto
+  status: 200
+}
+
+export type createRecurringFromVoucherResponseSuccess = (createRecurringFromVoucherResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createRecurringFromVoucherResponse = (createRecurringFromVoucherResponseSuccess)
+
+export const getCreateRecurringFromVoucherUrl = () => {
+
+
+
+
+  return `/api/recurring/from-voucher`
+}
+
+export const createRecurringFromVoucher = async (createRecurringRequest: CreateRecurringRequest, options?: Parameters<typeof http>[1]): Promise<createRecurringFromVoucherResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createRecurringFromVoucherResponse>(getCreateRecurringFromVoucherUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecurringRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateRecurringFromVoucherMutationKey = () => ['createRecurringFromVoucher'] as const;
+
+export const getCreateRecurringFromVoucherMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromVoucher>>, TError,CreateRecurringFromVoucherMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromVoucher>>, TError,CreateRecurringFromVoucherMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecurringFromVoucherMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecurringFromVoucher>>, CreateRecurringFromVoucherMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRecurringFromVoucher(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecurringFromVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof createRecurringFromVoucher>>>
+    export type CreateRecurringFromVoucherMutationBody = CreateRecurringRequest
+    export type CreateRecurringFromVoucherMutationError = unknown
+    export type CreateRecurringFromVoucherMutationVariables = {data: CreateRecurringRequest}
+
+    export const useCreateRecurringFromVoucher = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecurringFromVoucher>>, TError,CreateRecurringFromVoucherMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecurringFromVoucher>>,
+        TError,
+        CreateRecurringFromVoucherMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecurringFromVoucherMutationOptions(options), queryClient);
+    }
+
+export type updateRecurringResponse200 = {
+  data: RecurringDto
+  status: 200
+}
+
+export type updateRecurringResponseSuccess = (updateRecurringResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateRecurringResponse = (updateRecurringResponseSuccess)
+
+export const getUpdateRecurringUrl = (id: string,) => {
+
+
+
+
+  return `/api/recurring/${id}`
+}
+
+export const updateRecurring = async (id: string,
+    recurringInput: RecurringInput, options?: Parameters<typeof http>[1]): Promise<updateRecurringResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateRecurringResponse>(getUpdateRecurringUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recurringInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateRecurringMutationKey = () => ['updateRecurring'] as const;
+
+export const getUpdateRecurringMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecurring>>, TError,UpdateRecurringMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRecurring>>, TError,UpdateRecurringMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRecurringMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRecurring>>, UpdateRecurringMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRecurring(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRecurringMutationResult = NonNullable<Awaited<ReturnType<typeof updateRecurring>>>
+    export type UpdateRecurringMutationBody = RecurringInput
+    export type UpdateRecurringMutationError = unknown
+    export type UpdateRecurringMutationVariables = {id: string;data: RecurringInput}
+
+    export const useUpdateRecurring = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecurring>>, TError,UpdateRecurringMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateRecurring>>,
+        TError,
+        UpdateRecurringMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRecurringMutationOptions(options), queryClient);
+    }
+
+export type deleteRecurringResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteRecurringResponseSuccess = (deleteRecurringResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteRecurringResponse = (deleteRecurringResponseSuccess)
+
+export const getDeleteRecurringUrl = (id: string,) => {
+
+
+
+
+  return `/api/recurring/${id}`
+}
+
+export const deleteRecurring = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteRecurringResponse> => {
+
+  return http<deleteRecurringResponse>(getDeleteRecurringUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecurringMutationKey = () => ['deleteRecurring'] as const;
+
+export const getDeleteRecurringMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecurring>>, TError,DeleteRecurringMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecurring>>, TError,DeleteRecurringMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecurringMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecurring>>, DeleteRecurringMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRecurring(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecurringMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecurring>>>
+
+    export type DeleteRecurringMutationError = unknown
+    export type DeleteRecurringMutationVariables = {id: string}
+
+    export const useDeleteRecurring = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecurring>>, TError,DeleteRecurringMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecurring>>,
+        TError,
+        DeleteRecurringMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecurringMutationOptions(options), queryClient);
+    }
+
+export type setRecurringActiveResponse200 = {
+  data: RecurringDto
+  status: 200
+}
+
+export type setRecurringActiveResponseSuccess = (setRecurringActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setRecurringActiveResponse = (setRecurringActiveResponseSuccess)
+
+export const getSetRecurringActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/recurring/${id}/active`
+}
+
+export const setRecurringActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setRecurringActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setRecurringActiveResponse>(getSetRecurringActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetRecurringActiveMutationKey = () => ['setRecurringActive'] as const;
+
+export const getSetRecurringActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setRecurringActive>>, TError,SetRecurringActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setRecurringActive>>, TError,SetRecurringActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetRecurringActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setRecurringActive>>, SetRecurringActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setRecurringActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetRecurringActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setRecurringActive>>>
+    export type SetRecurringActiveMutationBody = SetActiveRequest
+    export type SetRecurringActiveMutationError = unknown
+    export type SetRecurringActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetRecurringActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setRecurringActive>>, TError,SetRecurringActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setRecurringActive>>,
+        TError,
+        SetRecurringActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetRecurringActiveMutationOptions(options), queryClient);
+    }
+
+export type runDueRecurringResponse200 = {
+  data: RecurringRunResult
+  status: 200
+}
+
+export type runDueRecurringResponseSuccess = (runDueRecurringResponse200) & {
+  headers: Headers;
+};
+;
+
+export type runDueRecurringResponse = (runDueRecurringResponseSuccess)
+
+export const getRunDueRecurringUrl = () => {
+
+
+
+
+  return `/api/recurring/run-due`
+}
+
+export const runDueRecurring = async ( options?: Parameters<typeof http>[1]): Promise<runDueRecurringResponse> => {
+
+  return http<runDueRecurringResponse>(getRunDueRecurringUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRunDueRecurringMutationKey = () => ['runDueRecurring'] as const;
+
+export const getRunDueRecurringMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueRecurring>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDueRecurring>>, TError,void, TContext> => {
+
+const mutationKey = getRunDueRecurringMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDueRecurring>>, void> = () => {
+
+
+          return  runDueRecurring(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDueRecurringMutationResult = NonNullable<Awaited<ReturnType<typeof runDueRecurring>>>
+
+    export type RunDueRecurringMutationError = unknown
+
+
+    export const useRunDueRecurring = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueRecurring>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runDueRecurring>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunDueRecurringMutationOptions(options), queryClient);
     }
 
 export type listProductsResponse200 = {

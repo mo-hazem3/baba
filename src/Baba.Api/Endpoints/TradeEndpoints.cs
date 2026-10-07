@@ -1,5 +1,7 @@
 using Baba.Application.Accounting;
+using Baba.Application.Printing;
 using Baba.Application.Trade;
+using Baba.Domain;
 using Baba.Domain.Trade;
 
 namespace Baba.Api.Endpoints;
@@ -8,6 +10,9 @@ namespace Baba.Api.Endpoints;
 public sealed record SaveDocumentRequest(Guid? Id, DocumentInput Input);
 
 public sealed record ConvertDocumentRequest(DocumentKind Target);
+
+/// <summary>Make a schedule from a saved document or voucher. The schedule keeps a copy of it as it is now.</summary>
+public sealed record CreateRecurringRequest(Guid SourceId, RecurringInput Input);
 
 /// <summary>Sales and purchase documents, products and price lists (brief section 10.3).</summary>
 public static class TradeEndpoints
@@ -45,12 +50,46 @@ public static class TradeEndpoints
             })
             .WithName("DeleteDocument");
 
+        documents.MapGet("/{id:guid}/pdf", async (Guid id, PrintLayout? layout, TradePrintService printing, CancellationToken ct) =>
+            {
+                if (!printing.IsAvailable)
+                    return Results.StatusCode(StatusCodes.Status501NotImplemented);
+                return Results.File(await printing.RenderAsync(id, layout, ct), "application/pdf", "document.pdf");
+            })
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf")
+            .Produces(StatusCodes.Status501NotImplemented)
+            .WithName("PrintDocument");
+
         var settlements = api.MapGroup("/settlements").WithTags("Settlements");
 
         settlements.MapGet("/outstanding", (SettlementService service, Guid? partyId, CancellationToken ct) => service.OutstandingAsync(partyId, ct))
             .WithName("ListOutstandingInvoices");
+        settlements.MapGet("/overdue", (SettlementService service, TimeProvider clock, CancellationToken ct) =>
+                service.OverdueAsync(DateOnly.FromDateTime(clock.GetLocalNow().DateTime), ct))
+            .WithName("GetOverdue");
         settlements.MapPost("/", (SettlementInput input, SettlementService service, CancellationToken ct) => service.SettleAsync(input, ct))
             .WithName("SettleInvoices");
+
+        var recurring = api.MapGroup("/recurring").WithTags("Recurring");
+
+        recurring.MapGet("/", (RecurringService service, CancellationToken ct) => service.ListAsync(ct))
+            .WithName("ListRecurring");
+        recurring.MapPost("/from-document", (CreateRecurringRequest request, RecurringService service, CancellationToken ct) => service.CreateFromDocumentAsync(request.SourceId, request.Input, ct))
+            .WithName("CreateRecurringFromDocument");
+        recurring.MapPost("/from-voucher", (CreateRecurringRequest request, RecurringService service, CancellationToken ct) => service.CreateFromVoucherAsync(request.SourceId, request.Input, ct))
+            .WithName("CreateRecurringFromVoucher");
+        recurring.MapPut("/{id:guid}", (Guid id, RecurringInput input, RecurringService service, CancellationToken ct) => service.UpdateAsync(id, input, ct))
+            .WithName("UpdateRecurring");
+        recurring.MapPost("/{id:guid}/active", (Guid id, SetActiveRequest request, RecurringService service, CancellationToken ct) => service.SetActiveAsync(id, request.Active, ct))
+            .WithName("SetRecurringActive");
+        recurring.MapDelete("/{id:guid}", async (Guid id, RecurringService service, CancellationToken ct) =>
+            {
+                await service.DeleteAsync(id, ct);
+                return Results.NoContent();
+            })
+            .WithName("DeleteRecurring");
+        recurring.MapPost("/run-due", (RecurringService service, CancellationToken ct) => service.RunDueAsync(null, ct))
+            .WithName("RunDueRecurring");
 
         var productsGroup = api.MapGroup("/products").WithTags("Products");
 

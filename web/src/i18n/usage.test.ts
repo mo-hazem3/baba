@@ -71,7 +71,10 @@ describe('translation keys used in the code', () => {
       'document.has-payments', 'document.has-notes', 'settlement.amount-invalid', 'settlement.document-unavailable', 'settlement.amount-too-high',
       'settlement.nothing-to-settle', 'settlement.mixed-currencies', 'settlement.currency-mismatch', 'fx.account-required',
     ]
+    const recurringCodes = ['recurring.name-required', 'recurring.next-date-required', 'recurring.end-before-next', 'recurring.template-unavailable', 'recurring.failed']
     const missing = [
+      ...recurringCodes.map((code) => `recurring.issues.${code}`),
+      ...['Weekly', 'Monthly', 'Quarterly', 'Yearly'].map((f) => `recurring.frequencies.${f}`),
       ...tradeCodes.map((code) => `trade.issues.${code}`),
       ...accountCodes.map((code) => `accounts.issues.${code}`),
       ...voucherCodes.map((code) => `voucher.issues.${code}`),
@@ -96,7 +99,7 @@ describe('translation keys used in the code', () => {
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring'].map((h) => `help.${h}`),
       ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])

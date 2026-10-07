@@ -20,6 +20,7 @@ import { AccountSearchDialog } from '../accounting/AccountSearchDialog'
 import { AccountSelect } from '../accounting/AccountSelect'
 import { CurrencyFields } from '../accounting/CurrencyFields'
 import { VoucherLinesGrid } from '../accounting/VoucherLinesGrid'
+import { RecurringModal } from '../recurring/RecurringModal'
 import { TransferForm } from './TransferForm'
 import {
   hasFreeLines,
@@ -103,6 +104,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   const [rows, setRows] = useState<LineRow[]>(() => withTrailingBlank(initial ? rowsFromVoucher(initial) : [newRow()]))
   const [issues, setIssues] = useState<MappedIssues>()
   const [find, setFind] = useState<{ open: boolean; target?: string }>({ open: false })
+  const [repeating, setRepeating] = useState(false)
 
   const current = () => fingerprint(date, cashAccountId, reference, memo, rows, currencyCode, rate)
   const [savedFingerprint, setSavedFingerprint] = useState(current)
@@ -292,6 +294,23 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
               ))}
             </ul>
           }
+        />
+      )}
+
+      {initial && !readOnly && kind !== 'Opening' && (
+        <div className="doc-actions">
+          <span className="muted">{t('recurring.repeatHelp')}</span>
+          <Button onClick={() => setRepeating(true)} disabled={dirty}>
+            {t('recurring.repeat')}
+          </Button>
+        </div>
+      )}
+      {repeating && initial && (
+        <RecurringModal
+          open
+          source={{ type: 'voucher', id: initial.id, name: initial.memo || `${t(`voucher.title.${kind}`)} ${initial.number ?? ''}`.trim() }}
+          onClose={() => setRepeating(false)}
+          onSaved={() => void message.success(t('recurring.saved'))}
         />
       )}
 

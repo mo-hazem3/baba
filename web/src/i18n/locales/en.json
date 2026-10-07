@@ -25,7 +25,8 @@
     "exchangeRates": "Exchange rates",
     "sales": "Sales",
     "purchases": "Purchases",
-    "products": "Products and prices"
+    "products": "Products and prices",
+    "recurring": "Recurring"
   },
   "header": {
     "language": "Language",
@@ -87,7 +88,8 @@
     "yearEnd": "At the end of a fiscal year you close it. Baba moves the year's profit or loss into retained earnings, locks the year's months, and saves a copy of your file first. If you made a mistake you can reopen the latest closed year.",
     "rates": "For every foreign currency you use, enter how many units of your own currency it is worth, from a date on. A voucher or document in that currency starts from the latest rate on or before its date, and you can change it for that one document.",
     "documents": "Quotes, orders, delivery notes, invoices, and credit or debit notes. Quotes and orders post nothing. An invoice posts to the customer or supplier and to revenue or expenses when you issue it, and you can change or delete it later. Use \"Turn this into\" to move to the next document without typing it again.",
-    "products": "Products and services you sell or buy, with their prices and accounts, and price lists that give chosen customers their own prices. Choosing a product on an invoice fills in its name, price and account."
+    "products": "Products and services you sell or buy, with their prices and accounts, and price lists that give chosen customers their own prices. Choosing a product on an invoice fills in its name, price and account.",
+    "recurring": "Invoices and entries that Baba makes again by itself, such as monthly rent. Open an invoice or a journal entry and choose Repeat to set one up. When the app is opened, whatever came due is made: as drafts to check, or issued straight away if you chose that."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -236,7 +238,11 @@
     "month": "Month: {{from}} – {{to}}",
     "drafts": "Draft vouchers",
     "draftsBody": "Drafts are not in your books until you post them.",
-    "quickActions": "Record something"
+    "quickActions": "Record something",
+    "overdueOpenInvoices": "See the invoices",
+    "overdueOpenBills": "See the bills",
+    "overdueInvoices": "Invoices past their due date: {{count}}, {{amount}} {{currency}} unpaid.",
+    "overdueBills": "Supplier bills past their due date: {{count}}, {{amount}} {{currency}} unpaid."
   },
   "settings": {
     "title": "Settings",
@@ -1151,6 +1157,55 @@
     "paid": "Paid",
     "nothingOutstandingTitle": "Nothing to pay",
     "nothingOutstandingBody": "There are no unpaid invoices in {{currency}}. Choose another currency, or type an amount below to keep it on account.",
-    "settledNote": "This invoice has been paid or credited, so it cannot be changed. Delete the receipt, payment or credit note first."
+    "settledNote": "This invoice has been paid or credited, so it cannot be changed. Delete the receipt, payment or credit note first.",
+    "documentsCount": "{{count}} documents"
+  },
+  "recurring": {
+    "title": "Recurring invoices and entries",
+    "new": "Repeat this",
+    "edit": "Change the schedule",
+    "intro": "Baba keeps a copy of this as it is now and makes a new one each time it is due.",
+    "name": "Name",
+    "frequency": "How often",
+    "frequencies": {
+      "Weekly": "Every week",
+      "Monthly": "Every month",
+      "Quarterly": "Every 3 months",
+      "Yearly": "Every year"
+    },
+    "nextRun": "Next date",
+    "endDate": "Last date (optional)",
+    "autoIssue": "Issue or post it automatically",
+    "autoIssueHelp": "If this is off, each one is left as a draft for you to check and issue.",
+    "makes": "Makes",
+    "mode": "Made as",
+    "modeIssue": "Issued",
+    "modeDraft": "Draft",
+    "runs": "Times",
+    "paused": "Paused",
+    "pause": "Pause",
+    "resume": "Resume",
+    "deleteTitle": "Stop repeating {{name}}?",
+    "deleteBody": "The schedule is deleted. Everything it already made stays.",
+    "deleted": "The schedule was deleted.",
+    "runNow": "Make what is due now",
+    "ran": "{{count}} made.",
+    "nothingDue": "Nothing is due.",
+    "ranOnOpen": "{{count}} recurring invoices or entries were made. See Recurring.",
+    "emptyTitle": "Nothing repeats yet",
+    "emptyBody": "Open an invoice or a journal entry and choose Repeat to make it again every week, month, quarter or year.",
+    "repeat": "Repeat…",
+    "repeatHelp": "Make this again on a schedule.",
+    "saved": "The schedule was saved. See Recurring.",
+    "issues": {
+      "recurring": {
+        "name-required": "Enter a name.",
+        "next-date-required": "Choose the next date.",
+        "end-before-next": "The last date cannot be before the next date.",
+        "template-unavailable": "Baba makes this entry itself, so it cannot be repeated.",
+        "failed": "It could not be made."
+      }
+    },
+    "ends": "Ends"
   }
 }

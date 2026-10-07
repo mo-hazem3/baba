@@ -35,6 +35,7 @@ public sealed class CompanyDbContext(
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
     public DbSet<Allocation> Allocations => Set<Allocation>();
+    public DbSet<RecurringSchedule> RecurringSchedules => Set<RecurringSchedule>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
     public DbSet<Product> Products => Set<Product>();
@@ -56,6 +57,8 @@ public sealed class CompanyDbContext(
         configuration.Properties<PartyKind>().HaveConversion<string>();
         configuration.Properties<DocumentKind>().HaveConversion<string>();
         configuration.Properties<DocumentStatus>().HaveConversion<string>();
+        configuration.Properties<RecurrenceFrequency>().HaveConversion<string>();
+        configuration.Properties<RecurringTemplate>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
 
@@ -163,6 +166,12 @@ public sealed class CompanyDbContext(
         });
 
         model.Entity<Voucher>().HasIndex(v => v.DocumentId);
+
+        model.Entity<RecurringSchedule>(schedule =>
+        {
+            schedule.HasIndex(s => s.NextRunDate);
+            schedule.HasQueryFilter(s => s.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<Allocation>(allocation =>
         {

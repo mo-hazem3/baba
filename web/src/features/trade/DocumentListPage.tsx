@@ -189,7 +189,7 @@ export function DocumentListPage({ side }: { side: Side }) {
             documents.length > 0 ? (
               <Table.Summary.Row className="report-total">
                 <Table.Summary.Cell index={0} colSpan={5}>
-                  {t('voucher.totalOf', { count: documents.length })}
+                  {t('trade.documentsCount', { count: documents.length })}
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="end">
                   {totalsByCurrency.map(([code, sum]) => (

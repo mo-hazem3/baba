@@ -1,14 +1,20 @@
-import { Alert, Button, Card, Descriptions, Statistic } from 'antd'
+import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { runDueRecurring, useGetOverdue } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
-import { useCountries, useDashboard, useHost } from '../../api/hooks'
+import { refreshBooks, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
 import { Link } from 'react-router'
 import { AmountText } from '../../layout/AmountText'
 import { errorMessage } from '../../layout/errors'
 import { useBackup } from './useBackup'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
-import { formatDate, monthName } from '../../utils/format'
+import { formatAmount, formatDate, monthName } from '../../utils/format'
+
+// Recurring invoices and entries that came due are made once each time a company is shown for the first time.
+let recurringCheckedFor: string | undefined
 
 /** The home page of an open company: the few numbers an owner checks every morning, shortcuts to record something, and the company's details. */
 export function SummaryPage({ company }: { company: CompanyInfo }) {
@@ -23,6 +29,24 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   const companyName = ar ? company.nameAr : company.nameEn
 
   const backup = useBackup()
+  const modules = useModules()
+  const trades = modules.has('sales') || modules.has('purchases')
+  const overdue = useGetOverdue({ query: { select: (r) => r.data, enabled: trades } })
+  const { message } = App.useApp()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (recurringCheckedFor === company.id) return
+    recurringCheckedFor = company.id
+    void runDueRecurring().then(async (response) => {
+      const made = response.data.items.filter((i) => !i.problemCode).length
+      if (made > 0) {
+        await refreshBooks(queryClient)
+        void message.info(t('recurring.ranOnOpen', { count: made }), 6)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per company, however often the page is shown
+  }, [company.id])
 
   return (
     <div>
@@ -66,6 +90,32 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
               to: formatDate(dashboard.data.monthEnd, settings.digits, settings.hijri),
             })}
           </p>
+          {overdue.data && overdue.data.invoiceCount > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              className="form-alert"
+              message={t('summary.overdueInvoices', {
+                count: overdue.data.invoiceCount,
+                amount: formatAmount(overdue.data.invoiceAmount, dashboard.data.minorUnits, settings.digits),
+                currency: dashboard.data.currencyCode,
+              })}
+              description={<Link to="/sales">{t('summary.overdueOpenInvoices')}</Link>}
+            />
+          )}
+          {overdue.data && overdue.data.billCount > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              className="form-alert"
+              message={t('summary.overdueBills', {
+                count: overdue.data.billCount,
+                amount: formatAmount(overdue.data.billAmount, dashboard.data.minorUnits, settings.digits),
+                currency: dashboard.data.currencyCode,
+              })}
+              description={<Link to="/purchases">{t('summary.overdueOpenBills')}</Link>}
+            />
+          )}
           {dashboard.data.draftVouchers > 0 && (
             <Alert
               type="info"
@@ -89,6 +139,11 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
           <Link to="/vouchers/journal/new">
             <Button>{t('voucher.new.Journal')}</Button>
           </Link>
+          {modules.has('sales') && (
+            <Link to="/documents/sales-invoice/new">
+              <Button type="primary">{t('trade.new.SalesInvoice')}</Button>
+            </Link>
+          )}
           <Link to="/reports">
             <Button>{t('reports.title')}</Button>
           </Link>

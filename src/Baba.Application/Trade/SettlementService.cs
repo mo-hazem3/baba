@@ -28,7 +28,11 @@ public sealed record OutstandingInvoice(
     DateOnly? DueDate,
     string CurrencyCode,
     decimal Total,
-    decimal Outstanding);
+    decimal Outstanding,
+    decimal ExchangeRate = 1m);
+
+/// <summary>How many invoices (and supplier bills) are past their due date, and what they come to in the company's currency.</summary>
+public sealed record OverdueSummary(int InvoiceCount, decimal InvoiceAmount, int BillCount, decimal BillAmount);
 
 public sealed record SettlementLineInput(Guid DocumentId, decimal Amount);
 
@@ -87,8 +91,21 @@ public sealed class SettlementService(
         {
             var total = Total(d, company);
             var outstanding = total - paid.GetValueOrDefault(d.Id) - credited.GetValueOrDefault(d.Id);
-            return new OutstandingInvoice(d.Id, d.Kind, d.Number ?? "", d.PartyId, d.Date, d.DueDate, d.CurrencyCode, total, Math.Max(outstanding, 0));
+            return new OutstandingInvoice(d.Id, d.Kind, d.Number ?? "", d.PartyId, d.Date, d.DueDate, d.CurrencyCode, total, Math.Max(outstanding, 0), d.ExchangeRate);
         }).ToList();
+    }
+
+    /// <summary>What is past its due date on the given day: customers' invoices and suppliers' bills, in the company's currency.</summary>
+    public async Task<OverdueSummary> OverdueAsync(DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var company = Company();
+        var baseCurrency = CurrencyOf(company.BaseCurrencyCode, company);
+        var late = (await OutstandingAsync(null, cancellationToken)).Where(o => o.Outstanding > 0 && o.DueDate is { } due && due < asOf).ToList();
+        decimal Base(IEnumerable<OutstandingInvoice> list) => list.Sum(o => Money.Round(o.Outstanding * o.ExchangeRate, baseCurrency));
+
+        var invoices = late.Where(o => o.Kind == DocumentKind.SalesInvoice).ToList();
+        var bills = late.Where(o => o.Kind == DocumentKind.PurchaseInvoice).ToList();
+        return new OverdueSummary(invoices.Count, Base(invoices), bills.Count, Base(bills));
     }
 
     public async Task<SettlementResult> SettleAsync(SettlementInput input, CancellationToken cancellationToken = default)

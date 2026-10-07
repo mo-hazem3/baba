@@ -1,12 +1,13 @@
 import { Alert, App, Button, Input, InputNumber, Select, Space, Spin, Tag } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { RecurringModal } from '../recurring/RecurringModal'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, saveDocumentDraft } from '../../api/generated/baba'
+import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, printDocument, saveDocumentDraft } from '../../api/generated/baba'
 import type { DocumentDto, DocumentKind, ProductDto } from '../../api/generated/model'
-import { ApiError } from '../../api/http'
-import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useModules, useParties, useProducts } from '../../api/hooks'
+import { ApiError, asBlob } from '../../api/http'
+import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
@@ -14,6 +15,7 @@ import { FormPage } from '../../layout/FormPage'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useUnsavedWork } from '../../layout/useUnsavedWork'
 import { useSettings } from '../../settings/SettingsContext'
+import { openPdf } from '../../utils/download'
 import { addDays, parseIsoDate, toIsoDate } from '../../utils/format'
 import { AccountSelect } from '../accounting/AccountSelect'
 import { CurrencyFields } from '../accounting/CurrencyFields'
@@ -89,6 +91,8 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const parties = useParties().data ?? []
   const products = useProducts().data ?? []
   const costCenters = useCostCenters().data ?? []
+  const host = useHost()
+  const printSettings = usePrintSettings()
 
   const sales = sideOf(kind) === 'sales'
   const baseCurrencyCode = company.data?.baseCurrencyCode ?? ''
@@ -117,6 +121,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   const [rate, setRate] = useState<number | null>(initial && initial.currencyCode !== baseCurrencyCode ? initial.exchangeRate : null)
   const [rows, setRows] = useState<DocRow[]>(() => withTrailingBlankRow(initial ? rowsFromDocument(initial) : [newDocRow()]))
   const [issues, setIssues] = useState<MappedDocIssues>()
+  const [repeating, setRepeating] = useState(false)
 
   const minorUnits = currencies.data?.find((c) => c.code === currencyCode)?.minorUnits ?? 2
   const header = (): DocHeader => ({ date, dueDate, partyId, currencyCode, exchangeRate: rate, reference, memo, discountPercent })
@@ -206,6 +211,15 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
     onError,
   })
 
+  const print = useMutation({
+    mutationFn: async () => {
+      const response = await printDocument(initial!.id, { layout: printSettings.data?.defaultLayout })
+      if (response.status !== 200) throw new ApiError(response.status, 'NotImplemented', 'This host cannot make PDFs.')
+      openPdf(asBlob(response.data))
+    },
+    onError: (error) => void message.error(error instanceof ApiError && error.status === 501 ? t('export.pdfUnavailable') : errorMessage(error, t)),
+  })
+
   const remove = useMutation({
     mutationFn: () => deleteDocument(initial!.id),
     onSuccess: async () => {
@@ -246,7 +260,10 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   }
 
   const busy = save.isPending || remove.isPending || convert.isPending
-  useShortcuts({ 'ctrl+s': () => !busy && !readOnly && save.mutate(true) })
+  useShortcuts({
+    'ctrl+s': () => !busy && !readOnly && save.mutate(true),
+    'ctrl+p': () => initial && !dirty && host.data?.pdfPrinting && print.mutate(),
+  })
 
   const issueText = (code: string, line?: number) => t([`trade.issues.${code}`, `voucher.issues.${code}`], { line, defaultValue: code })
   const rowProblem = (key: string, field: string) => {
@@ -291,6 +308,13 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
       saveAsDraft={
         readOnly || issued ? undefined : { label: t('voucher.saveAsDraft'), onClick: () => save.mutate(false), loading: save.isPending && save.variables === false, disabled: busy }
       }
+      print={{
+        label: t('voucher.print'),
+        onClick: () => print.mutate(),
+        loading: print.isPending,
+        disabled: !initial || dirty || !host.data?.pdfPrinting,
+        title: !initial || dirty ? t('voucher.printSaveFirst') : host.data?.pdfPrinting ? undefined : t('export.pdfUnavailable'),
+      }}
       cancel={{ label: t('common.cancel'), onClick: cancel, disabled: busy }}
       remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
@@ -313,6 +337,22 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
         />
       )}
 
+      {initial && !converted && (
+        <div className="doc-actions">
+          <span className="muted">{t('recurring.repeatHelp')}</span>
+          <Button onClick={() => setRepeating(true)} disabled={dirty} title={dirty ? t('trade.saveFirst') : undefined}>
+            {t('recurring.repeat')}
+          </Button>
+        </div>
+      )}
+      {repeating && initial && (
+        <RecurringModal
+          open
+          source={{ type: 'document', id: initial.id, name: `${t(`trade.title.${kind}`)} — ${parties.find((p) => p.id === initial.partyId)?.nameEn ?? ''}` }}
+          onClose={() => setRepeating(false)}
+          onSaved={() => void message.success(t('recurring.saved'))}
+        />
+      )}
       {isInvoice && initial?.status === 'Issued' && outstanding !== undefined && (
         <div className="doc-actions">
           <span>

@@ -1,3 +1,4 @@
+using System.Text;
 using Baba.Application;
 using Baba.Application.Accounting;
 using Baba.Application.Trade;
@@ -236,6 +237,52 @@ public class TradeDocumentTests : AccountingFixture
 
         await Assert.ThrowsAnyAsync<Exception>(() => e.Parties.DeleteAsync(e.Customer));
         await Assert.ThrowsAnyAsync<Exception>(() => e.Chart.DeleteAsync(e.Id("511")));
+    }
+
+    // ------------------------------------------------------------------ Printing
+
+    [Fact]
+    public async Task An_invoice_prints_in_both_languages_with_the_party_the_lines_the_discount_and_the_rate()
+    {
+        var e = await NewEnvAsync();
+        var invoice = await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.SalesInvoice, Oct6, Line(e, "511", 2, 500m)) with
+        {
+            CurrencyCode = "USD", ExchangeRate = 0.3m, DiscountPercent = 10, Memo = "Thanks & regards", Reference = "PO-77",
+        });
+
+        var pdf = await e.TradePrint.RenderAsync(invoice.Id, PrintLayout.Both);
+        var html = e.Renderer.Html!;
+
+        Assert.Equal("%PDF-fake", Encoding.ASCII.GetString(pdf));
+        Assert.Contains("Sales invoice", html);
+        Assert.Contains("فاتورة مبيعات", html);
+        Assert.Contains(invoice.Number!, html);
+        Assert.Contains("First Customer", html);
+        Assert.Contains("العميل الأول", html);
+        Assert.Contains("PO-77", html);
+        Assert.Contains("1 USD = 0.3 KWD", html);
+        Assert.Contains("<bdi dir=\"ltr\">1,000.00</bdi>", html); // subtotal
+        Assert.Contains("<bdi dir=\"ltr\">900.00</bdi>", html);   // total after 10% off
+        Assert.Contains("Thanks &amp; regards", html);
+        Assert.Contains("Amount in words", html);
+        Assert.DoesNotContain("DRAFT", html);
+    }
+
+    [Fact]
+    public async Task A_draft_quote_prints_with_a_draft_mark_and_a_supplier_document_names_the_supplier()
+    {
+        var e = await NewEnvAsync();
+        var draft = await e.Trade.SaveDraftAsync(null, Invoice(e, DocumentKind.Quote, Oct6, Line(e, "511", 1, 80m)));
+        await e.TradePrint.RenderAsync(draft.Id, PrintLayout.English);
+        Assert.Contains("DRAFT", e.Renderer.Html!);
+        Assert.Contains("Quotation", e.Renderer.Html!);
+        Assert.Contains("Customer acceptance", e.Renderer.Html!);
+
+        var order = await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.PurchaseOrder, Oct6, Line(e, "422", 1, 40m)));
+        await e.TradePrint.RenderAsync(order.Id, PrintLayout.English);
+        Assert.Contains("Purchase order", e.Renderer.Html!);
+        Assert.Contains("Supplier", e.Renderer.Html!);
+        Assert.Contains("First Supplier", e.Renderer.Html!);
     }
 
     // ------------------------------------------------------------------ Products, price lists, pricing

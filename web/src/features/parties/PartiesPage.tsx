@@ -33,6 +33,8 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
   const partiesQuery = useParties({ kind })
   const allQuery = useParties()
   const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data])
+  // A stable list: the form window resets itself whenever this changes, which must not happen on every render.
+  const everyone = useMemo(() => allQuery.data ?? [], [allQuery.data])
   const customer = kind === 'Customer'
   const minorUnits = currencies.data?.find((c) => c.code === company.data?.baseCurrencyCode)?.minorUnits ?? 2
 
@@ -173,7 +175,7 @@ export function PartiesPage({ kind }: { kind: PartyKind }) {
         open={form.open}
         kind={kind}
         editing={form.editing}
-        parties={allQuery.data ?? []}
+        parties={everyone}
         minorUnits={minorUnits}
         onClose={() => setForm({ open: false })}
       />

@@ -199,6 +199,28 @@ public class SettlementTests : AccountingFixture
         Assert.Equal(0m, await BalanceAsync(e, "112"));
     }
 
+    // ------------------------------------------------------------------ Overdue
+
+    [Fact]
+    public async Task Overdue_counts_unpaid_invoices_and_bills_past_their_due_date_in_the_company_currency()
+    {
+        var e = await NewEnvAsync();
+        var late = await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.SalesInvoice, new DateOnly(2026, 8, 1), 100m));               // due Aug 31
+        await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.SalesInvoice, Oct6, 500m));                                               // due Nov 5
+        var paid = await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.SalesInvoice, new DateOnly(2026, 8, 2), 70m));
+        await e.Settlements.SettleAsync(Receive(e, Oct6, null, null, (paid.Id, 70m)));
+        await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.SalesInvoice, new DateOnly(2026, 8, 3), 1000m, "USD", 0.30m));             // 300 dinars, due Sep 2
+        await e.Trade.IssueAsync(null, Invoice(e, DocumentKind.PurchaseInvoice, new DateOnly(2026, 8, 1), 40m));                         // a bill past due
+
+        var overdue = await e.Settlements.OverdueAsync(Oct6);
+
+        Assert.Equal(2, overdue.InvoiceCount);
+        Assert.Equal(400m, overdue.InvoiceAmount);
+        Assert.Equal(1, overdue.BillCount);
+        Assert.Equal(40m, overdue.BillAmount);
+        Assert.NotNull(late);
+    }
+
     // ------------------------------------------------------------------ Undoing and protecting
 
     [Fact]

@@ -12,6 +12,7 @@ import { DocumentFormPage, DocumentOpenPage } from './features/trade/DocumentFor
 import { DocumentListPage } from './features/trade/DocumentListPage'
 import { ProductsPage } from './features/trade/ProductsPage'
 import { SettlementPage } from './features/trade/SettlementPage'
+import { RecurringPage } from './features/recurring/RecurringPage'
 import { PartiesPage } from './features/parties/PartiesPage'
 import { OpeningPage } from './features/vouchers/OpeningPage'
 import { YearEndPage } from './features/yearend/YearEndPage'
@@ -64,6 +65,7 @@ export function App() {
         <Route path="/sales" element={<DocumentListPage side="sales" />} />
         <Route path="/purchases" element={<DocumentListPage side="purchases" />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/recurring" element={<RecurringPage />} />
         <Route path="/settlements/receive" element={<SettlementPage side="customer" />} />
         <Route path="/settlements/pay" element={<SettlementPage side="supplier" />} />
         <Route path="/documents/open/:id" element={<DocumentOpenPage />} />

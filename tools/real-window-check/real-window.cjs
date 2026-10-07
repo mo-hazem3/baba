@@ -116,7 +116,7 @@ async function main() {
     } else {
       log('NO-NATIVE mode: the company is created through the API (the wizard and its native Save dialog were not driven in this run)')
       const created = await page.evaluate(async ({ path, password, year }) => {
-        const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة النافذة الحقيقية', nameEn: 'Real Window Trading', countryCode: 'KW', baseCurrencyCode: 'KWD', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: {}, address: null, chartTemplateKey: 'default', enabledModules: ['bank-cash', 'customers-suppliers', 'cost-centers'] } }) })
+        const response = await fetch('/api/company/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, password, company: { nameAr: 'شركة النافذة الحقيقية', nameEn: 'Real Window Trading', countryCode: 'KW', baseCurrencyCode: 'KWD', fiscalYearStartMonth: 1, firstFiscalYear: year, taxNumbers: {}, address: null, chartTemplateKey: 'default', enabledModules: ['bank-cash', 'customers-suppliers', 'cost-centers', 'sales', 'purchases'] } }) })
         return response.status
       }, { path: companyFile, password, year: new Date().getFullYear() })
       if (created !== 200) throw new Error('Creating the company through the API returned ' + created)
@@ -342,6 +342,75 @@ async function main() {
     await expect(page.getByText('2 imported.').first()).toBeVisible()
     await page.getByRole('button', { name: 'Close' }).last().click()
     log('chart of accounts imported from a CSV file')
+    await menu('Summary')
+
+    // ---- Phase 3: products, a sales invoice and its PDF, a dollar invoice paid at a better rate, repeating an invoice ----
+    await menu('Products and prices')
+    await expect(page.getByText('No products yet')).toBeVisible()
+    await page.getByRole('button', { name: 'New product' }).click()
+    await page.getByLabel('Name (English)').fill('Real hour')
+    await page.getByLabel('Sale price').fill('50')
+    await pickAccount('Revenue account', '511')
+    await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByRole('row', { name: /Real hour/ })).toContainText('50.000')
+    await page.screenshot({ path: path.join(shots, '17-products.png') })
+    log('product created with its price and revenue account')
+
+    await menu('Sales')
+    await page.getByRole('button', { name: 'New invoice' }).click()
+    await pickAccount('Customer', 'Window')
+    await pickAccount('Product 1', 'Real')
+    await expect(page.getByLabel('Price 1')).toHaveValue('50.000')
+    await page.getByLabel('Quantity 1').fill('2')
+    await expect(page.locator('.doc-totals')).toContainText('100.000')
+    await page.screenshot({ path: path.join(shots, '18-invoice-form.png') })
+    await page.getByRole('button', { name: 'Issue and post' }).click()
+    await expect(page.getByText(/Issued as SI-\d{4}-0001/)).toBeVisible()
+    log('sales invoice of 100 issued and posted')
+
+    await page.getByRole('link', { name: /SI-\d{4}-0001/ }).click()
+    const invoicePopup = context.waitForEvent('page', { timeout: 60000 })
+    await page.getByRole('button', { name: 'Print', exact: true }).click()
+    const invoicePdf = await invoicePopup
+    await sleep(2500)
+    log('invoice PDF opened in the viewer window | title:', await invoicePdf.title())
+    await Promise.race([page.bringToFront().catch(() => {}), sleep(5000)])
+
+    // A dollar invoice (set up through the API), paid at a better rate: the exchange gain is booked.
+    const today = new Date().toISOString().slice(0, 10)
+    const setup = await page.evaluate(async (day) => {
+      const send = async (method, url, body) => (await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).status
+      const accounts = await (await fetch('/api/accounts')).json()
+      const parties = await (await fetch('/api/parties')).json()
+      const customer = parties.find((p) => p.nameEn === 'Window Customer')
+      const rate = await send('PUT', '/api/exchange-rates', { currencyCode: 'USD', date: '2026-01-01', rate: 0.3 })
+      const invoice = await send('POST', '/api/documents/issue', { id: null, input: { kind: 'SalesInvoice', date: day, dueDate: null, partyId: customer.id, currencyCode: 'USD', exchangeRate: 0.3, reference: 'USD-1', memo: null, discountPercent: 0, lines: [{ id: null, productId: null, accountId: accounts.find((a) => a.code === '511').id, description: 'Export order', quantity: 1, unitPrice: 1000, discountPercent: 0 }] } })
+      return { rate, invoice }
+    }, today)
+    if (setup.rate !== 200 || setup.invoice !== 200) throw new Error('Could not set up the dollar invoice: ' + JSON.stringify(setup))
+    await menu('Sales')
+    await page.getByRole('row', { name: /USD-1/ }).getByRole('link').click()
+    await page.getByRole('button', { name: 'Receive payment' }).click()
+    await pickAccount('Received into', '112')
+    await page.getByLabel(/Rate: 1 USD/).fill('0.32')
+    await page.screenshot({ path: path.join(shots, '19-receive-payment.png') })
+    await page.getByRole('button', { name: 'Record receipt' }).click()
+    await expect(page.getByText(/Exchange gain: 20\.000 KWD/)).toBeVisible()
+    await expect(page.getByRole('row', { name: /USD-1/ })).toContainText('Paid')
+    await page.screenshot({ path: path.join(shots, '20-invoices-paid.png') })
+    log('dollar invoice paid at a better rate: exchange gain of 20.000 KWD booked, invoice shown as paid')
+
+    await menu('Recurring')
+    await expect(page.getByText('Nothing repeats yet')).toBeVisible()
+    await menu('Sales')
+    await page.getByRole('row', { name: /SI-\d{4}-0001/ }).getByRole('link').click()
+    await page.getByRole('button', { name: 'Repeat…' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByText(/The schedule was saved/)).toBeVisible()
+    await menu('Recurring')
+    await expect(page.getByRole('row', { name: /Every month/ })).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '21-recurring.png') })
+    log('invoice set to repeat monthly; the schedule is listed')
     await menu('Summary')
 
     // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).

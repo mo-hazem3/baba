@@ -17,4 +17,5 @@ export interface OutstandingInvoice {
   currencyCode: string;
   total: number;
   outstanding: number;
+  exchangeRate?: number;
 }

@@ -1738,6 +1738,40 @@
         }
       }
     },
+    "/api/documents/{id}/pdf": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "operationId": "PrintDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrintLayout"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
     "/api/settlements/outstanding": {
       "get": {
         "tags": [
@@ -1771,6 +1805,26 @@
         }
       }
     },
+    "/api/settlements/overdue": {
+      "get": {
+        "tags": [
+          "Settlements"
+        ],
+        "operationId": "GetOverdue",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverdueSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settlements": {
       "post": {
         "tags": [
@@ -1794,6 +1848,213 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SettlementResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recurring": {
+      "get": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "ListRecurring",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recurring/from-document": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "CreateRecurringFromDocument",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recurring/from-voucher": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "CreateRecurringFromVoucher",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recurring/{id}": {
+      "put": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "UpdateRecurring",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "DeleteRecurring",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recurring/{id}/active": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "SetRecurringActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recurring/run-due": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "RunDueRecurring",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRunResult"
                 }
               }
             }
@@ -3325,6 +3586,22 @@
           }
         }
       },
+      "CreateRecurringRequest": {
+        "required": [
+          "sourceId",
+          "input"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "input": {
+            "$ref": "#/components/schemas/RecurringInput"
+          }
+        }
+      },
       "CurrencyDto": {
         "required": [
           "code",
@@ -4173,6 +4450,38 @@
           "outstanding": {
             "type": "number",
             "format": "double"
+          },
+          "exchangeRate": {
+            "type": "number",
+            "format": "double",
+            "default": 1
+          }
+        }
+      },
+      "OverdueSummary": {
+        "required": [
+          "invoiceCount",
+          "invoiceAmount",
+          "billCount",
+          "billAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "invoiceCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "invoiceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "billCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "billAmount": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -4892,6 +5201,179 @@
             }
           }
         }
+      },
+      "RecurrenceFrequency": {
+        "enum": [
+          "Weekly",
+          "Monthly",
+          "Quarterly",
+          "Yearly"
+        ]
+      },
+      "RecurringDto": {
+        "required": [
+          "id",
+          "name",
+          "template",
+          "templateKind",
+          "frequency",
+          "nextRunDate",
+          "endDate",
+          "autoIssue",
+          "isActive",
+          "lastRunDate",
+          "runCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/RecurringTemplate"
+          },
+          "templateKind": {
+            "type": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/RecurrenceFrequency"
+          },
+          "nextRunDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "autoIssue": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "lastRunDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "runCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RecurringInput": {
+        "required": [
+          "name",
+          "frequency",
+          "nextRunDate",
+          "endDate",
+          "autoIssue"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/RecurrenceFrequency"
+          },
+          "nextRunDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "autoIssue": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RecurringRunItem": {
+        "required": [
+          "scheduleId",
+          "name",
+          "templateKind",
+          "date",
+          "createdId",
+          "number",
+          "issued",
+          "problemCode"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "templateKind": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "createdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issued": {
+            "type": "boolean"
+          },
+          "problemCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RecurringRunResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecurringRunItem"
+            }
+          }
+        }
+      },
+      "RecurringTemplate": {
+        "enum": [
+          "Document",
+          "Voucher"
+        ]
       },
       "RemoveRecentFileRequest": {
         "required": [
@@ -5802,6 +6284,9 @@
     },
     {
       "name": "Settlements"
+    },
+    {
+      "name": "Recurring"
     },
     {
       "name": "Price lists"

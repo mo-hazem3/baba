@@ -225,3 +225,48 @@ test('Arabic: the receive-payment page reads right-to-left', async ({ page }) =>
   await expectNoHorizontalScroll(page)
   await page.screenshot({ path: 'test-results/ar-receive-payment.png' })
 })
+
+// ---------------------------------------------------------------- Recurring invoices
+
+test('English: an invoice is repeated monthly and what is due is made as drafts', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await createKuwaitCompany(page, companyFile('p3-recurring'), wizardEn)
+  await page.getByRole('button', { name: wizardEn.create }).click()
+  await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
+
+  const accounts = (await (await request.get('/api/accounts')).json()) as { id: string; code: string }[]
+  const customer = (await (await request.post('/api/parties', { data: { kind: 'Customer', code: 'C100', nameAr: '', nameEn: 'Gulf Traders', phone: null, email: null, address: null, taxNumber: null, creditLimit: 0, paymentTermsDays: 30, notes: null, priceListId: null } })).json()) as { id: string }
+  const today = new Date()
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  await request.post('/api/documents/issue', {
+    data: { id: null, input: { kind: 'SalesInvoice', date: iso(today), dueDate: null, partyId: customer.id, currencyCode: null, exchangeRate: null, reference: null, memo: null, discountPercent: 0, lines: [{ id: null, productId: null, accountId: accounts.find((a) => a.code === '511')!.id, description: 'Rent', quantity: 1, unitPrice: 300, discountPercent: 0 }] } },
+  })
+
+  // Repeat the invoice monthly starting two months back: three are due by today.
+  await menu(page, 'Sales').click()
+  await page.getByRole('link', { name: /SI-/ }).click()
+  await page.getByRole('button', { name: 'Repeat…' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Repeat this')
+  const start = new Date(today.getFullYear(), today.getMonth() - 2, 1)
+  const ddmmyyyy = `01/${String(start.getMonth() + 1).padStart(2, '0')}/${start.getFullYear()}`
+  await page.getByLabel('Next date').fill(ddmmyyyy)
+  await page.keyboard.press('Enter')
+  await page.screenshot({ path: 'test-results/en-recurring-modal.png' })
+  await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText(/The schedule was saved/)).toBeVisible()
+
+  await menu(page, 'Recurring').click()
+  await expect(page.getByRole('row', { name: /Sales invoice/ })).toContainText('Every month')
+  await page.getByRole('button', { name: 'Make what is due now' }).click()
+  await expect(page.getByText('3 made.')).toBeVisible()
+  await expect(page.getByRole('row', { name: /Sales invoice/ })).toContainText('3')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/en-recurring.png' })
+
+  // They are drafts: they are in the invoice list but not in the books.
+  await menu(page, 'Sales').click()
+  await expect(page.getByRole('row', { name: /Draft/ })).toHaveCount(3)
+  await page.goto('/reports/trial-balance')
+  await expect(page.getByRole('row', { name: /Accounts receivable/ })).toContainText('300.000')
+})
