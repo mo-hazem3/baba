@@ -100,6 +100,10 @@ public sealed class VoucherService(
         return await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
     }
 
+    /// <summary>Whether a date is in a month that is not locked.</summary>
+    internal async Task<bool> IsDateOpenAsync(DateOnly date, CancellationToken cancellationToken = default) =>
+        !(await periods.ListAsync(cancellationToken)).Any(p => p.IsLocked && p.Start <= date && date <= p.End);
+
     /// <summary>For the year-end close only: deletes a voucher of a kind that people cannot delete by hand.</summary>
     internal async Task DeleteSystemAsync(Guid id, CancellationToken cancellationToken = default)
     {

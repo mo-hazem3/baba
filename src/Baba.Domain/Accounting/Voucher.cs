@@ -34,6 +34,12 @@ public enum VoucherKind
 
     /// <summary>The exchange gain or loss when a payment is worth a different amount in the company's currency than the invoices it pays. Made by the payment itself.</summary>
     FxSettlement,
+
+    /// <summary>What the stock sold on an invoice cost (or the stock taken back on a credit note): cost of sales against the stock account. Made by the invoice.</summary>
+    StockCost,
+
+    /// <summary>The value of an opening stock or a stock adjustment: the stock account against the other side. Made by the stock document.</summary>
+    StockAdjustment,
 }
 
 public enum VoucherStatus
@@ -145,10 +151,11 @@ public static class VoucherKindExtensions
 
     /// <summary>Lines are written as debits and credits that the user balances.</summary>
     public static bool HasFreeLines(this VoucherKind kind) =>
-        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing or VoucherKind.FxSettlement || kind.IsDocument();
+        kind is VoucherKind.Journal or VoucherKind.Opening or VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment || kind.IsDocument();
 
     /// <summary>Made by Baba itself (closing a year, an invoice, an exchange difference) and never saved or deleted by hand.</summary>
-    public static bool IsSystemMade(this VoucherKind kind) => kind is VoucherKind.Closing or VoucherKind.FxSettlement || kind.IsDocument();
+    public static bool IsSystemMade(this VoucherKind kind) =>
+        kind is VoucherKind.Closing or VoucherKind.FxSettlement or VoucherKind.StockCost or VoucherKind.StockAdjustment || kind.IsDocument();
 
     /// <summary>
     /// The ledger side of an invoice or a credit or debit note. Its first line is the customer's or supplier's account for the whole

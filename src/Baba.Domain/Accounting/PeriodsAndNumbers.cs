@@ -56,6 +56,8 @@ public static class VoucherNumber
         VoucherKind.PurchaseInvoice => "PI",
         VoucherKind.PurchaseDebitNote => "PD",
         VoucherKind.FxSettlement => "FX",
+        VoucherKind.StockCost => "CG",
+        VoucherKind.StockAdjustment => "SK",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 

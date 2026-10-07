@@ -8,21 +8,24 @@ using Baba.Localization;
 namespace Baba.Application.Trade;
 
 public sealed record ProductInput(
-    string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice, Guid? SalesAccountId, Guid? PurchaseAccountId, Guid? TaxCodeId = null);
+    string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice, Guid? SalesAccountId, Guid? PurchaseAccountId, Guid? TaxCodeId = null,
+    bool IsStockItem = false, string? Barcode = null, decimal ReorderLevel = 0, Guid? InventoryAccountId = null, Guid? CostOfSalesAccountId = null);
 
 public sealed record ProductDto(
     Guid Id, string Code, string NameAr, string NameEn, string? Unit, decimal SalePrice, decimal PurchasePrice,
-    Guid? SalesAccountId, Guid? PurchaseAccountId, bool IsActive, bool InUse, Guid? TaxCodeId = null);
+    Guid? SalesAccountId, Guid? PurchaseAccountId, bool IsActive, bool InUse, Guid? TaxCodeId = null,
+    bool IsStockItem = false, string? Barcode = null, decimal ReorderLevel = 0, Guid? InventoryAccountId = null, Guid? CostOfSalesAccountId = null);
 
 /// <summary>
 /// Products and services (brief section 10.3). A product that has been used on a document can be switched off but not deleted, so old
 /// documents still say what was sold.
 /// </summary>
-public sealed class ProductService(IProductStore products, IDocumentStore documents, IAccountStore accounts, ITaxCodeStore taxCodes)
+public sealed class ProductService(
+    IProductStore products, IDocumentStore documents, IAccountStore accounts, ITaxCodeStore taxCodes, Inventory.IStockStore stock)
 {
     public async Task<IReadOnlyList<ProductDto>> ListAsync(CancellationToken cancellationToken = default)
     {
-        var inUse = await documents.ProductIdsInUseAsync(cancellationToken);
+        var inUse = await InUseAsync(cancellationToken);
         return (await products.ListAsync(cancellationToken))
             .OrderBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
             .Select(p => ToDto(p, inUse.Contains(p.Id))).ToList();
@@ -55,8 +58,13 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
         product.SalesAccountId = changed.SalesAccountId;
         product.PurchaseAccountId = changed.PurchaseAccountId;
         product.TaxCodeId = changed.TaxCodeId;
+        product.IsStockItem = changed.IsStockItem;
+        product.Barcode = changed.Barcode;
+        product.ReorderLevelScaled = changed.ReorderLevelScaled;
+        product.InventoryAccountId = changed.InventoryAccountId;
+        product.CostOfSalesAccountId = changed.CostOfSalesAccountId;
         await products.UpdateAsync(product, cancellationToken);
-        return ToDto(product, (await documents.ProductIdsInUseAsync(cancellationToken)).Contains(id));
+        return ToDto(product, (await InUseAsync(cancellationToken)).Contains(id));
     }
 
     public async Task<ProductDto> SetActiveAsync(Guid id, bool active, CancellationToken cancellationToken = default)
@@ -64,16 +72,24 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
         var product = (await products.ListAsync(cancellationToken)).FirstOrDefault(p => p.Id == id) ?? throw new NotFoundException("product");
         product.IsActive = active;
         await products.UpdateAsync(product, cancellationToken);
-        return ToDto(product, (await documents.ProductIdsInUseAsync(cancellationToken)).Contains(id));
+        return ToDto(product, (await InUseAsync(cancellationToken)).Contains(id));
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         if ((await products.ListAsync(cancellationToken)).All(p => p.Id != id))
             throw new NotFoundException("product");
-        if ((await documents.ProductIdsInUseAsync(cancellationToken)).Contains(id))
+        if ((await InUseAsync(cancellationToken)).Contains(id))
             throw new ValidationException([new ValidationIssue("product", "product.in-use")]);
         await products.DeleteAsync(id, cancellationToken);
+    }
+
+    /// <summary>Products that a document or a stock movement uses: they can be switched off but not deleted.</summary>
+    private async Task<IReadOnlySet<Guid>> InUseAsync(CancellationToken cancellationToken)
+    {
+        var used = (await documents.ProductIdsInUseAsync(cancellationToken)).ToHashSet();
+        used.UnionWith((await stock.ListMovementsAsync(cancellationToken)).Select(m => m.ProductId));
+        return used;
     }
 
     private async Task<IReadOnlyList<ValidationIssue>> ValidateAsync(Product product, IReadOnlyList<Product> all, CancellationToken cancellationToken)
@@ -95,6 +111,20 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
             issues.Add(new("purchaseAccount", "product.account-invalid"));
         if (product.TaxCodeId is { } taxCodeId && (await taxCodes.ListAsync(cancellationToken)).All(c => c.Id != taxCodeId))
             issues.Add(new("taxCode", "product.tax-code-unknown"));
+
+        if (product.ReorderLevelScaled < 0)
+            issues.Add(new("reorderLevel", "product.reorder-negative"));
+        if (product.Barcode is { } barcode && all.Any(p => p.Id != product.Id && string.Equals(p.Barcode, barcode, StringComparison.OrdinalIgnoreCase)))
+            issues.Add(new("barcode", "product.barcode-duplicate"));
+        if (product.InventoryAccountId is { } inv && (!chart.TryGetValue(inv, out var ia) || !ia.IsPosting || ia.Type != AccountType.Asset))
+            issues.Add(new("inventoryAccount", "product.account-invalid"));
+        if (product.CostOfSalesAccountId is { } cos && (!chart.TryGetValue(cos, out var ca) || !ca.IsPosting || ca.Type != AccountType.Expense))
+            issues.Add(new("costOfSalesAccount", "product.account-invalid"));
+
+        // Stock that has moved is kept: a product cannot stop being a stock item while it has movements.
+        var original = all.FirstOrDefault(p => p.Id == product.Id);
+        if (original is { IsStockItem: true } && !product.IsStockItem && (await stock.ListMovementsAsync(cancellationToken)).Any(m => m.ProductId == product.Id))
+            issues.Add(new("isStockItem", "product.has-stock"));
         return issues;
     }
 
@@ -109,12 +139,18 @@ public sealed class ProductService(IProductStore products, IDocumentStore docume
         product.SalesAccountId = input.SalesAccountId == Guid.Empty ? null : input.SalesAccountId;
         product.PurchaseAccountId = input.PurchaseAccountId == Guid.Empty ? null : input.PurchaseAccountId;
         product.TaxCodeId = input.TaxCodeId == Guid.Empty ? null : input.TaxCodeId;
+        product.IsStockItem = input.IsStockItem;
+        product.Barcode = string.IsNullOrWhiteSpace(input.Barcode) ? null : input.Barcode.Trim();
+        product.ReorderLevel = input.ReorderLevel;
+        product.InventoryAccountId = input.InventoryAccountId == Guid.Empty ? null : input.InventoryAccountId;
+        product.CostOfSalesAccountId = input.CostOfSalesAccountId == Guid.Empty ? null : input.CostOfSalesAccountId;
         if (product.NameAr.Length == 0) product.NameAr = product.NameEn;
         if (product.NameEn.Length == 0) product.NameEn = product.NameAr;
     }
 
     private static ProductDto ToDto(Product p, bool inUse) =>
-        new(p.Id, p.Code, p.NameAr, p.NameEn, p.Unit, p.SalePrice, p.PurchasePrice, p.SalesAccountId, p.PurchaseAccountId, p.IsActive, inUse, p.TaxCodeId);
+        new(p.Id, p.Code, p.NameAr, p.NameEn, p.Unit, p.SalePrice, p.PurchasePrice, p.SalesAccountId, p.PurchaseAccountId, p.IsActive, inUse, p.TaxCodeId,
+            p.IsStockItem, p.Barcode, p.ReorderLevel, p.InventoryAccountId, p.CostOfSalesAccountId);
 
     private static void Throw(IReadOnlyCollection<ValidationIssue> issues)
     {

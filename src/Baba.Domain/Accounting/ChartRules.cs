@@ -59,7 +59,9 @@ public static class ChartRules
             {
                 AccountRole.CashOrBank or AccountRole.Receivable => account.Type == AccountType.Asset,
                 AccountRole.Payable or AccountRole.TaxPayable => account.Type == AccountType.Liability,
-                AccountRole.TaxReceivable => account.Type == AccountType.Asset,
+                AccountRole.TaxReceivable or AccountRole.Inventory => account.Type == AccountType.Asset,
+                AccountRole.CostOfSales => account.Type == AccountType.Expense,
+                AccountRole.InventoryAdjustment => account.Type is AccountType.Expense or AccountType.Revenue,
                 AccountRole.RetainedEarnings => account.Type == AccountType.Equity,
                 AccountRole.ExchangeDifference => account.Type is AccountType.Revenue or AccountType.Expense,
                 _ => true,

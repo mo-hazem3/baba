@@ -23,6 +23,9 @@ public sealed class AccountStore(ICompanyDbContextFactory contexts) : IAccountSt
         used.UnionWith(await context.DocumentLines.Where(l => l.AccountId != null).Select(l => l.AccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.TaxCodes.Where(t => t.OutputAccountId != null).Select(t => t.OutputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.TaxCodes.Where(t => t.InputAccountId != null).Select(t => t.InputAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.Products.Where(p => p.InventoryAccountId != null).Select(p => p.InventoryAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.Products.Where(p => p.CostOfSalesAccountId != null).Select(p => p.CostOfSalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
+        used.UnionWith(await context.StockDocuments.Where(d => d.CounterAccountId != null).Select(d => d.CounterAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.SalesAccountId != null).Select(p => p.SalesAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         used.UnionWith(await context.Products.Where(p => p.PurchaseAccountId != null).Select(p => p.PurchaseAccountId!.Value).Distinct().ToListAsync(cancellationToken));
         return used;

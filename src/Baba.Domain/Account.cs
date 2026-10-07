@@ -19,6 +19,15 @@ public enum AccountRole
 
     /// <summary>Where tax paid on purchases is posted (an asset, claimed back). The default account of the tax codes.</summary>
     TaxReceivable,
+
+    /// <summary>The stock account: what stock on hand is worth. Bought stock is posted here and sold stock leaves it.</summary>
+    Inventory,
+
+    /// <summary>The expense a sale of stock is charged to (what the stock sold cost).</summary>
+    CostOfSales,
+
+    /// <summary>Where gains and losses found by counting stock are posted.</summary>
+    InventoryAdjustment,
 }
 
 /// <summary>A node in the chart of accounts tree (unlimited depth). Entries are posted to posting accounts only.</summary>

@@ -21,7 +21,7 @@ public static class DefaultChartOfAccounts
             new("111", "Cash on hand", "النقدية بالصندوق", AccountType.Asset, "11", true, AccountRole.CashOrBank),
             new("112", "Bank account", "الحساب البنكي", AccountType.Asset, "11", true, AccountRole.CashOrBank),
             new("113", "Accounts receivable", "العملاء (الذمم المدينة)", AccountType.Asset, "11", true, AccountRole.Receivable),
-            new("114", "Inventory", "المخزون", AccountType.Asset, "11", true),
+            new("114", "Inventory", "المخزون", AccountType.Asset, "11", true, AccountRole.Inventory),
             new("115", "Prepaid expenses and advances", "مصروفات مدفوعة مقدمًا وسلف", AccountType.Asset, "11", true),
             new("116", "Taxes receivable", "ضرائب مدينة قابلة للاسترداد", AccountType.Asset, "11", true, AccountRole.TaxReceivable),
             new("12", "Fixed assets", "الأصول الثابتة", AccountType.Asset, "1", false),
@@ -52,7 +52,7 @@ public static class DefaultChartOfAccounts
             // Expenses
             new("4", "Expenses", "المصروفات", AccountType.Expense, null, false),
             new("41", "Cost of sales", "تكلفة المبيعات", AccountType.Expense, "4", false),
-            new("411", "Cost of goods sold", "تكلفة البضاعة المباعة", AccountType.Expense, "41", true),
+            new("411", "Cost of goods sold", "تكلفة البضاعة المباعة", AccountType.Expense, "41", true, AccountRole.CostOfSales),
             new("42", "General expenses", "المصروفات العمومية", AccountType.Expense, "4", false),
             new("421", "Salaries and wages", "الرواتب والأجور", AccountType.Expense, "42", true),
             new("422", "Rent", "الإيجار", AccountType.Expense, "42", true),
@@ -61,6 +61,7 @@ public static class DefaultChartOfAccounts
             new("425", "Bank charges", "رسوم بنكية", AccountType.Expense, "42", true),
             new("426", "Depreciation expense", "مصروف الإهلاك", AccountType.Expense, "42", true),
             new("427", "Other expenses", "مصروفات أخرى", AccountType.Expense, "42", true),
+            new("429", "Inventory gains and losses", "فروقات جرد المخزون", AccountType.Expense, "42", true, AccountRole.InventoryAdjustment),
             new("428", "Exchange differences", "فروق العملة", AccountType.Expense, "42", true, AccountRole.ExchangeDifference),
 
             // Revenues

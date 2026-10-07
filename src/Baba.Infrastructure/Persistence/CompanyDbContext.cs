@@ -2,6 +2,7 @@ using System.Text.Json;
 using Baba.Application.Abstractions;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -53,6 +54,10 @@ public sealed class CompanyDbContext(
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
     public DbSet<Allocation> Allocations => Set<Allocation>();
     public DbSet<TaxCode> TaxCodes => Set<TaxCode>();
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
+    public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
     public DbSet<RecurringSchedule> RecurringSchedules => Set<RecurringSchedule>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentLine> DocumentLines => Set<DocumentLine>();
@@ -77,6 +82,9 @@ public sealed class CompanyDbContext(
         configuration.Properties<DocumentStatus>().HaveConversion<string>();
         configuration.Properties<RecurrenceFrequency>().HaveConversion<string>();
         configuration.Properties<TaxTreatment>().HaveConversion<string>();
+        configuration.Properties<StockMovementKind>().HaveConversion<string>();
+        configuration.Properties<StockDocumentKind>().HaveConversion<string>();
+        configuration.Properties<CostMode>().HaveConversion<string>();
         configuration.Properties<RecurringTemplate>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
@@ -137,7 +145,7 @@ public sealed class CompanyDbContext(
 
         model.Entity<Product>(product =>
         {
-            product.Ignore(p => p.SalePrice).Ignore(p => p.PurchasePrice);
+            product.Ignore(p => p.SalePrice).Ignore(p => p.PurchasePrice).Ignore(p => p.ReorderLevel);
             product.HasIndex(p => new { p.CompanyId, p.Code }).IsUnique();
             product.HasOne<Account>().WithMany().HasForeignKey(p => p.SalesAccountId).OnDelete(DeleteBehavior.Restrict);
             product.HasOne<Account>().WithMany().HasForeignKey(p => p.PurchaseAccountId).OnDelete(DeleteBehavior.Restrict);
@@ -197,6 +205,48 @@ public sealed class CompanyDbContext(
 
         model.Entity<DocumentLine>().HasOne<TaxCode>().WithMany().HasForeignKey(l => l.TaxCodeId).OnDelete(DeleteBehavior.Restrict);
         model.Entity<Product>().HasOne<TaxCode>().WithMany().HasForeignKey(p => p.TaxCodeId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<Warehouse>(warehouse =>
+        {
+            warehouse.HasIndex(w => new { w.CompanyId, w.Code }).IsUnique();
+            warehouse.HasQueryFilter(w => w.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<StockMovement>(movement =>
+        {
+            movement.Ignore(m => m.Quantity).Ignore(m => m.Value);
+            movement.HasOne<Product>().WithMany().HasForeignKey(m => m.ProductId).OnDelete(DeleteBehavior.Restrict);
+            movement.HasOne<Warehouse>().WithMany().HasForeignKey(m => m.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            movement.HasIndex(m => m.ProductId);
+            movement.HasIndex(m => m.DocumentId);
+            movement.HasIndex(m => m.StockDocumentId);
+            movement.HasIndex(m => m.Date);
+            movement.HasQueryFilter(m => m.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<StockDocument>(document =>
+        {
+            document.HasMany(d => d.Lines).WithOne().HasForeignKey(l => l.StockDocumentId).OnDelete(DeleteBehavior.Cascade);
+            document.HasOne<Account>().WithMany().HasForeignKey(d => d.CounterAccountId).OnDelete(DeleteBehavior.Restrict);
+            document.HasIndex(d => new { d.CompanyId, d.Number }).IsUnique();
+            document.HasIndex(d => d.Date);
+            document.HasQueryFilter(d => d.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<StockDocumentLine>(line =>
+        {
+            line.Ignore(l => l.Quantity).Ignore(l => l.UnitCost);
+            line.HasOne<Product>().WithMany().HasForeignKey(l => l.ProductId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<Warehouse>().WithMany().HasForeignKey(l => l.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<Warehouse>().WithMany().HasForeignKey(l => l.ToWarehouseId).OnDelete(DeleteBehavior.Restrict);
+            line.HasIndex(l => new { l.StockDocumentId, l.LineNumber });
+            line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.InventoryAccountId).OnDelete(DeleteBehavior.Restrict);
+        model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.CostOfSalesAccountId).OnDelete(DeleteBehavior.Restrict);
+        model.Entity<Product>().HasIndex(p => p.Barcode);
+        model.Entity<Document>().HasOne<Warehouse>().WithMany().HasForeignKey(d => d.WarehouseId).OnDelete(DeleteBehavior.Restrict);
 
         model.Entity<RecurringSchedule>(schedule =>
         {

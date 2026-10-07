@@ -28,6 +28,26 @@ public sealed class Product : Entity, ICompanyScoped, IAuditable
     /// <summary>The expense or asset account purchases of it are posted to.</summary>
     public Guid? PurchaseAccountId { get; set; }
 
+    /// <summary>A product whose quantity is kept: bought into stock, sold out of it (brief section 10.4). A service is not.</summary>
+    public bool IsStockItem { get; set; }
+
+    public string? Barcode { get; set; }
+
+    /// <summary>When the quantity on hand falls to this or below, the product shows on the reorder list. Zero means no level.</summary>
+    public long ReorderLevelScaled { get; set; }
+
+    /// <summary>The stock account of this product; empty takes the company's stock account.</summary>
+    public Guid? InventoryAccountId { get; set; }
+
+    /// <summary>The cost of sales account of this product; empty takes the company's.</summary>
+    public Guid? CostOfSalesAccountId { get; set; }
+
+    public decimal ReorderLevel
+    {
+        get => Scaled.ToDecimal(ReorderLevelScaled);
+        set => ReorderLevelScaled = Scaled.ToScaled(value);
+    }
+
     /// <summary>The tax code lines of this product start with (sales and purchases alike: the code knows both accounts).</summary>
     public Guid? TaxCodeId { get; set; }
 
