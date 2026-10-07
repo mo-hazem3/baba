@@ -21,8 +21,17 @@ public class DesktopSmokeTests
                 RedirectStandardError = true,
             })!;
 
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            await process.WaitForExitAsync(timeout.Token);
+            // The test projects run side by side on a shared build machine, so starting WebView2 and making the PDFs can take a while.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill(entireProcessTree: true); // never leave the window running
+                throw new TimeoutException("The desktop app did not finish its smoke test within 4 minutes.");
+            }
 
             Assert.True(File.Exists(result), "The app did not write a smoke test result.");
             using var json = JsonDocument.Parse(await File.ReadAllTextAsync(result));
