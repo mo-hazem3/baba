@@ -2,6 +2,7 @@ using Baba.Application.Accounting;
 using Baba.Application.Assets;
 using Baba.Application.Companies;
 using Baba.Application.Inventory;
+using Baba.Application.Payroll;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
@@ -28,6 +29,7 @@ public sealed class ListImportService(
     StockDocumentService stockDocuments,
     WarehouseService warehouses,
     AssetService assets,
+    EmployeeService employees,
     ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Products
@@ -252,6 +254,101 @@ public sealed class ListImportService(
         }
 
         return new ImportResult(pending.Count, 0, []);
+    }
+
+    // ---------------------------------------------------------------- Employees
+
+    /// <summary>
+    /// Columns: code, name (English), name (Arabic), job title, ID number, national (yes or no), join date, basic salary, bank, account
+    /// number, annual leave days. Allowances and deductions are given to employees afterwards.
+    /// </summary>
+    public async Task<ImportResult> ImportEmployeesAsync(string fileName, byte[] content, CancellationToken cancellationToken = default)
+    {
+        if (!TryRead(fileName, content, out var rows))
+            return Fail("import.unreadable");
+
+        var header = FindHeader(rows, out var headerIndex, "basic salary", "basic", "salary", "الراتب الأساسي", "الراتب");
+        if (header is null)
+            return Fail("employees.salary-column-missing");
+
+        int code = ImportParsing.FindColumn(header, "code", "employee code", "الرمز");
+        int nameEn = ImportParsing.FindColumn(header, "name", "name en", "english name", "name (english)", "الاسم بالانجليزية", "الاسم (بالانجليزية)", "الاسم (بالإنجليزية)");
+        int nameAr = ImportParsing.FindColumn(header, "name ar", "arabic name", "name (arabic)", "الاسم", "الاسم بالعربية", "الاسم (بالعربية)");
+        int job = ImportParsing.FindColumn(header, "job title", "position", "المسمى الوظيفي");
+        int nationalId = ImportParsing.FindColumn(header, "id number", "national id", "civil id", "رقم الهوية");
+        int national = ImportParsing.FindColumn(header, "national", "is national", "citizen", "مواطن");
+        int joined = ImportParsing.FindColumn(header, "join date", "joined", "hire date", "تاريخ التعيين");
+        int basic = ImportParsing.FindColumn(header, "basic salary", "basic", "salary", "الراتب الأساسي", "الراتب");
+        int bank = ImportParsing.FindColumn(header, "bank", "البنك");
+        int account = ImportParsing.FindColumn(header, "account number", "iban", "account", "رقم الحساب");
+        int leave = ImportParsing.FindColumn(header, "annual leave days", "leave days", "أيام الإجازة السنوية");
+
+        var existing = (await employees.ListAsync(cancellationToken)).Select(e => e.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var pending = new List<EmployeeInput>();
+        var issues = new List<ImportIssue>();
+        for (var i = headerIndex + 1; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.All(string.IsNullOrWhiteSpace))
+                continue;
+
+            var rowIssues = issues.Count;
+            var line = i + 1;
+            var employeeCode = ImportParsing.Cell(row, code);
+            if (employeeCode.Length == 0)
+                issues.Add(new(line, "employee.code-required"));
+            else if (!existing.Add(employeeCode))
+                issues.Add(new(line, "employee.code-duplicate"));
+            if (ImportParsing.Cell(row, nameEn).Length == 0 && ImportParsing.Cell(row, nameAr).Length == 0)
+                issues.Add(new(line, "employee.name-required"));
+
+            var joinDate = ImportParsing.ParseDate(ImportParsing.Cell(row, joined));
+            if (joinDate is null)
+                issues.Add(new(line, "employee.join-required"));
+
+            var salary = ImportParsing.ParseAmount(ImportParsing.Cell(row, basic));
+            if (salary is null or < 0)
+                issues.Add(new(line, "employee.basic-invalid"));
+
+            var days = 30;
+            var daysText = ImportParsing.Cell(row, leave);
+            if (daysText.Length > 0)
+            {
+                if (ImportParsing.ParseAmount(daysText) is { } parsed && parsed is >= 0 and <= 366)
+                    days = (int)parsed;
+                else
+                    issues.Add(new(line, "employee.leave-days-invalid"));
+            }
+
+            var nationalText = ImportParsing.Cell(row, national).ToLowerInvariant();
+            if (issues.Count == rowIssues)
+            {
+                pending.Add(new EmployeeInput(
+                    employeeCode, ImportParsing.Cell(row, nameAr), ImportParsing.Cell(row, nameEn), Clean(ImportParsing.Cell(row, job)), Clean(ImportParsing.Cell(row, nationalId)),
+                    nationalText is "yes" or "y" or "true" or "1" or "نعم", joinDate!.Value, null, salary!.Value, Clean(ImportParsing.Cell(row, bank)), Clean(ImportParsing.Cell(row, account)),
+                    null, days, 0, null, null, []));
+            }
+        }
+
+        if (issues.Count > 0)
+            return new ImportResult(0, 0, issues);
+        if (pending.Count == 0)
+            return Fail("import.empty");
+
+        var created = new List<Guid>();
+        try
+        {
+            foreach (var input in pending)
+                created.Add((await employees.CreateAsync(input, cancellationToken)).Id);
+        }
+        catch (ValidationException e)
+        {
+            foreach (var id in created)
+                await employees.DeleteAsync(id, CancellationToken.None); // nothing half-imported is left behind
+            return new ImportResult(0, 0, [.. e.Issues.Select(x => new ImportIssue(0, x.Code))]);
+        }
+
+        return new ImportResult(created.Count, 0, []);
     }
 
     // ---------------------------------------------------------------- Fixed assets

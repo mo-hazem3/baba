@@ -2,11 +2,13 @@ using Baba.Application.Accounting;
 using Baba.Application.Assets;
 using Baba.Application.Companies;
 using Baba.Application.Inventory;
+using Baba.Application.Payroll;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
 using Baba.Domain.Assets;
 using Baba.Domain.Inventory;
+using Baba.Domain.Payroll;
 using Baba.Domain.Trade;
 using Baba.Localization;
 
@@ -30,6 +32,8 @@ public sealed class ListingService(
     WarehouseService warehouses,
     StockDocumentService stockDocuments,
     AssetService assets,
+    EmployeeService employees,
+    PayrollService payroll,
     ILedgerQuery ledger,
     IAccountStore accounts,
     ICompanyFiles files)
@@ -162,6 +166,121 @@ public sealed class ListingService(
             [new(r.CurrencyCode), new(Date: r.Date), Number(r.Rate, 6)], 0, RowStyle.Normal)).ToList();
         return Table("exchange-rates", ("Exchange rates", "أسعار الصرف"), ($"{list.Count} rates", $"{list.Count} سعراً"),
             [Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("date", ColumnKind.Date, "From", "من"), Column("rate", ColumnKind.Text, "Worth in the company's currency", "تساوي بعملة الشركة")], rows);
+    }
+
+    // ---------------------------------------------------------------- Payroll
+
+    public async Task<ReportResult> EmployeesAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await employees.ListAsync(cancellationToken);
+        var rows = list.Select(e => new ReportRow(
+            [
+                new(e.Code), new(e.NameEn, e.NameAr), new(e.JobTitle), new(e.NationalId), e.IsNational ? new("Yes", "نعم") : ReportCell.Blank, new(Date: e.JoinDate),
+                new(Amount: e.BasicSalary), new(e.BankName), new(e.BankAccount), new(e.AnnualLeaveDays.ToString(Invariant)), Active(e.IsActive),
+            ],
+            0, RowStyle.Normal)).ToList();
+        return Table("employees", ("Employees", "الموظفون"), ($"{list.Count} employees", $"{list.Count} موظفاً"),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("job", ColumnKind.Text, "Job title", "المسمى الوظيفي"),
+                Column("id", ColumnKind.Text, "ID number", "رقم الهوية"), Column("national", ColumnKind.Text, "National", "مواطن"), Column("joined", ColumnKind.Date, "Join date", "تاريخ التعيين"),
+                Column("basic", ColumnKind.Amount, "Basic salary", "الراتب الأساسي"), Column("bank", ColumnKind.Text, "Bank", "البنك"), Column("account", ColumnKind.Text, "Account number", "رقم الحساب"),
+                Column("leave", ColumnKind.Text, "Annual leave days", "أيام الإجازة السنوية"), Column("status", ColumnKind.Text, "Status", "الحالة"),
+            ], rows);
+    }
+
+    public async Task<ReportResult> SalaryComponentsAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await employees.ListComponentsAsync(cancellationToken);
+        var rows = list.Select(c => new ReportRow(
+            [
+                new(c.Code), new(c.NameEn, c.NameAr), c.Kind == SalaryComponentKind.Earning ? new("Earning", "استحقاق") : new("Deduction", "استقطاع"),
+                c.Calculation == ComponentCalculation.Fixed ? new("Fixed amount", "مبلغ ثابت") : new("% of basic", "نسبة من الأساسي"), new(Amount: c.DefaultValue),
+                c.IsInsurable ? new("Yes", "نعم") : ReportCell.Blank, c.InEndOfService ? new("Yes", "نعم") : ReportCell.Blank, Active(c.IsActive),
+            ],
+            0, RowStyle.Normal)).ToList();
+        return Table("salary-components", ("Salary components", "بنود الراتب"), ($"{list.Count} components", $"{list.Count} بنداً"),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("kind", ColumnKind.Text, "Type", "النوع"),
+                Column("calculation", ColumnKind.Text, "Calculation", "طريقة الحساب"), Column("value", ColumnKind.Amount, "Default value", "القيمة الافتراضية"),
+                Column("insurable", ColumnKind.Text, "Insurable", "خاضع للتأمينات"), Column("eos", ColumnKind.Text, "In end-of-service", "ضمن نهاية الخدمة"), Column("status", ColumnKind.Text, "Status", "الحالة"),
+            ], rows);
+    }
+
+    /// <summary>What was paid to each employee in each month of a period, with where the salary goes: also the list to give the bank.</summary>
+    public async Task<ReportResult> PayrollSummaryAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
+    {
+        var staff = (await employees.ListAsync(cancellationToken)).ToDictionary(e => e.Id);
+        var rows = new List<ReportRow>();
+        decimal earnings = 0, deductions = 0, employeeInsurance = 0, employerInsurance = 0, net = 0;
+        foreach (var summary in (await payroll.ListRunsAsync(cancellationToken)).Where(r => (from is null || r.Month >= new DateOnly(from.Value.Year, from.Value.Month, 1)) && (to is null || r.Month <= to)).OrderBy(r => r.Month))
+        {
+            var run = await payroll.GetRunAsync(summary.Id, cancellationToken);
+            foreach (var slip in run!.Payslips.Where(p => staff.ContainsKey(p.EmployeeId)).OrderBy(p => staff[p.EmployeeId].Code, StringComparer.OrdinalIgnoreCase))
+            {
+                var e = staff[slip.EmployeeId];
+                rows.Add(new ReportRow(
+                    [
+                        new(summary.Month.ToString("yyyy-MM", Invariant)), new(e.Code), new(e.NameEn, e.NameAr), new(Amount: slip.Earnings), new(Amount: slip.Deductions), new(Amount: slip.EmployeeInsurance),
+                        new(Amount: slip.EmployerInsurance), new(Amount: slip.Net), new(e.BankName), new(e.BankAccount),
+                        summary.Status == PayrollStatus.Draft ? new("Draft", "مسودة") : summary.PaidDate is null ? new("Posted", "مرحّل") : new("Paid", "مدفوع"),
+                    ],
+                    0, RowStyle.Normal));
+                earnings += slip.Earnings;
+                deductions += slip.Deductions;
+                employeeInsurance += slip.EmployeeInsurance;
+                employerInsurance += slip.EmployerInsurance;
+                net += slip.Net;
+            }
+        }
+
+        rows.Add(new ReportRow(
+            [ReportCell.Blank, ReportCell.Blank, new("Total", "الإجمالي"), new(Amount: earnings), new(Amount: deductions), new(Amount: employeeInsurance), new(Amount: employerInsurance), new(Amount: net), ReportCell.Blank, ReportCell.Blank, ReportCell.Blank],
+            0, RowStyle.Total));
+        return Table("payroll-summary", ("Payroll summary", "ملخص الرواتب"), ReportLabels.Range(from, to),
+            [
+                Column("month", ColumnKind.Text, "Month", "الشهر"), Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Employee", "الموظف"),
+                Column("earnings", ColumnKind.Amount, "Earnings", "المستحقات"), Column("deductions", ColumnKind.Amount, "Deductions", "الاستقطاعات"),
+                Column("employeeInsurance", ColumnKind.Amount, "Employee insurance", "تأمينات الموظف"), Column("employerInsurance", ColumnKind.Amount, "Employer insurance", "تأمينات صاحب العمل"),
+                Column("net", ColumnKind.Amount, "Net pay", "صافي الراتب"), Column("bank", ColumnKind.Text, "Bank", "البنك"), Column("account", ColumnKind.Text, "Account number", "رقم الحساب"),
+                Column("status", ColumnKind.Text, "Status", "الحالة"),
+            ], rows);
+    }
+
+    public async Task<ReportResult> LeaveBalancesAsync(DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var staff = (await employees.ListAsync(cancellationToken)).ToDictionary(e => e.Id);
+        var rows = (await employees.BalancesAsync(asOf, cancellationToken)).Where(b => staff.ContainsKey(b.EmployeeId)).Select(b =>
+        {
+            var e = staff[b.EmployeeId];
+            return new ReportRow([new(e.Code), new(e.NameEn, e.NameAr), new(Amount: b.Earned), new(Amount: b.Taken), new(Amount: b.Balance)], 0, RowStyle.Normal);
+        }).ToList();
+        return Table("leave-balances", ("Leave balances", "أرصدة الإجازات"), ReportLabels.Range(null, asOf),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Employee", "الموظف"), Column("earned", ColumnKind.Amount, "Earned (days)", "المكتسب (أيام)"),
+                Column("taken", ColumnKind.Amount, "Taken (days)", "المستخدم (أيام)"), Column("balance", ColumnKind.Amount, "Balance (days)", "الرصيد (أيام)"),
+            ], rows);
+    }
+
+    /// <summary>What the employees' end-of-service gratuity comes to on a date, and whether the books hold that much.</summary>
+    public async Task<ReportResult> EndOfServiceAsync(DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var position = await payroll.EndOfServicePositionAsync(asOf, cancellationToken);
+        var staff = (await employees.ListAsync(cancellationToken)).ToDictionary(e => e.Id);
+        var rows = position.Lines.Where(l => staff.ContainsKey(l.EmployeeId)).Select(l =>
+        {
+            var e = staff[l.EmployeeId];
+            return new ReportRow([new(e.Code), new(e.NameEn, e.NameAr), new(Date: e.JoinDate), new(Amount: l.YearsOfService), new(Amount: l.Wage), new(Amount: l.Gratuity)], 0, RowStyle.Normal);
+        }).ToList();
+        rows.Add(new ReportRow([ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, new("Total owed", "الإجمالي المستحق"), new(Amount: position.Required)], 0, RowStyle.Total));
+        rows.Add(new ReportRow([ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, ReportCell.Blank, new("Set aside in the books", "المخصص في الدفاتر"), new(Amount: position.Provision)], 0, RowStyle.Normal));
+        var checks = position.Applicable
+            ? new List<ReportCheck> { new("The provision in the books equals what is owed", "المخصص في الدفاتر يساوي المستحق", position.Difference == 0) }
+            : new List<ReportCheck>();
+        return Table("end-of-service", ("End-of-service provision", "مخصص نهاية الخدمة"), ReportLabels.Range(null, asOf),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Employee", "الموظف"), Column("joined", ColumnKind.Date, "Joined", "تاريخ التعيين"),
+                Column("years", ColumnKind.Amount, "Years of service", "سنوات الخدمة"), Column("wage", ColumnKind.Amount, "Monthly wage", "الأجر الشهري"), Column("gratuity", ColumnKind.Amount, "Owed", "المستحق"),
+            ], rows) with { Checks = checks };
     }
 
     // ---------------------------------------------------------------- Assets

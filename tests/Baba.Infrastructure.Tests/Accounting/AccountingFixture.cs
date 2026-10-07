@@ -139,7 +139,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         return new Env(
             files, chart, vouchers, periods, ledger, reports, byCode,
             new Baba.Application.Printing.BrandingService(brandingStore),
-            new Baba.Application.Reporting.ListingService(chart, vouchers, trade, new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore, stockStore), parties, tax, new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock), new ExchangeRateService(rateStore, files), stockService, warehouseService, stockDocuments, assetService, ledger, accounts, files),
+            new Baba.Application.Reporting.ListingService(chart, vouchers, trade, new Baba.Application.Trade.ProductService(productStore, documentStore, accounts, taxStore, stockStore), parties, tax, new Baba.Application.Trade.RecurringService(new Trade.RecurringStore(files), trade, vouchers, files, Clock), new ExchangeRateService(rateStore, files), stockService, warehouseService, stockDocuments, assetService, employeeService, payrollService, ledger, accounts, files),
             new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
             documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id,
             new Baba.Application.Banking.BankService(accounts, reconciliationStore, ledger, new Baba.Infrastructure.Printing.TabularReader(), Clock),

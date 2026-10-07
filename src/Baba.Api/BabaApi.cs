@@ -84,6 +84,10 @@ public static class BabaApi
             sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(),
             sp.GetRequiredService<IBrandingStore>(), sp.GetRequiredService<Baba.Application.Trade.DocumentService>(), sp.GetRequiredService<PartyService>(), sp.GetRequiredService<CountryPackRegistry>(), sp.GetRequiredService<IQrImageMaker>()));
 
+        services.AddSingleton(sp => new PayslipPrintService(
+            sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(),
+            sp.GetRequiredService<IBrandingStore>(), sp.GetRequiredService<Baba.Application.Payroll.PayrollService>(), sp.GetRequiredService<Baba.Application.Payroll.EmployeeService>()));
+
         // The PDF renderer is optional: only hosts that can make PDFs (the desktop app) register one.
         services.AddSingleton(sp => new PrintService(
             sp.GetService<IPdfRenderer>(), sp.GetRequiredService<IPrintFonts>(), sp.GetRequiredService<ICompanyFiles>(), sp.GetRequiredService<TimeProvider>()));

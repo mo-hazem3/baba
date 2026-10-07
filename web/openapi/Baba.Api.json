@@ -4060,6 +4060,83 @@
         }
       }
     },
+    "/api/payroll/runs/{id}/payslips/pdf": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "PrintPayslips",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrintLayout"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/api/payroll/runs/{id}/payslips/{payslipId}/pdf": {
+      "get": {
+        "tags": [
+          "Payroll"
+        ],
+        "operationId": "PrintPayslip",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "payslipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrintLayout"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
     "/api/payroll/end-of-service": {
       "get": {
         "tags": [
@@ -4399,6 +4476,26 @@
           "Import"
         ],
         "operationId": "ImportAssets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/employees": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportEmployees",
         "responses": {
           "200": {
             "description": "OK",

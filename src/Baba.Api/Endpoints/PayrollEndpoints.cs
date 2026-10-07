@@ -1,4 +1,6 @@
 using Baba.Application.Payroll;
+using Baba.Application.Printing;
+using Baba.Domain;
 
 namespace Baba.Api.Endpoints;
 
@@ -68,6 +70,24 @@ public static class PayrollEndpoints
         payroll.MapPost("/runs/{id:guid}/unpost", (Guid id, PayrollService service, CancellationToken ct) => service.UnpostRunAsync(id, ct)).WithName("UnpostPayrollRun");
         payroll.MapPost("/runs/{id:guid}/pay", (Guid id, PayInput input, PayrollService service, CancellationToken ct) => service.PayRunAsync(id, input, ct)).WithName("PayPayrollRun");
         payroll.MapPost("/runs/{id:guid}/unpay", (Guid id, PayrollService service, CancellationToken ct) => service.UnpayRunAsync(id, ct)).WithName("UnpayPayrollRun");
+        payroll.MapGet("/runs/{id:guid}/payslips/pdf", async (Guid id, PrintLayout? layout, PayslipPrintService printing, CancellationToken ct) =>
+            {
+                if (!printing.IsAvailable)
+                    return Results.StatusCode(StatusCodes.Status501NotImplemented);
+                return Results.File(await printing.RenderAsync(id, null, layout, ct), "application/pdf", "payslips.pdf");
+            })
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf")
+            .Produces(StatusCodes.Status501NotImplemented)
+            .WithName("PrintPayslips");
+        payroll.MapGet("/runs/{id:guid}/payslips/{payslipId:guid}/pdf", async (Guid id, Guid payslipId, PrintLayout? layout, PayslipPrintService printing, CancellationToken ct) =>
+            {
+                if (!printing.IsAvailable)
+                    return Results.StatusCode(StatusCodes.Status501NotImplemented);
+                return Results.File(await printing.RenderAsync(id, payslipId, layout, ct), "application/pdf", "payslip.pdf");
+            })
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf")
+            .Produces(StatusCodes.Status501NotImplemented)
+            .WithName("PrintPayslip");
         payroll.MapDelete("/runs/{id:guid}", async (Guid id, PayrollService service, CancellationToken ct) =>
             {
                 await service.DeleteRunAsync(id, ct);

@@ -233,7 +233,7 @@ public class AssetTests : AccountingFixture
 
     private static ListImportService Importer(Env e) => new(
         new Baba.Infrastructure.Printing.TabularReader(), new Baba.Infrastructure.Accounting.AccountStore(e.Files), new Baba.Infrastructure.Accounting.PartyStore(e.Files),
-        new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Files);
+        new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Files);
 
     [Fact]
     public async Task Assets_import_with_their_accounts_and_depreciation_so_far_and_are_listed_with_the_same_columns()

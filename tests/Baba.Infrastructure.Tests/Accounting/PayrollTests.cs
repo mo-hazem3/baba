@@ -306,4 +306,87 @@ public class PayrollTests : AccountingFixture
         var inUse = await RefusedAsync(() => e.Employees.DeleteAsync(id));
         Assert.Contains("employee.in-use", Codes(inUse));
     }
+
+    // ------------------------------------------------------------------ Reports, payslips, import
+
+    [Fact]
+    public async Task The_payroll_summary_lists_each_payslip_with_where_the_money_goes_and_the_totals()
+    {
+        var (e, housing, loan) = await EnvAsync();
+        await e.Employees.CreateAsync(Staff("E1", 1000m, components: [new(housing.Id, 200m), new(loan.Id, 40m)]) with { BankName = "Gulf Bank", BankAccount = "KW81000123" });
+        var run = await e.Payroll.CreateRunAsync(Sep);
+        await e.Payroll.PostRunAsync(run.Summary.Id);
+
+        var report = await e.Listings.PayrollSummaryAsync(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31));
+
+        var row = report.Rows.First();
+        Assert.Equal("2026-09", row.Cells[0].Text);
+        Assert.Equal("E1", row.Cells[1].Text);
+        Assert.Equal(1200m, row.Cells[3].Amount);
+        Assert.Equal(40m, row.Cells[4].Amount);
+        Assert.Equal(126m, row.Cells[5].Amount);
+        Assert.Equal(138m, row.Cells[6].Amount);
+        Assert.Equal(1034m, row.Cells[7].Amount);
+        Assert.Equal("KW81000123", row.Cells[9].Text);
+        Assert.Equal(1034m, report.Rows.Last().Cells[7].Amount);
+        Assert.DoesNotContain((await e.Listings.PayrollSummaryAsync(new DateOnly(2027, 1, 1), null)).Rows, r => r.Cells[1].Text == "E1");
+    }
+
+    [Fact]
+    public async Task The_end_of_service_report_checks_the_books_against_what_is_owed()
+    {
+        var (e, _, _) = await EnvAsync();
+        await e.Employees.CreateAsync(Staff("E1", 1000m, joined: new DateOnly(2023, 10, 1)));
+
+        var before = await e.Listings.EndOfServiceAsync(new DateOnly(2026, 10, 31));
+        await e.Payroll.AccrueEndOfServiceAsync(Oct);
+        var after = await e.Listings.EndOfServiceAsync(new DateOnly(2026, 10, 31));
+
+        Assert.False(before.Checks.Single().Passed); // nothing set aside yet
+        Assert.True(after.Checks.Single().Passed);
+    }
+
+    [Fact]
+    public async Task A_payslip_prints_in_both_languages_with_its_lines_and_the_net_pay()
+    {
+        var (e, housing, loan) = await EnvAsync();
+        await e.Employees.CreateAsync(Staff("E1", 1000m, components: [new(housing.Id, 200m), new(loan.Id, 40m)]));
+        var run = await e.Payroll.CreateRunAsync(Sep);
+        var printing = new Baba.Application.Printing.PayslipPrintService(
+            e.Renderer, new Baba.Infrastructure.Printing.EmbeddedPrintFonts(), e.Files, new Baba.Infrastructure.Printing.BrandingStore(e.Files), e.Payroll, e.Employees);
+
+        await printing.RenderAsync(run.Summary.Id, null, Baba.Domain.PrintLayout.Both);
+
+        var html = e.Renderer.Html!;
+        Assert.Contains("Payslip", html);
+        Assert.Contains("قسيمة راتب", html);
+        Assert.Contains("Housing allowance", html);
+        Assert.Contains("Net pay", html);
+        Assert.Contains("1,034.000", html);
+        Assert.Contains("Employee E1", html);
+    }
+
+    [Fact]
+    public async Task Employees_import_from_a_file_and_one_wrong_row_imports_nothing()
+    {
+        var e = await new PayrollTests().NewEnvAsync(countryCode: "KW");
+        var importer = new Baba.Application.Importing.ListImportService(
+            new Baba.Infrastructure.Printing.TabularReader(), new Baba.Infrastructure.Accounting.AccountStore(e.Files), new Baba.Infrastructure.Accounting.PartyStore(e.Files),
+            new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Employees, e.Files);
+
+        var good = await importer.ImportEmployeesAsync("e.csv", System.Text.Encoding.UTF8.GetBytes("Code,Name,Job title,National,Join date,Basic salary,Account number\nE1,Sara,Accountant,yes,2025-03-01,750,KW81000\nE2,Omar,Driver,no,2025-04-15,400,\n"));
+        Assert.Empty(good.Issues);
+        Assert.Equal(2, good.Imported);
+        var sara = (await e.Employees.ListAsync()).Single(x => x.Code == "E1");
+        Assert.True(sara.IsNational);
+        Assert.Equal(750m, sara.BasicSalary);
+        Assert.Equal("KW81000", sara.BankAccount);
+
+        var bad = await importer.ImportEmployeesAsync("e.csv", System.Text.Encoding.UTF8.GetBytes("Code,Name,Join date,Basic salary\nE3,Fine,2025-01-01,100\nE1,Twice,2025-01-01,100\nE5,NoDate,notadate,100\nE6,Negative,2025-01-01,-5\n"));
+        Assert.Equal(0, bad.Imported);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(3, "employee.code-duplicate"), bad.Issues);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(4, "employee.join-required"), bad.Issues);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(5, "employee.basic-invalid"), bad.Issues);
+        Assert.Equal(2, (await e.Employees.ListAsync()).Count);
+    }
 }
