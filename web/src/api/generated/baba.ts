@@ -50,6 +50,7 @@ import type {
   GetProductPriceParams,
   GetReconciliationParams,
   GetReportParams,
+  GetStockLevelsParams,
   HostInfo,
   ImportResult,
   ListDocumentsParams,
@@ -57,6 +58,7 @@ import type {
   ListOutstandingInvoicesParams,
   ListPartiesParams,
   ListPeriodsParams,
+  ListStockDocumentsParams,
   ListVouchersParams,
   LockPeriodRequest,
   ModuleDto,
@@ -92,17 +94,22 @@ import type {
   RestoredFile,
   SaveDialogRequest,
   SaveDocumentRequest,
+  SaveStockDocumentRequest,
   SaveVoucherRequest,
   SetActiveRequest,
   SetModulesRequest,
   SettlementInput,
   SettlementResult,
   StartupInfo,
+  StockDocumentDto,
+  StockLevelDto,
   TaxCodeDto,
   TaxCodeInput,
   TestPageRequest,
   VoucherDto,
-  VoucherSummary
+  VoucherSummary,
+  WarehouseDto,
+  WarehouseInput
 } from './model';
 
 import { http } from '../http';
@@ -8177,6 +8184,1073 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getSetPriceListActiveMutationOptions(options), queryClient);
     }
 
+export type listWarehousesResponse200 = {
+  data: WarehouseDto[]
+  status: 200
+}
+
+export type listWarehousesResponseSuccess = (listWarehousesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listWarehousesResponse = (listWarehousesResponseSuccess)
+
+export const getListWarehousesUrl = () => {
+
+
+
+
+  return `/api/warehouses`
+}
+
+export const listWarehouses = async ( options?: Parameters<typeof http>[1]): Promise<listWarehousesResponse> => {
+
+  return http<listWarehousesResponse>(getListWarehousesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWarehousesQueryKey = () => {
+    return [
+    `/api/warehouses`
+    ] as const;
+    }
+
+
+export const getListWarehousesQueryOptions = <TData = Awaited<ReturnType<typeof listWarehouses>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWarehousesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWarehouses>>> = ({ signal }) => listWarehouses({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListWarehousesQueryResult = NonNullable<Awaited<ReturnType<typeof listWarehouses>>>
+export type ListWarehousesQueryError = unknown
+
+
+export function useListWarehouses<TData = Awaited<ReturnType<typeof listWarehouses>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWarehouses>>,
+          TError,
+          Awaited<ReturnType<typeof listWarehouses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWarehouses<TData = Awaited<ReturnType<typeof listWarehouses>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWarehouses>>,
+          TError,
+          Awaited<ReturnType<typeof listWarehouses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWarehouses<TData = Awaited<ReturnType<typeof listWarehouses>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListWarehouses<TData = Awaited<ReturnType<typeof listWarehouses>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWarehouses>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListWarehousesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createWarehouseResponse200 = {
+  data: WarehouseDto
+  status: 200
+}
+
+export type createWarehouseResponseSuccess = (createWarehouseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createWarehouseResponse = (createWarehouseResponseSuccess)
+
+export const getCreateWarehouseUrl = () => {
+
+
+
+
+  return `/api/warehouses`
+}
+
+export const createWarehouse = async (warehouseInput: WarehouseInput, options?: Parameters<typeof http>[1]): Promise<createWarehouseResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createWarehouseResponse>(getCreateWarehouseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(warehouseInput)
+  }
+);}
+
+
+
+
+
+export const getCreateWarehouseMutationKey = () => ['createWarehouse'] as const;
+
+export const getCreateWarehouseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWarehouse>>, TError,CreateWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWarehouse>>, TError,CreateWarehouseMutationVariables, TContext> => {
+
+const mutationKey = getCreateWarehouseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWarehouse>>, CreateWarehouseMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWarehouse(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWarehouseMutationResult = NonNullable<Awaited<ReturnType<typeof createWarehouse>>>
+    export type CreateWarehouseMutationBody = WarehouseInput
+    export type CreateWarehouseMutationError = unknown
+    export type CreateWarehouseMutationVariables = {data: WarehouseInput}
+
+    export const useCreateWarehouse = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWarehouse>>, TError,CreateWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createWarehouse>>,
+        TError,
+        CreateWarehouseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateWarehouseMutationOptions(options), queryClient);
+    }
+
+export type updateWarehouseResponse200 = {
+  data: WarehouseDto
+  status: 200
+}
+
+export type updateWarehouseResponseSuccess = (updateWarehouseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateWarehouseResponse = (updateWarehouseResponseSuccess)
+
+export const getUpdateWarehouseUrl = (id: string,) => {
+
+
+
+
+  return `/api/warehouses/${id}`
+}
+
+export const updateWarehouse = async (id: string,
+    warehouseInput: WarehouseInput, options?: Parameters<typeof http>[1]): Promise<updateWarehouseResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateWarehouseResponse>(getUpdateWarehouseUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(warehouseInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateWarehouseMutationKey = () => ['updateWarehouse'] as const;
+
+export const getUpdateWarehouseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWarehouse>>, TError,UpdateWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWarehouse>>, TError,UpdateWarehouseMutationVariables, TContext> => {
+
+const mutationKey = getUpdateWarehouseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWarehouse>>, UpdateWarehouseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWarehouse(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWarehouseMutationResult = NonNullable<Awaited<ReturnType<typeof updateWarehouse>>>
+    export type UpdateWarehouseMutationBody = WarehouseInput
+    export type UpdateWarehouseMutationError = unknown
+    export type UpdateWarehouseMutationVariables = {id: string;data: WarehouseInput}
+
+    export const useUpdateWarehouse = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWarehouse>>, TError,UpdateWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateWarehouse>>,
+        TError,
+        UpdateWarehouseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateWarehouseMutationOptions(options), queryClient);
+    }
+
+export type deleteWarehouseResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteWarehouseResponseSuccess = (deleteWarehouseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteWarehouseResponse = (deleteWarehouseResponseSuccess)
+
+export const getDeleteWarehouseUrl = (id: string,) => {
+
+
+
+
+  return `/api/warehouses/${id}`
+}
+
+export const deleteWarehouse = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteWarehouseResponse> => {
+
+  return http<deleteWarehouseResponse>(getDeleteWarehouseUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteWarehouseMutationKey = () => ['deleteWarehouse'] as const;
+
+export const getDeleteWarehouseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWarehouse>>, TError,DeleteWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWarehouse>>, TError,DeleteWarehouseMutationVariables, TContext> => {
+
+const mutationKey = getDeleteWarehouseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWarehouse>>, DeleteWarehouseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteWarehouse(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWarehouseMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWarehouse>>>
+
+    export type DeleteWarehouseMutationError = unknown
+    export type DeleteWarehouseMutationVariables = {id: string}
+
+    export const useDeleteWarehouse = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWarehouse>>, TError,DeleteWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWarehouse>>,
+        TError,
+        DeleteWarehouseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteWarehouseMutationOptions(options), queryClient);
+    }
+
+export type setWarehouseActiveResponse200 = {
+  data: WarehouseDto
+  status: 200
+}
+
+export type setWarehouseActiveResponseSuccess = (setWarehouseActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setWarehouseActiveResponse = (setWarehouseActiveResponseSuccess)
+
+export const getSetWarehouseActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/warehouses/${id}/active`
+}
+
+export const setWarehouseActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setWarehouseActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setWarehouseActiveResponse>(getSetWarehouseActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetWarehouseActiveMutationKey = () => ['setWarehouseActive'] as const;
+
+export const getSetWarehouseActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWarehouseActive>>, TError,SetWarehouseActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setWarehouseActive>>, TError,SetWarehouseActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetWarehouseActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setWarehouseActive>>, SetWarehouseActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setWarehouseActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetWarehouseActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setWarehouseActive>>>
+    export type SetWarehouseActiveMutationBody = SetActiveRequest
+    export type SetWarehouseActiveMutationError = unknown
+    export type SetWarehouseActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetWarehouseActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWarehouseActive>>, TError,SetWarehouseActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setWarehouseActive>>,
+        TError,
+        SetWarehouseActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetWarehouseActiveMutationOptions(options), queryClient);
+    }
+
+export type setDefaultWarehouseResponse200 = {
+  data: WarehouseDto
+  status: 200
+}
+
+export type setDefaultWarehouseResponseSuccess = (setDefaultWarehouseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setDefaultWarehouseResponse = (setDefaultWarehouseResponseSuccess)
+
+export const getSetDefaultWarehouseUrl = (id: string,) => {
+
+
+
+
+  return `/api/warehouses/${id}/default`
+}
+
+export const setDefaultWarehouse = async (id: string, options?: Parameters<typeof http>[1]): Promise<setDefaultWarehouseResponse> => {
+
+  return http<setDefaultWarehouseResponse>(getSetDefaultWarehouseUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSetDefaultWarehouseMutationKey = () => ['setDefaultWarehouse'] as const;
+
+export const getSetDefaultWarehouseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultWarehouse>>, TError,SetDefaultWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDefaultWarehouse>>, TError,SetDefaultWarehouseMutationVariables, TContext> => {
+
+const mutationKey = getSetDefaultWarehouseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDefaultWarehouse>>, SetDefaultWarehouseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  setDefaultWarehouse(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDefaultWarehouseMutationResult = NonNullable<Awaited<ReturnType<typeof setDefaultWarehouse>>>
+
+    export type SetDefaultWarehouseMutationError = unknown
+    export type SetDefaultWarehouseMutationVariables = {id: string}
+
+    export const useSetDefaultWarehouse = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultWarehouse>>, TError,SetDefaultWarehouseMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setDefaultWarehouse>>,
+        TError,
+        SetDefaultWarehouseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetDefaultWarehouseMutationOptions(options), queryClient);
+    }
+
+export type getStockLevelsResponse200 = {
+  data: StockLevelDto[]
+  status: 200
+}
+
+export type getStockLevelsResponseSuccess = (getStockLevelsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getStockLevelsResponse = (getStockLevelsResponseSuccess)
+
+export const getGetStockLevelsUrl = (params?: GetStockLevelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stock/levels?${stringifiedParams}` : `/api/stock/levels`
+}
+
+export const getStockLevels = async (params?: GetStockLevelsParams, options?: Parameters<typeof http>[1]): Promise<getStockLevelsResponse> => {
+
+  return http<getStockLevelsResponse>(getGetStockLevelsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStockLevelsQueryKey = (params?: GetStockLevelsParams,) => {
+    return [
+    `/api/stock/levels`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetStockLevelsQueryOptions = <TData = Awaited<ReturnType<typeof getStockLevels>>, TError = unknown>(params?: GetStockLevelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStockLevelsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStockLevels>>> = ({ signal }) => getStockLevels(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStockLevelsQueryResult = NonNullable<Awaited<ReturnType<typeof getStockLevels>>>
+export type GetStockLevelsQueryError = unknown
+
+
+export function useGetStockLevels<TData = Awaited<ReturnType<typeof getStockLevels>>, TError = unknown>(
+ params: undefined |  GetStockLevelsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockLevels>>,
+          TError,
+          Awaited<ReturnType<typeof getStockLevels>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockLevels<TData = Awaited<ReturnType<typeof getStockLevels>>, TError = unknown>(
+ params?: GetStockLevelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockLevels>>,
+          TError,
+          Awaited<ReturnType<typeof getStockLevels>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockLevels<TData = Awaited<ReturnType<typeof getStockLevels>>, TError = unknown>(
+ params?: GetStockLevelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetStockLevels<TData = Awaited<ReturnType<typeof getStockLevels>>, TError = unknown>(
+ params?: GetStockLevelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockLevels>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStockLevelsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listStockDocumentsResponse200 = {
+  data: StockDocumentDto[]
+  status: 200
+}
+
+export type listStockDocumentsResponseSuccess = (listStockDocumentsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listStockDocumentsResponse = (listStockDocumentsResponseSuccess)
+
+export const getListStockDocumentsUrl = (params?: ListStockDocumentsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stock/documents?${stringifiedParams}` : `/api/stock/documents`
+}
+
+export const listStockDocuments = async (params?: ListStockDocumentsParams, options?: Parameters<typeof http>[1]): Promise<listStockDocumentsResponse> => {
+
+  return http<listStockDocumentsResponse>(getListStockDocumentsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStockDocumentsQueryKey = (params?: ListStockDocumentsParams,) => {
+    return [
+    `/api/stock/documents`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStockDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof listStockDocuments>>, TError = unknown>(params?: ListStockDocumentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStockDocumentsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStockDocuments>>> = ({ signal }) => listStockDocuments(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStockDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof listStockDocuments>>>
+export type ListStockDocumentsQueryError = unknown
+
+
+export function useListStockDocuments<TData = Awaited<ReturnType<typeof listStockDocuments>>, TError = unknown>(
+ params: undefined |  ListStockDocumentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockDocuments>>,
+          TError,
+          Awaited<ReturnType<typeof listStockDocuments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockDocuments<TData = Awaited<ReturnType<typeof listStockDocuments>>, TError = unknown>(
+ params?: ListStockDocumentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockDocuments>>,
+          TError,
+          Awaited<ReturnType<typeof listStockDocuments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockDocuments<TData = Awaited<ReturnType<typeof listStockDocuments>>, TError = unknown>(
+ params?: ListStockDocumentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListStockDocuments<TData = Awaited<ReturnType<typeof listStockDocuments>>, TError = unknown>(
+ params?: ListStockDocumentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockDocuments>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStockDocumentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type saveStockDocumentResponse200 = {
+  data: StockDocumentDto
+  status: 200
+}
+
+export type saveStockDocumentResponseSuccess = (saveStockDocumentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type saveStockDocumentResponse = (saveStockDocumentResponseSuccess)
+
+export const getSaveStockDocumentUrl = () => {
+
+
+
+
+  return `/api/stock/documents`
+}
+
+export const saveStockDocument = async (saveStockDocumentRequest: SaveStockDocumentRequest, options?: Parameters<typeof http>[1]): Promise<saveStockDocumentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<saveStockDocumentResponse>(getSaveStockDocumentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveStockDocumentRequest)
+  }
+);}
+
+
+
+
+
+export const getSaveStockDocumentMutationKey = () => ['saveStockDocument'] as const;
+
+export const getSaveStockDocumentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveStockDocument>>, TError,SaveStockDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveStockDocument>>, TError,SaveStockDocumentMutationVariables, TContext> => {
+
+const mutationKey = getSaveStockDocumentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveStockDocument>>, SaveStockDocumentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveStockDocument(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveStockDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof saveStockDocument>>>
+    export type SaveStockDocumentMutationBody = SaveStockDocumentRequest
+    export type SaveStockDocumentMutationError = unknown
+    export type SaveStockDocumentMutationVariables = {data: SaveStockDocumentRequest}
+
+    export const useSaveStockDocument = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveStockDocument>>, TError,SaveStockDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveStockDocument>>,
+        TError,
+        SaveStockDocumentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveStockDocumentMutationOptions(options), queryClient);
+    }
+
+export type getStockDocumentResponse200 = {
+  data: StockDocumentDto
+  status: 200
+}
+
+export type getStockDocumentResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getStockDocumentResponseSuccess = (getStockDocumentResponse200) & {
+  headers: Headers;
+};
+export type getStockDocumentResponseError = (getStockDocumentResponse404) & {
+  headers: Headers;
+};
+
+export type getStockDocumentResponse = (getStockDocumentResponseSuccess | getStockDocumentResponseError)
+
+export const getGetStockDocumentUrl = (id: string,) => {
+
+
+
+
+  return `/api/stock/documents/${id}`
+}
+
+export const getStockDocument = async (id: string, options?: Parameters<typeof http>[1]): Promise<getStockDocumentResponse> => {
+
+  return http<getStockDocumentResponse>(getGetStockDocumentUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStockDocumentQueryKey = (id: string,) => {
+    return [
+    `/api/stock/documents/${id}`
+    ] as const;
+    }
+
+
+export const getGetStockDocumentQueryOptions = <TData = Awaited<ReturnType<typeof getStockDocument>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStockDocumentQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStockDocument>>> = ({ signal }) => getStockDocument(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStockDocumentQueryResult = NonNullable<Awaited<ReturnType<typeof getStockDocument>>>
+export type GetStockDocumentQueryError = void
+
+
+export function useGetStockDocument<TData = Awaited<ReturnType<typeof getStockDocument>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockDocument>>,
+          TError,
+          Awaited<ReturnType<typeof getStockDocument>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockDocument<TData = Awaited<ReturnType<typeof getStockDocument>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockDocument>>,
+          TError,
+          Awaited<ReturnType<typeof getStockDocument>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockDocument<TData = Awaited<ReturnType<typeof getStockDocument>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetStockDocument<TData = Awaited<ReturnType<typeof getStockDocument>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockDocument>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStockDocumentQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type deleteStockDocumentResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteStockDocumentResponseSuccess = (deleteStockDocumentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteStockDocumentResponse = (deleteStockDocumentResponseSuccess)
+
+export const getDeleteStockDocumentUrl = (id: string,) => {
+
+
+
+
+  return `/api/stock/documents/${id}`
+}
+
+export const deleteStockDocument = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteStockDocumentResponse> => {
+
+  return http<deleteStockDocumentResponse>(getDeleteStockDocumentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteStockDocumentMutationKey = () => ['deleteStockDocument'] as const;
+
+export const getDeleteStockDocumentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStockDocument>>, TError,DeleteStockDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStockDocument>>, TError,DeleteStockDocumentMutationVariables, TContext> => {
+
+const mutationKey = getDeleteStockDocumentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStockDocument>>, DeleteStockDocumentMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteStockDocument(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStockDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStockDocument>>>
+
+    export type DeleteStockDocumentMutationError = unknown
+    export type DeleteStockDocumentMutationVariables = {id: string}
+
+    export const useDeleteStockDocument = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStockDocument>>, TError,DeleteStockDocumentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStockDocument>>,
+        TError,
+        DeleteStockDocumentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteStockDocumentMutationOptions(options), queryClient);
+    }
+
 export type listExchangeRatesResponse200 = {
   data: CurrencyRateDto[]
   status: 200
@@ -8931,6 +10005,86 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getImportProductsMutationOptions(options), queryClient);
+    }
+
+export type importOpeningStockResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importOpeningStockResponseSuccess = (importOpeningStockResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importOpeningStockResponse = (importOpeningStockResponseSuccess)
+
+export const getImportOpeningStockUrl = () => {
+
+
+
+
+  return `/api/import/opening-stock`
+}
+
+export const importOpeningStock = async ( options?: Parameters<typeof http>[1]): Promise<importOpeningStockResponse> => {
+
+  return http<importOpeningStockResponse>(getImportOpeningStockUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportOpeningStockMutationKey = () => ['importOpeningStock'] as const;
+
+export const getImportOpeningStockMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importOpeningStock>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importOpeningStock>>, TError,void, TContext> => {
+
+const mutationKey = getImportOpeningStockMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importOpeningStock>>, void> = () => {
+
+
+          return  importOpeningStock(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportOpeningStockMutationResult = NonNullable<Awaited<ReturnType<typeof importOpeningStock>>>
+
+    export type ImportOpeningStockMutationError = unknown
+
+
+    export const useImportOpeningStock = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importOpeningStock>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importOpeningStock>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportOpeningStockMutationOptions(options), queryClient);
     }
 
 export type importExchangeRatesResponse200 = {

@@ -40,4 +40,6 @@ export interface DocumentDto {
   /** @nullable */
   issuedAt?: string | null;
   immutable?: boolean;
+  /** @nullable */
+  warehouseId?: string | null;
 }

@@ -23,4 +23,6 @@ export interface DocumentInput {
   memo: string | null;
   discountPercent: number;
   lines: DocumentLineInput[];
+  /** @nullable */
+  warehouseId?: string | null;
 }

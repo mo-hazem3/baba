@@ -17,4 +17,7 @@ export const AccountRole = {
   ExchangeDifference: 'ExchangeDifference',
   TaxPayable: 'TaxPayable',
   TaxReceivable: 'TaxReceivable',
+  Inventory: 'Inventory',
+  CostOfSales: 'CostOfSales',
+  InventoryAdjustment: 'InventoryAdjustment',
 } as const;

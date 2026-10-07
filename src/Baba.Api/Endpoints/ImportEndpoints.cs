@@ -34,6 +34,11 @@ public static class ImportEndpoints
             .Produces<ImportResult>()
             .WithName("ImportProducts");
 
+        import.MapPut("/opening-stock", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
+                await service.ImportOpeningStockAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
+            .Produces<ImportResult>()
+            .WithName("ImportOpeningStock");
+
         import.MapPut("/exchange-rates", async (HttpRequest request, ListImportService service, CancellationToken ct) =>
                 await service.ImportExchangeRatesAsync(request.Headers["X-File-Name"].ToString(), await ReadBodyAsync(request, ct), ct))
             .Produces<ImportResult>()

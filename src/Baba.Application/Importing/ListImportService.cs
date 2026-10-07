@@ -1,8 +1,10 @@
 using Baba.Application.Accounting;
 using Baba.Application.Companies;
+using Baba.Application.Inventory;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Inventory;
 using Baba.Localization;
 
 namespace Baba.Application.Importing;
@@ -21,11 +23,13 @@ public sealed class ListImportService(
     ProductService products,
     ExchangeRateService rates,
     VoucherService vouchers,
+    StockDocumentService stockDocuments,
+    WarehouseService warehouses,
     ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Products
 
-    /// <summary>Columns: code, name (English), name (Arabic), unit, sale price, purchase price, revenue account, expense account, tax code. Only one name is needed.</summary>
+    /// <summary>Columns: code, name (English), name (Arabic), unit, sale price, purchase price, revenue account, expense account, tax code, stock item (yes or no), barcode, reorder level. Only one name is needed.</summary>
     public async Task<ImportResult> ImportProductsAsync(string fileName, byte[] content, CancellationToken cancellationToken = default)
     {
         if (!TryRead(fileName, content, out var rows))
@@ -44,6 +48,9 @@ public sealed class ListImportService(
         int salesAccount = ImportParsing.FindColumn(header, "revenue account", "sales account", "income account", "حساب الايراد", "حساب الإيراد", "حساب المبيعات");
         int purchaseAccount = ImportParsing.FindColumn(header, "expense account", "purchase account", "حساب المصروف", "حساب المشتريات");
         int taxColumn = ImportParsing.FindColumn(header, "tax code", "tax", "vat code", "رمز الضريبة", "الضريبة");
+        int stockColumn = ImportParsing.FindColumn(header, "stock item", "stock", "inventory item", "صنف مخزون", "مخزون");
+        int barcodeColumn = ImportParsing.FindColumn(header, "barcode", "الباركود");
+        int reorderColumn = ImportParsing.FindColumn(header, "reorder level", "reorder", "min stock", "حد إعادة الطلب", "حدّ إعادة الطلب");
 
         var chart = (await accounts.ListAsync(cancellationToken)).Where(a => a.IsPosting).ToDictionary(a => a.Code, StringComparer.OrdinalIgnoreCase);
         var codes = (await taxes.ListAsync(cancellationToken)).ToDictionary(c => c.Code, StringComparer.OrdinalIgnoreCase); // asking makes sure the country's codes exist
@@ -111,8 +118,22 @@ public sealed class ListImportService(
                     issues.Add(new(line, "product.tax-code-unknown"));
             }
 
+            var stockText = ImportParsing.Cell(row, stockColumn).ToLowerInvariant();
+            var isStockItem = stockText is "yes" or "y" or "true" or "1" or "نعم";
+            var reorderText = ImportParsing.Cell(row, reorderColumn);
+            decimal reorderLevel = 0;
+            if (reorderText.Length > 0)
+            {
+                if (ImportParsing.ParseAmount(reorderText) is { } level)
+                    reorderLevel = level;
+                else
+                    issues.Add(new(line, "product.reorder-invalid"));
+            }
+
             if (issues.Count == rowIssues)
-                pending.Add(new ProductInput(productCode, arabic, english, Clean(ImportParsing.Cell(row, unit)), salePrice, purchasePrice, salesAccountId, purchaseAccountId, taxCodeId));
+                pending.Add(new ProductInput(
+                    productCode, arabic, english, Clean(ImportParsing.Cell(row, unit)), salePrice, purchasePrice, salesAccountId, purchaseAccountId, taxCodeId,
+                    isStockItem, Clean(ImportParsing.Cell(row, barcodeColumn)), reorderLevel));
         }
 
         if (issues.Count > 0)
@@ -142,6 +163,92 @@ public sealed class ListImportService(
             .Select(c => int.TryParse(new string(c.SkipWhile(ch => !char.IsDigit(ch)).ToArray()), out var n) ? n : 0)
             .DefaultIfEmpty(0).Max();
         return $"P{highest + 1:000}";
+    }
+
+    // ---------------------------------------------------------------- Opening stock
+
+    /// <summary>
+    /// Columns: product code (or barcode), warehouse code (empty for the default warehouse), quantity, cost per unit. The whole file is one
+    /// opening-stock document dated the day before the books start; the products must be stock items.
+    /// </summary>
+    public async Task<ImportResult> ImportOpeningStockAsync(string fileName, byte[] content, CancellationToken cancellationToken = default)
+    {
+        var company = files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
+        if (!TryRead(fileName, content, out var rows))
+            return Fail("import.unreadable");
+
+        var header = FindHeader(rows, out var headerIndex, "product code", "product", "item code", "code", "barcode", "رمز الصنف", "الصنف", "الرمز", "الباركود");
+        if (header is null)
+            return Fail("opening-stock.product-column-missing");
+
+        int productColumn = ImportParsing.FindColumn(header, "product code", "product", "item code", "code", "رمز الصنف", "الصنف", "الرمز");
+        int barcodeColumn = ImportParsing.FindColumn(header, "barcode", "الباركود");
+        int warehouseColumn = ImportParsing.FindColumn(header, "warehouse code", "warehouse", "رمز المستودع", "المستودع");
+        int quantityColumn = ImportParsing.FindColumn(header, "quantity", "qty", "الكمية");
+        int costColumn = ImportParsing.FindColumn(header, "unit cost", "cost", "cost per unit", "تكلفة الوحدة", "التكلفة");
+
+        var productList = await products.ListAsync(cancellationToken);
+        var byCode = productList.ToDictionary(p => p.Code, StringComparer.OrdinalIgnoreCase);
+        var byBarcode = productList.Where(p => p.Barcode is not null).ToDictionary(p => p.Barcode!, StringComparer.OrdinalIgnoreCase);
+        var warehouseList = (await warehouses.ListAsync(cancellationToken)).Where(w => w.IsActive).ToList();
+        var defaultWarehouse = warehouseList.FirstOrDefault(w => w.IsDefault) ?? warehouseList.FirstOrDefault();
+
+        var pending = new List<StockLineInput>();
+        var issues = new List<ImportIssue>();
+        for (var i = headerIndex + 1; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.All(string.IsNullOrWhiteSpace))
+                continue;
+
+            var rowIssues = issues.Count;
+            var line = i + 1;
+            var codeText = ImportParsing.Cell(row, productColumn);
+            var barcodeText = ImportParsing.Cell(row, barcodeColumn);
+            ProductDto? product = null;
+            if (!(codeText.Length > 0 && byCode.TryGetValue(codeText, out product)) && !(barcodeText.Length > 0 && byBarcode.TryGetValue(barcodeText, out product)))
+                issues.Add(new(line, "opening-stock.product-unknown"));
+            else if (!product!.IsStockItem)
+                issues.Add(new(line, "opening-stock.product-not-stock"));
+
+            var warehouseText = ImportParsing.Cell(row, warehouseColumn);
+            var warehouse = warehouseText.Length == 0 ? defaultWarehouse : warehouseList.FirstOrDefault(w => string.Equals(w.Code, warehouseText, StringComparison.OrdinalIgnoreCase));
+            if (warehouse is null)
+                issues.Add(new(line, "opening-stock.warehouse-unknown"));
+
+            if (ImportParsing.ParseAmount(ImportParsing.Cell(row, quantityColumn)) is not > 0)
+                issues.Add(new(line, "opening-stock.quantity-invalid"));
+
+            decimal? cost = null;
+            var costText = ImportParsing.Cell(row, costColumn);
+            if (costText.Length > 0)
+            {
+                if (ImportParsing.ParseAmount(costText) is { } parsedCost and >= 0)
+                    cost = parsedCost;
+                else
+                    issues.Add(new(line, "opening-stock.cost-invalid"));
+            }
+
+            if (issues.Count == rowIssues)
+                pending.Add(new StockLineInput(product!.Id, warehouse!.Id, null, ImportParsing.ParseAmount(ImportParsing.Cell(row, quantityColumn))!.Value, cost));
+        }
+
+        if (issues.Count > 0)
+            return new ImportResult(0, 0, issues);
+        if (pending.Count == 0)
+            return Fail("import.empty");
+
+        var day = new DateOnly(company.FirstFiscalYear, company.FiscalYearStartMonth, 1).AddDays(-1);
+        try
+        {
+            await stockDocuments.SaveAsync(null, new StockDocumentInput(StockDocumentKind.Opening, day, null, null, pending), cancellationToken);
+        }
+        catch (ValidationException e)
+        {
+            return new ImportResult(0, 0, [.. e.Issues.Select(x => new ImportIssue(0, x.Code))]);
+        }
+
+        return new ImportResult(pending.Count, 0, []);
     }
 
     // ---------------------------------------------------------------- Exchange rates

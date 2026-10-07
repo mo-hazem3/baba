@@ -20,4 +20,6 @@ export const VoucherKind = {
   PurchaseInvoice: 'PurchaseInvoice',
   PurchaseDebitNote: 'PurchaseDebitNote',
   FxSettlement: 'FxSettlement',
+  StockCost: 'StockCost',
+  StockAdjustment: 'StockAdjustment',
 } as const;

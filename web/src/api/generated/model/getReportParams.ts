@@ -8,6 +8,7 @@ import type { Comparison } from './comparison';
 import type { DocumentKind } from './documentKind';
 import type { DocumentStatus } from './documentStatus';
 import type { PartyKind } from './partyKind';
+import type { StockDocumentKind } from './stockDocumentKind';
 import type { VoucherKind } from './voucherKind';
 import type { VoucherStatus } from './voucherStatus';
 
@@ -24,4 +25,7 @@ CostCenterId?: string;
 DocumentKind?: DocumentKind;
 DocumentStatus?: DocumentStatus;
 PartyKind?: PartyKind;
+ProductId?: string;
+WarehouseId?: string;
+StockDocumentKind?: StockDocumentKind;
 };

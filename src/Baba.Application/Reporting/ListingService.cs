@@ -76,6 +76,7 @@ public sealed class ListingService(
             [
                 new(p.Code), new(p.NameEn, p.NameAr), new(p.Unit), new(Amount: p.SalePrice), new(Amount: p.PurchasePrice),
                 p.TaxCodeId is { } id && codes.TryGetValue(id, out var c) ? new(c.Code) : ReportCell.Blank, Active(p.IsActive),
+                p.IsStockItem ? new("Yes", "نعم") : ReportCell.Blank, new(p.Barcode), p.IsStockItem ? new(Amount: p.ReorderLevel) : ReportCell.Blank,
             ],
             0, RowStyle.Normal)).ToList();
         return Table("products", ("Products and services", "الأصناف والخدمات"), ($"{list.Count} items", $"{list.Count} صنفاً"),
@@ -83,6 +84,7 @@ public sealed class ListingService(
                 Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("unit", ColumnKind.Text, "Unit", "الوحدة"),
                 Column("sale", ColumnKind.Amount, "Sale price", "سعر البيع"), Column("purchase", ColumnKind.Amount, "Purchase price", "سعر الشراء"),
                 Column("tax", ColumnKind.Text, "Tax code", "رمز الضريبة"), Column("status", ColumnKind.Text, "Status", "الحالة"),
+                Column("stock", ColumnKind.Text, "Stock item", "صنف مخزون"), Column("barcode", ColumnKind.Text, "Barcode", "الباركود"), Column("reorder", ColumnKind.Amount, "Reorder level", "حد إعادة الطلب"),
             ], rows);
     }
 

@@ -19,4 +19,12 @@ export interface ProductInput {
   purchaseAccountId: string | null;
   /** @nullable */
   taxCodeId?: string | null;
+  isStockItem?: boolean;
+  /** @nullable */
+  barcode?: string | null;
+  reorderLevel?: number;
+  /** @nullable */
+  inventoryAccountId?: string | null;
+  /** @nullable */
+  costOfSalesAccountId?: string | null;
 }
