@@ -1,9 +1,11 @@
 using Baba.Application.Accounting;
+using Baba.Application.Assets;
 using Baba.Application.Companies;
 using Baba.Application.Inventory;
 using Baba.Application.Trade;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Assets;
 using Baba.Domain.Inventory;
 using Baba.Localization;
 
@@ -25,6 +27,7 @@ public sealed class ListImportService(
     VoucherService vouchers,
     StockDocumentService stockDocuments,
     WarehouseService warehouses,
+    AssetService assets,
     ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Products
@@ -249,6 +252,133 @@ public sealed class ListImportService(
         }
 
         return new ImportResult(pending.Count, 0, []);
+    }
+
+    // ---------------------------------------------------------------- Fixed assets
+
+    /// <summary>
+    /// Columns: code, name (English), name (Arabic), type (fixed or intangible), acquisition date, cost, salvage value, useful life in
+    /// months, method (straight line or declining balance), yearly rate in percent (declining balance), asset account, accumulated
+    /// depreciation account, depreciation expense account, depreciation so far, depreciated through (a date in the last month already done).
+    /// </summary>
+    public async Task<ImportResult> ImportAssetsAsync(string fileName, byte[] content, CancellationToken cancellationToken = default)
+    {
+        if (!TryRead(fileName, content, out var rows))
+            return Fail("import.unreadable");
+
+        var header = FindHeader(rows, out var headerIndex, "cost", "التكلفة");
+        if (header is null)
+            return Fail("assets.cost-column-missing");
+
+        int code = ImportParsing.FindColumn(header, "code", "asset code", "الرمز");
+        int nameEn = ImportParsing.FindColumn(header, "name", "name en", "english name", "name (english)", "الاسم بالانجليزية", "الاسم (بالانجليزية)", "الاسم (بالإنجليزية)");
+        int nameAr = ImportParsing.FindColumn(header, "name ar", "arabic name", "name (arabic)", "الاسم", "الاسم بالعربية", "الاسم (بالعربية)");
+        int kind = ImportParsing.FindColumn(header, "type", "kind", "النوع");
+        int acquired = ImportParsing.FindColumn(header, "acquisition date", "acquired", "date", "تاريخ الاقتناء", "التاريخ");
+        int cost = ImportParsing.FindColumn(header, "cost", "التكلفة");
+        int salvage = ImportParsing.FindColumn(header, "salvage value", "salvage", "residual value", "القيمة المتبقية");
+        int life = ImportParsing.FindColumn(header, "useful life (months)", "useful life", "life (months)", "life", "العمر الإنتاجي (بالأشهر)", "العمر الإنتاجي");
+        int method = ImportParsing.FindColumn(header, "method", "depreciation method", "الطريقة", "طريقة الإهلاك");
+        int rate = ImportParsing.FindColumn(header, "annual rate (%)", "annual rate", "rate", "المعدل السنوي", "المعدل");
+        int assetAccount = ImportParsing.FindColumn(header, "asset account", "حساب الأصل");
+        int accumulatedAccount = ImportParsing.FindColumn(header, "accumulated depreciation account", "accumulated account", "حساب مجمع الإهلاك");
+        int expenseAccount = ImportParsing.FindColumn(header, "depreciation expense account", "expense account", "حساب مصروف الإهلاك");
+        int opening = ImportParsing.FindColumn(header, "depreciation so far", "accumulated depreciation", "opening depreciation", "الإهلاك المتراكم");
+        int through = ImportParsing.FindColumn(header, "depreciated through", "depreciated until", "مهلك حتى");
+
+        var chart = (await accounts.ListAsync(cancellationToken)).Where(a => a.IsPosting).ToDictionary(a => a.Code, StringComparer.OrdinalIgnoreCase);
+        var pending = new List<AssetInput>();
+        var issues = new List<ImportIssue>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (var i = headerIndex + 1; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.All(string.IsNullOrWhiteSpace))
+                continue;
+
+            var rowIssues = issues.Count;
+            var line = i + 1;
+            var assetCode = ImportParsing.Cell(row, code);
+            if (assetCode.Length > 0 && !seen.Add(assetCode))
+                issues.Add(new(line, "asset.code-duplicate"));
+
+            decimal Number(int column, string problem, decimal fallback = 0)
+            {
+                var text = ImportParsing.Cell(row, column);
+                if (text.Length == 0)
+                    return fallback;
+                if (ImportParsing.ParseAmount(text) is { } value)
+                    return value;
+                issues.Add(new(line, problem));
+                return fallback;
+            }
+
+            Guid? Account(int column)
+            {
+                var text = ImportParsing.Cell(row, column);
+                if (text.Length == 0)
+                    return null;
+                if (chart.TryGetValue(text, out var account))
+                    return account.Id;
+                issues.Add(new(line, "asset.account-unknown"));
+                return null;
+            }
+
+            var date = ImportParsing.ParseDate(ImportParsing.Cell(row, acquired));
+            if (date is null)
+                issues.Add(new(line, "asset.date-required"));
+
+            var kindText = ImportParsing.Cell(row, kind).ToLowerInvariant();
+            var assetKind = kindText is "intangible" or "أصل غير ملموس" or "غير ملموس" ? AssetKind.Intangible : AssetKind.Tangible;
+            var methodText = ImportParsing.Cell(row, method).ToLowerInvariant();
+            var depreciation = methodText.Contains("declin") || methodText.Contains("متناقص") ? DepreciationMethod.DecliningBalance : DepreciationMethod.StraightLine;
+
+            DateOnly? doneThrough = null;
+            var throughText = ImportParsing.Cell(row, through);
+            if (throughText.Length > 0)
+            {
+                doneThrough = ImportParsing.ParseDate(throughText);
+                if (doneThrough is null)
+                    issues.Add(new(line, "date.invalid"));
+            }
+
+            var costValue = Number(cost, "asset.cost-invalid");
+            var salvageValue = Number(salvage, "asset.salvage-invalid");
+            var lifeValue = (int)Number(life, "asset.life-invalid");
+            var rateValue = Number(rate, "asset.rate-invalid");
+            var openingValue = Number(opening, "asset.opening-invalid");
+            var assetAccountId = Account(assetAccount);
+            var accumulatedId = Account(accumulatedAccount);
+            var expenseId = Account(expenseAccount);
+
+            if (issues.Count == rowIssues)
+            {
+                pending.Add(new AssetInput(
+                    assetCode, ImportParsing.Cell(row, nameAr), ImportParsing.Cell(row, nameEn), assetKind, date!.Value, costValue, salvageValue, lifeValue,
+                    depreciation, rateValue, assetAccountId, accumulatedId, expenseId, null, openingValue, doneThrough));
+            }
+        }
+
+        if (issues.Count > 0)
+            return new ImportResult(0, 0, issues);
+        if (pending.Count == 0)
+            return Fail("import.empty");
+
+        var created = new List<Guid>();
+        try
+        {
+            foreach (var input in pending)
+                created.Add((await assets.CreateAsync(input, cancellationToken)).Id);
+        }
+        catch (ValidationException e)
+        {
+            foreach (var id in created)
+                await assets.DeleteAsync(id, CancellationToken.None); // nothing half-imported is left behind
+            return new ImportResult(0, 0, [.. e.Issues.Select(x => new ImportIssue(created.Count + 1 + headerIndex + 1, x.Code))]);
+        }
+
+        return new ImportResult(created.Count, 0, []);
     }
 
     // ---------------------------------------------------------------- Exchange rates

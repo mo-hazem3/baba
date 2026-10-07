@@ -3413,6 +3413,26 @@
         }
       }
     },
+    "/api/import/assets": {
+      "put": {
+        "tags": [
+          "Import"
+        ],
+        "operationId": "ImportAssets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/import/exchange-rates": {
       "put": {
         "tags": [

@@ -1,5 +1,6 @@
 using Baba.Application.Accounting;
 using Baba.Application.Assets;
+using Baba.Application.Importing;
 using Baba.Domain.Accounting;
 using Baba.Domain.Assets;
 
@@ -226,5 +227,53 @@ public class AssetTests : AccountingFixture
 
         await BuyAsync(e, 300m, EndOf(2)); // an asset bought but not entered in the register
         Assert.Contains(await e.Listings.AssetRegisterAsync(EndOf(2)) is { } r ? r.Checks : [], c => !c.Passed);
+    }
+
+    // ------------------------------------------------------------------ Excel and CSV
+
+    private static ListImportService Importer(Env e) => new(
+        new Baba.Infrastructure.Printing.TabularReader(), new Baba.Infrastructure.Accounting.AccountStore(e.Files), new Baba.Infrastructure.Accounting.PartyStore(e.Files),
+        new Baba.Infrastructure.Accounting.CostCenterStore(e.Files), e.Tax, e.Products, e.Rates, e.Vouchers, e.StockDocs, e.Warehouses, e.FixedAssets, e.Files);
+
+    [Fact]
+    public async Task Assets_import_with_their_accounts_and_depreciation_so_far_and_are_listed_with_the_same_columns()
+    {
+        var e = await NewEnvAsync();
+        var csv = "Code,Name,Type,Acquisition date,Cost,Salvage value,Useful life (months),Method,Annual rate (%),Asset account,Depreciation so far,Depreciated through\n"
+            + "A1,Laptop,Fixed asset,2025-07-01,1200,0,12,Straight line,,121,500,2025-12-15\n"
+            + "A2,Licence,Intangible,2026-01-10,600,0,,Declining balance,20,121,,\n";
+
+        var result = await Importer(e).ImportAssetsAsync("assets.csv", System.Text.Encoding.UTF8.GetBytes(csv));
+
+        Assert.Empty(result.Issues);
+        Assert.Equal(2, result.Imported);
+        var laptop = (await e.FixedAssets.ListAsync()).Single(a => a.Code == "A1");
+        Assert.Equal(500m, laptop.Accumulated);
+        Assert.Equal(new DateOnly(2025, 12, 1), laptop.DepreciatedThrough);
+        Assert.Equal(e.Id("123"), laptop.AccumulatedAccountId); // the default for the special use
+        Assert.Equal(AssetKind.Intangible, (await e.FixedAssets.ListAsync()).Single(a => a.Code == "A2").Kind);
+
+        var listing = await e.Listings.AssetsAsync();
+        Assert.Equal("Depreciation so far", listing.Columns[12].TitleEn);
+        Assert.Equal(2, listing.Rows.Count);
+    }
+
+    [Fact]
+    public async Task One_wrong_asset_row_imports_nothing_and_every_wrong_row_is_named()
+    {
+        var e = await NewEnvAsync();
+        var csv = "Code,Name,Acquisition date,Cost,Useful life (months),Asset account\n"
+            + "A1,Fine,2026-01-01,100,12,121\n"
+            + "A1,Twice,2026-01-01,100,12,121\n"
+            + "A3,Bad date,notadate,100,12,121\n"
+            + "A4,Bad account,2026-01-01,100,12,9999\n";
+
+        var result = await Importer(e).ImportAssetsAsync("assets.csv", System.Text.Encoding.UTF8.GetBytes(csv));
+
+        Assert.Equal(0, result.Imported);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(3, "asset.code-duplicate"), result.Issues);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(4, "asset.date-required"), result.Issues);
+        Assert.Contains(new Baba.Application.Importing.ImportIssue(5, "asset.account-unknown"), result.Issues);
+        Assert.Empty(await e.FixedAssets.ListAsync());
     }
 }

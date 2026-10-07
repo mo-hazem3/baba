@@ -204,6 +204,35 @@ public sealed class ListingService(
             ], rows) with { Checks = checks };
     }
 
+    /// <summary>The asset list with everything an import needs, so an export can be corrected in Excel and brought back.</summary>
+    public async Task<ReportResult> AssetsAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await assets.ListAsync(cancellationToken);
+        var chart = (await accounts.ListAsync(cancellationToken)).ToDictionary(a => a.Id);
+        string CodeOf(Guid id) => chart.TryGetValue(id, out var a) ? a.Code : "";
+        var rows = list.Select(a =>
+        {
+            var kind = a.Kind == AssetKind.Tangible ? ("Fixed asset", "أصل ثابت") : ("Intangible", "أصل غير ملموس");
+            var method = a.Method == DepreciationMethod.StraightLine ? ("Straight line", "قسط ثابت") : ("Declining balance", "قسط متناقص");
+            return new ReportRow(
+                [
+                    new(a.Code), new(a.NameEn, a.NameAr), new(kind.Item1, kind.Item2), new(Date: a.AcquisitionDate), new(Amount: a.Cost), new(Amount: a.Salvage),
+                    new(a.UsefulLifeMonths.ToString(Invariant)), new(method.Item1, method.Item2), new(Amount: a.AnnualRate), new(CodeOf(a.AssetAccountId)),
+                    new(CodeOf(a.AccumulatedAccountId)), new(CodeOf(a.ExpenseAccountId)), new(Amount: a.Accumulated), a.Status == AssetStatus.Disposed ? new("Disposed", "مستبعد") : new("In use", "قيد الاستخدام"),
+                ],
+                0, RowStyle.Normal);
+        }).ToList();
+        return Table("assets", ("Fixed assets", "الأصول الثابتة"), ($"{list.Count} assets", $"{list.Count} أصلاً"),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("kind", ColumnKind.Text, "Type", "النوع"),
+                Column("acquired", ColumnKind.Date, "Acquisition date", "تاريخ الاقتناء"), Column("cost", ColumnKind.Amount, "Cost", "التكلفة"), Column("salvage", ColumnKind.Amount, "Salvage value", "القيمة المتبقية"),
+                Column("life", ColumnKind.Text, "Useful life (months)", "العمر الإنتاجي (بالأشهر)"), Column("method", ColumnKind.Text, "Method", "الطريقة"), Column("rate", ColumnKind.Amount, "Annual rate (%)", "المعدل السنوي"),
+                Column("assetAccount", ColumnKind.Text, "Asset account", "حساب الأصل"), Column("accumulatedAccount", ColumnKind.Text, "Accumulated depreciation account", "حساب مجمع الإهلاك"),
+                Column("expenseAccount", ColumnKind.Text, "Depreciation expense account", "حساب مصروف الإهلاك"), Column("accumulated", ColumnKind.Amount, "Depreciation so far", "الإهلاك المتراكم"),
+                Column("status", ColumnKind.Text, "Status", "الحالة"),
+            ], rows);
+    }
+
     // ---------------------------------------------------------------- Stock
 
     /// <summary>

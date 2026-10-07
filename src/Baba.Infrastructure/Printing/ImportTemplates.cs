@@ -16,6 +16,7 @@ public sealed class ImportTemplates : IImportTemplates
         ["parties"] = (["Code", "Name", "Name (Arabic)", "Phone", "Email", "Address", "Tax number", "Credit limit", "Payment terms"], ["", "Gulf Traders", "الخليج للتجارة", "+965 5555 1111", "", "", "", "1500", "30"]),
         ["statement"] = (["Date", "Description", "Amount"], ["2026-10-06", "Transfer from customer", "1250.500"]),
         ["products"] = (["Code", "Name", "Name (Arabic)", "Unit", "Sale price", "Purchase price", "Revenue account", "Expense account", "Tax code", "Stock item", "Barcode", "Reorder level"], ["P001", "Consulting hour", "ساعة استشارة", "hour", "90", "", "512", "", "", "no", "", ""]),
+        ["assets"] = (["Code", "Name", "Name (Arabic)", "Type", "Acquisition date", "Cost", "Salvage value", "Useful life (months)", "Method", "Annual rate (%)", "Asset account", "Accumulated depreciation account", "Depreciation expense account", "Depreciation so far", "Depreciated through"], ["A001", "Laptop", "حاسوب محمول", "Fixed asset", "2026-01-15", "1200", "0", "36", "Straight line", "", "121", "123", "426", "0", ""]),
         ["opening-stock"] = (["Product code", "Warehouse code", "Quantity", "Unit cost"], ["P001", "MAIN", "10", "25.5"]),
         ["exchange-rates"] = (["Currency", "Date", "Rate"], ["USD", "2026-10-01", "0.3075"]),
         ["journal"] = (["Entry", "Date", "Account", "Debit", "Credit", "Description", "Customer", "Cost center"], ["1", "2026-10-02", "111", "500", "", "Cash in", "", ""]),
