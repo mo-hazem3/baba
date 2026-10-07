@@ -27,7 +27,7 @@ export function ReportTable({ report }: { report: ReportResult }) {
     title: language === 'ar' ? column.titleAr : column.titleEn,
     align: column.kind === 'Amount' ? 'end' : 'start',
     // Names need room (they are indented by level); amounts line up in equal columns. The table scrolls inside its box if the screen is narrow.
-    width: column.kind === 'Amount' ? 112 : column.key === 'name' ? 240 : column.key === 'code' ? 80 : undefined,
+    width: column.kind === 'Amount' ? 108 : column.key === 'name' ? 200 : column.key === 'code' ? 80 : undefined,
     className: column.kind === 'Amount' ? 'numbers' : undefined,
     render: (_: unknown, row: ReportRow) => {
       const cell = row.cells[index]

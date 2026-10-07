@@ -22,6 +22,15 @@ public sealed class CompanyService(ICompanyFiles files, CountryPackRegistry coun
 
     public void Close() => files.Close();
 
+    /// <summary>Turns optional modules on or off (brief section 10). Core accounting is always on; nothing is deleted when a module is switched off.</summary>
+    public Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default)
+    {
+        var distinct = (modules ?? []).Distinct().ToList();
+        if (distinct.Any(m => !ModuleKeys.All.Contains(m)))
+            throw new ValidationException([new ValidationIssue("modules", "module.unknown")]);
+        return files.SetEnabledModulesAsync(ModuleKeys.All.Where(distinct.Contains).ToList(), cancellationToken);
+    }
+
     public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default) =>
         files.BackupAsync(destinationPath, cancellationToken);
 

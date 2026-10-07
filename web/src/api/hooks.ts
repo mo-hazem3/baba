@@ -9,10 +9,13 @@ import {
   useGetHostInfo,
   useGetPrintSettings,
   useListAccounts,
+  useListCostCenters,
   useListCountries,
   useListCurrencies,
+  useListParties,
   useListRecentFiles,
 } from './generated/baba'
+import type { ListPartiesParams } from './generated/model'
 
 // Thin wrappers over the generated client that hand back plain data instead of { data, status, headers }.
 
@@ -51,6 +54,16 @@ export const startupFileOnce = (): Promise<string | null> => (firstStartupCheck 
 // ---- Accounting ----
 
 export const useAccounts = () => useListAccounts({ query: { select: (r) => r.data } })
+
+export const useParties = (params?: ListPartiesParams) => useListParties(params, { query: { select: (r) => r.data } })
+
+export const useCostCenters = () => useListCostCenters({ query: { select: (r) => r.data } })
+
+/** The optional modules this company has switched on. Screens of a module that is off are not offered. */
+export const useModules = (): ReadonlySet<string> => {
+  const company = useCurrentCompany()
+  return new Set(company.data?.enabledModules ?? [])
+}
 
 export const useDashboard = () => useGetDashboard({ query: { select: (r) => r.data } })
 

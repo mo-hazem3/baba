@@ -211,6 +211,12 @@ public class CompanyServiceTests
 
         public void Close() => Current = null;
 
+        public Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default)
+        {
+            Current = Current! with { EnabledModules = modules };
+            return Task.FromResult(Current);
+        }
+
         public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

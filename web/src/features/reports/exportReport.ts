@@ -11,6 +11,8 @@ export interface ReportParams {
   Comparison?: 'None' | 'PreviousYear'
   Kind?: 'Payment' | 'Receipt' | 'Journal'
   Status?: 'Draft' | 'Posted'
+  PartyId?: string
+  CostCenterId?: string
 }
 
 /** Exports a report (or list) the way the format asks: PDF opens in the viewer, Excel and CSV are saved as files. */

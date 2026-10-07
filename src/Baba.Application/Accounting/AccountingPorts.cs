@@ -67,6 +67,24 @@ public interface IPeriodStore
 /// <summary>A total for one account in the base currency.</summary>
 public sealed record AccountTotal(Guid AccountId, decimal Debit, decimal Credit);
 
+/// <summary>What one customer or supplier has been debited and credited, in the base currency.</summary>
+public sealed record PartyTotal(Guid PartyId, decimal Debit, decimal Credit);
+
+/// <summary>One ledger entry that belongs to a customer or supplier, in the base currency.</summary>
+public sealed record PartyEntry(
+    DateOnly Date,
+    Guid VoucherId,
+    VoucherKind Kind,
+    string? VoucherNumber,
+    string? Description,
+    Guid AccountId,
+    Guid PartyId,
+    decimal Debit,
+    decimal Credit);
+
+/// <summary>A total for one account within one cost center, in the base currency.</summary>
+public sealed record CostCenterTotal(Guid CostCenterId, Guid AccountId, decimal Debit, decimal Credit);
+
 /// <summary>One ledger entry with the voucher it came from, in the base currency.</summary>
 public sealed record LedgerLine(
     DateOnly Date,
@@ -91,4 +109,16 @@ public interface ILedgerQuery
     /// <summary>The entries, in date, voucher number and position order, for some accounts (or all when null).</summary>
     Task<IReadOnlyList<LedgerLine>> LinesAsync(
         IReadOnlyCollection<Guid>? accountIds, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
+
+    /// <summary>What each customer or supplier has been debited and credited up to a date (all time when null).</summary>
+    Task<IReadOnlyList<PartyTotal>> PartyTotalsAsync(DateOnly? to, CancellationToken cancellationToken = default);
+
+    /// <summary>Every entry tagged with a party (or with one party) up to a date, in date, voucher number and position order.</summary>
+    Task<IReadOnlyList<PartyEntry>> PartyEntriesAsync(Guid? partyId, DateOnly? to, CancellationToken cancellationToken = default);
+
+    /// <summary>The totals per account of the entries tagged with one cost center, over a date range.</summary>
+    Task<IReadOnlyList<AccountTotal>> TotalsForCostCenterAsync(Guid costCenterId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
+
+    /// <summary>The totals per cost center and account over a date range, for the entries that carry a cost center.</summary>
+    Task<IReadOnlyList<CostCenterTotal>> CostCenterTotalsAsync(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }

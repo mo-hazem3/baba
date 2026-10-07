@@ -33,6 +33,12 @@ public sealed record ReportLink(string Kind, Guid Id, DateOnly? From = null, Dat
 {
     public const string Account = "account";
     public const string Voucher = "voucher";
+
+    /// <summary>A customer's or supplier's statement (the id is the party).</summary>
+    public const string Party = "party";
+
+    /// <summary>The profit and loss of one cost center (the id is the cost center).</summary>
+    public const string CostCenter = "costCenter";
 }
 
 public sealed record ReportRow(IReadOnlyList<ReportCell> Cells, int Level = 0, RowStyle Style = RowStyle.Normal, ReportLink? Link = null);

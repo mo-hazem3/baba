@@ -12,4 +12,8 @@ export interface VoucherLineDto {
   description: string | null;
   debit: number;
   credit: number;
+  /** @nullable */
+  partyId?: string | null;
+  /** @nullable */
+  costCenterId?: string | null;
 }

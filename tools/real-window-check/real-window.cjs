@@ -15,7 +15,8 @@ const path = require('node:path')
 const root = path.resolve(__dirname, '..', '..')
 const { chromium, expect } = require(path.join(root, 'web', 'node_modules', '@playwright/test'))
 
-const exe = path.join(root, 'src', 'Baba.Desktop', 'bin', 'Debug', 'net10.0-windows', 'Baba.Desktop.exe')
+// BABA_EXE points the check at another build, for example an installed copy.
+const exe = process.env.BABA_EXE ?? path.join(root, 'src', 'Baba.Desktop', 'bin', 'Debug', 'net10.0-windows', 'Baba.Desktop.exe')
 const shots = path.join(root, 'artifacts', 'real-window')
 fs.mkdirSync(shots, { recursive: true })
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'baba-real-profile-'))

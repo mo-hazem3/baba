@@ -27,6 +27,8 @@ public sealed class CompanyDbContext(
     public DbSet<Period> Periods => Set<Period>();
     public DbSet<NumberSequence> NumberSequences => Set<NumberSequence>();
     public DbSet<PrintSettings> PrintSettings => Set<PrintSettings>();
+    public DbSet<Party> Parties => Set<Party>();
+    public DbSet<CostCenter> CostCenters => Set<CostCenter>();
 
     // Read by the query filters below (EF turns it into a parameter per context instance).
     private Guid CurrentCompanyId => scope.CompanyId;
@@ -40,6 +42,7 @@ public sealed class CompanyDbContext(
         configuration.Properties<AccountRole>().HaveConversion<string>();
         configuration.Properties<VoucherKind>().HaveConversion<string>();
         configuration.Properties<VoucherStatus>().HaveConversion<string>();
+        configuration.Properties<PartyKind>().HaveConversion<string>();
         configuration.Properties<PrintLayout>().HaveConversion<string>();
     }
 
@@ -84,10 +87,25 @@ public sealed class CompanyDbContext(
             voucher.HasQueryFilter(v => v.CompanyId == CurrentCompanyId);
         });
 
+        model.Entity<Party>(party =>
+        {
+            party.Ignore(p => p.CreditLimit);
+            party.HasIndex(p => new { p.CompanyId, p.Code }).IsUnique();
+            party.HasQueryFilter(p => p.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<CostCenter>(costCenter =>
+        {
+            costCenter.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
+            costCenter.HasQueryFilter(c => c.CompanyId == CurrentCompanyId);
+        });
+
         model.Entity<VoucherLine>(line =>
         {
             line.Ignore(l => l.Debit).Ignore(l => l.Credit);
             line.HasOne<Account>().WithMany().HasForeignKey(l => l.AccountId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<Party>().WithMany().HasForeignKey(l => l.PartyId).OnDelete(DeleteBehavior.Restrict);
+            line.HasOne<CostCenter>().WithMany().HasForeignKey(l => l.CostCenterId).OnDelete(DeleteBehavior.Restrict);
             line.HasIndex(l => new { l.VoucherId, l.LineNumber });
             line.HasIndex(l => l.AccountId);
             line.HasQueryFilter(l => l.CompanyId == CurrentCompanyId);
@@ -98,6 +116,9 @@ public sealed class CompanyDbContext(
             entry.Ignore(e => e.Debit).Ignore(e => e.Credit).Ignore(e => e.BaseDebit).Ignore(e => e.BaseCredit);
             entry.HasOne<Voucher>().WithMany().HasForeignKey(e => e.VoucherId).OnDelete(DeleteBehavior.Cascade);
             entry.HasOne<Account>().WithMany().HasForeignKey(e => e.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasOne<Party>().WithMany().HasForeignKey(e => e.PartyId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasOne<CostCenter>().WithMany().HasForeignKey(e => e.CostCenterId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasIndex(e => new { e.PartyId, e.Date });
             entry.HasIndex(e => new { e.AccountId, e.Date });
             entry.HasIndex(e => e.Date);
             entry.HasIndex(e => e.VoucherId);

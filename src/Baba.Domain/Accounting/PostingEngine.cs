@@ -11,8 +11,14 @@ public sealed class PostingContext(
     IReadOnlyDictionary<Guid, Account> accounts,
     Currency baseCurrency,
     Currency voucherCurrency,
-    Func<DateOnly, bool> isDateOpen)
+    Func<DateOnly, bool> isDateOpen,
+    IReadOnlyDictionary<Guid, Party>? parties = null,
+    IReadOnlyDictionary<Guid, CostCenter>? costCenters = null)
 {
+    public IReadOnlyDictionary<Guid, Party> Parties { get; } = parties ?? new Dictionary<Guid, Party>();
+
+    public IReadOnlyDictionary<Guid, CostCenter> CostCenters { get; } = costCenters ?? new Dictionary<Guid, CostCenter>();
+
     public IReadOnlyDictionary<Guid, Account> Accounts { get; } = accounts;
 
     /// <summary>The company's base currency: the currency reports are in.</summary>
@@ -73,6 +79,8 @@ public static class PostingEngine
                 else if (!account.IsActive)
                     issues.Add(new($"lines[{i}].account", "line.account-inactive"));
             }
+
+            ValidateDimensions(voucher.Lines[i], i, context, issues);
         }
 
         if (voucher.Kind is VoucherKind.Payment or VoucherKind.Receipt)
@@ -103,7 +111,8 @@ public static class PostingEngine
             var baseCredit = ToBase(line.CreditScaled, rate, context.BaseCurrency);
             entries.Add(LedgerEntry.Create(
                 voucher.CompanyId, voucher.Id, voucher.Date, line.AccountId, line.Description ?? voucher.Memo, entries.Count,
-                line.DebitScaled, line.CreditScaled, voucher.CurrencyCode, voucher.ExchangeRateScaled, baseDebit, baseCredit));
+                line.DebitScaled, line.CreditScaled, voucher.CurrencyCode, voucher.ExchangeRateScaled, baseDebit, baseCredit,
+                line.PartyId, line.CostCenterId));
 
             totalScaled += voucher.Kind == VoucherKind.Payment ? line.DebitScaled : line.CreditScaled;
             totalBaseScaled += voucher.Kind == VoucherKind.Payment ? baseDebit : baseCredit;
@@ -175,6 +184,42 @@ public static class PostingEngine
         // No silent rounding: an amount must fit the currency (2 decimals, or 3 for dinars).
         if (Money.Round(line.Debit, context.VoucherCurrency) != line.Debit || Money.Round(line.Credit, context.VoucherCurrency) != line.Credit)
             issues.Add(new(Field("amount"), "line.amount-decimals"));
+    }
+
+    /// <summary>
+    /// A line on a receivable or payable account must say which customer or supplier it is for (that is the sub-ledger), and no other
+    /// account may carry one. A cost center is optional on any line, but must exist and be active.
+    /// </summary>
+    private static void ValidateDimensions(VoucherLine line, int index, PostingContext context, List<PostingIssue> issues)
+    {
+        var subLedger = context.Accounts.TryGetValue(line.AccountId, out var account)
+            && account.Role is AccountRole.Receivable or AccountRole.Payable;
+
+        if (line.PartyId is not { } partyId || partyId == Guid.Empty)
+        {
+            if (subLedger)
+                issues.Add(new($"lines[{index}].party", "line.party-required"));
+        }
+        else if (!context.Parties.TryGetValue(partyId, out var party))
+        {
+            issues.Add(new($"lines[{index}].party", "line.party-unknown"));
+        }
+        else if (!party.IsActive)
+        {
+            issues.Add(new($"lines[{index}].party", "line.party-inactive"));
+        }
+        else if (account is not null && !subLedger)
+        {
+            issues.Add(new($"lines[{index}].party", "line.party-not-allowed"));
+        }
+
+        if (line.CostCenterId is { } costCenterId && costCenterId != Guid.Empty)
+        {
+            if (!context.CostCenters.TryGetValue(costCenterId, out var costCenter))
+                issues.Add(new($"lines[{index}].costCenter", "line.cost-center-unknown"));
+            else if (!costCenter.IsActive)
+                issues.Add(new($"lines[{index}].costCenter", "line.cost-center-inactive"));
+        }
     }
 
     private static void ValidateCashAccount(Voucher voucher, PostingContext context, List<PostingIssue> issues)

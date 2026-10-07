@@ -18,6 +18,9 @@ public interface ICompanyFiles
     /// <summary>Releases the file so it can be copied, moved or opened elsewhere. Does nothing if nothing is open.</summary>
     void Close();
 
+    /// <summary>Switches the optional modules of the open company on or off. Returns the company as it is now.</summary>
+    Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default);
+
     /// <summary>Writes a complete, consistent copy of the open company to <paramref name="destinationPath"/> with the same password.</summary>
     Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default);
 }

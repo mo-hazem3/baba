@@ -78,6 +78,51 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("Baba.Domain.Accounting.CostCenter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("CostCenters");
+                });
+
             modelBuilder.Entity("Baba.Domain.Accounting.LedgerEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -94,6 +139,9 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CostCenterId")
                         .HasColumnType("TEXT");
 
                     b.Property<long>("CreditScaled")
@@ -115,6 +163,9 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.Property<long>("FxRateScaled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("PartyId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("INTEGER");
 
@@ -123,11 +174,15 @@ namespace Baba.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CostCenterId");
+
                     b.HasIndex("Date");
 
                     b.HasIndex("VoucherId");
 
                     b.HasIndex("AccountId", "Date");
+
+                    b.HasIndex("PartyId", "Date");
 
                     b.ToTable("LedgerEntries");
                 });
@@ -157,6 +212,76 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("NumberSequences");
+                });
+
+            modelBuilder.Entity("Baba.Domain.Accounting.Party", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreditLimitScaled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentTermsDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("Parties");
                 });
 
             modelBuilder.Entity("Baba.Domain.Accounting.Period", b =>
@@ -278,6 +403,9 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CostCenterId")
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("CreditScaled")
                         .HasColumnType("INTEGER");
 
@@ -290,12 +418,19 @@ namespace Baba.Infrastructure.Persistence.Migrations
                     b.Property<int>("LineNumber")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("PartyId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("VoucherId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("CostCenterId");
+
+                    b.HasIndex("PartyId");
 
                     b.HasIndex("VoucherId", "LineNumber");
 
@@ -526,6 +661,16 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Baba.Domain.Accounting.CostCenter", null)
+                        .WithMany()
+                        .HasForeignKey("CostCenterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Baba.Domain.Accounting.Party", null)
+                        .WithMany()
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Baba.Domain.Accounting.Voucher", null)
                         .WithMany()
                         .HasForeignKey("VoucherId")
@@ -548,6 +693,16 @@ namespace Baba.Infrastructure.Persistence.Migrations
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Baba.Domain.Accounting.CostCenter", null)
+                        .WithMany()
+                        .HasForeignKey("CostCenterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Baba.Domain.Accounting.Party", null)
+                        .WithMany()
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Baba.Domain.Accounting.Voucher", null)
                         .WithMany("Lines")

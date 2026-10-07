@@ -1,5 +1,6 @@
 using Baba.Application;
 using Baba.Application.Accounting;
+using Baba.Domain;
 using Baba.Domain.Accounting;
 using Baba.Infrastructure.Accounting;
 using Baba.Infrastructure.CompanyFiles;
@@ -36,9 +37,21 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Reporting.DashboardService Dashboard,
         Baba.Application.Printing.DocumentPrintService Documents,
         Baba.Application.Printing.ExportService Exports,
-        CapturingRenderer Renderer)
+        CapturingRenderer Renderer,
+        PartyService Parties,
+        CostCenterService CostCenters,
+        Guid Customer,
+        Guid Supplier)
     {
         public Guid Id(string code) => ByCode[code].Id;
+
+        /// <summary>Lines on a receivable or payable account must name a customer or supplier; every other line has none.</summary>
+        public Guid? PartyFor(string code) => ByCode[code].Role switch
+        {
+            AccountRole.Receivable => Customer,
+            AccountRole.Payable => Supplier,
+            _ => null,
+        };
     }
 
     protected static readonly DateOnly Oct6 = new(2026, 10, 6);
@@ -72,11 +85,16 @@ public abstract class AccountingFixture : CompanyFilesFixture
 
         var accounts = new AccountStore(files);
         var chart = new ChartOfAccountsService(accounts);
-        var vouchers = new VoucherService(new VoucherStore(files), accounts, new PeriodStore(files), files, Clock);
+        var partyStore = new PartyStore(files);
+        var costCenterStore = new CostCenterStore(files);
+        var vouchers = new VoucherService(new VoucherStore(files), accounts, partyStore, costCenterStore, new PeriodStore(files), files, Clock);
         var periods = new PeriodService(new PeriodStore(files), files);
         var byCode = (await chart.ListAsync()).ToDictionary(a => a.Code);
         var ledger = new LedgerQuery(files);
-        var reports = new Baba.Application.Reporting.ReportService(accounts, ledger, files);
+        var reports = new Baba.Application.Reporting.ReportService(accounts, partyStore, costCenterStore, ledger, files);
+        var parties = new PartyService(partyStore, ledger);
+        var customer = await parties.CreateAsync(new PartyInput(PartyKind.Customer, "C001", "العميل الأول", "First Customer", null, null, null, null, 0, 30, null));
+        var supplier = await parties.CreateAsync(new PartyInput(PartyKind.Supplier, "S001", "المورد الأول", "First Supplier", null, null, null, null, 0, 30, null));
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();
@@ -88,20 +106,20 @@ public abstract class AccountingFixture : CompanyFilesFixture
             new Baba.Application.Printing.BrandingService(brandingStore),
             new Baba.Application.Reporting.ListingService(chart, vouchers, files),
             new Baba.Application.Reporting.DashboardService(accounts, ledger, new VoucherStore(files), files, Clock),
-            documents, exports, renderer);
+            documents, exports, renderer, parties, new CostCenterService(costCenterStore), customer.Id, supplier.Id);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(
         VoucherKind.Payment, date, e.Id("111"), "CHQ-1", "payment memo",
-        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, l.Amount, 0)).ToList());
+        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, l.Amount, 0, e.PartyFor(l.Code))).ToList());
 
     protected static VoucherInput Receipt(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(
         VoucherKind.Receipt, date, e.Id("112"), null, "receipt memo",
-        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, 0, l.Amount)).ToList());
+        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, 0, l.Amount, e.PartyFor(l.Code))).ToList());
 
     protected static VoucherInput Journal(Env e, DateOnly date, params (string Code, decimal Debit, decimal Credit)[] lines) => new(
         VoucherKind.Journal, date, null, null, "journal memo",
-        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, l.Debit, l.Credit)).ToList());
+        lines.Select(l => new VoucherLineInput(null, e.Id(l.Code), null, l.Debit, l.Credit, e.PartyFor(l.Code))).ToList());
 
     protected static async Task<ValidationException> RefusedAsync(Func<Task> action) => await Assert.ThrowsAsync<ValidationException>(action);
 

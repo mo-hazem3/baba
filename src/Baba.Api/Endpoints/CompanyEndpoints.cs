@@ -40,6 +40,10 @@ public static class CompanyEndpoints
             })
             .WithName("CloseCompany");
 
+        company.MapPost("/modules", (SetModulesRequest request, CompanyService service, CancellationToken cancellationToken) =>
+                service.SetEnabledModulesAsync(request.Modules, cancellationToken))
+            .WithName("SetEnabledModules");
+
         company.MapPost("/backup", async (BackupRequest request, CompanyService service, CancellationToken cancellationToken) =>
             {
                 await service.BackupAsync(request.DestinationPath, cancellationToken);

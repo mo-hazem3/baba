@@ -11,6 +11,8 @@ public sealed record OpenCompanyRequest(string Path, string Password);
 
 public sealed record BackupRequest(string DestinationPath);
 
+public sealed record SetModulesRequest(IReadOnlyList<string> Modules);
+
 public sealed record SaveDialogRequest(string SuggestedFileName);
 
 public sealed record PathChoice(string? Path);

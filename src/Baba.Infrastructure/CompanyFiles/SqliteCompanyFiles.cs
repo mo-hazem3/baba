@@ -133,6 +133,23 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         SqliteConnection.ClearAllPools();
     }
 
+    public async Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default)
+    {
+        if (_current is null)
+            throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
+
+        await using var context = Create();
+        var company = await context.Companies.SingleAsync(cancellationToken);
+        company.EnabledModules = modules.ToList();
+        await context.SaveChangesAsync(cancellationToken);
+
+        lock (_gate)
+        {
+            _current = _current with { EnabledModules = modules.ToList() };
+            return _current;
+        }
+    }
+
     public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
         string path, password;

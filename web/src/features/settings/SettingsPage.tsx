@@ -10,6 +10,7 @@ import { useSettings } from '../../settings/SettingsContext'
 import { textSizes } from '../../settings/settings'
 import { formatAmount, formatDate } from '../../utils/format'
 import { BrandingCard } from './BrandingCard'
+import { ModulesCard } from './ModulesCard'
 import { PeriodsCard } from './PeriodsCard'
 import { PrintTemplateCard } from './PrintTemplateCard'
 
@@ -99,6 +100,7 @@ export function SettingsPage() {
         </div>
       </Card>
 
+      <ModulesCard />
       <PrintTemplateCard />
       <BrandingCard />
       <PeriodsCard />

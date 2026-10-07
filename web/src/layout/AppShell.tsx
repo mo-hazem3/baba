@@ -15,12 +15,20 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
   const { pathname } = useLocation()
 
   // Without a company there is nothing to go to, so the menu only lists the modules of an open one.
+  const modules = new Set(company?.enabledModules ?? [])
   const items = [
     { key: '/', label: t('nav.summary') },
     { key: '/accounts', label: t('nav.accounts') },
     { key: '/vouchers/payment', label: t('nav.payments') },
     { key: '/vouchers/receipt', label: t('nav.receipts') },
     { key: '/vouchers/journal', label: t('nav.journal') },
+    ...(modules.has('customers-suppliers')
+      ? [
+          { key: '/customers', label: t('nav.customers') },
+          { key: '/suppliers', label: t('nav.suppliers') },
+        ]
+      : []),
+    ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
     { key: '/reports', label: t('nav.reports') },
     { key: '/settings', label: t('nav.settings') },
   ]

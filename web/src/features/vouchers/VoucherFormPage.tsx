@@ -6,7 +6,7 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { deleteVoucher, getVoucher, printVoucher, saveAndPostVoucher, saveVoucherDraft } from '../../api/generated/baba'
 import type { VoucherDto, VoucherKind } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
-import { refreshBooks, useAccounts, useCurrentCompany, useCurrencies, useHost, usePrintSettings } from '../../api/hooks'
+import { refreshBooks, useAccounts, useCostCenters, useCurrentCompany, useCurrencies, useHost, useModules, useParties, usePrintSettings } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
@@ -58,7 +58,7 @@ export function VoucherFormPage() {
 }
 
 const fingerprint = (date: string, cash: string | undefined, reference: string, memo: string, rows: readonly LineRow[]) =>
-  JSON.stringify([date, cash ?? '', reference.trim(), memo.trim(), rowsToSend(rows).map((r) => [r.accountId ?? '', r.description.trim(), r.debit ?? 0, r.credit ?? 0])])
+  JSON.stringify([date, cash ?? '', reference.trim(), memo.trim(), rowsToSend(rows).map((r) => [r.accountId ?? '', r.partyId ?? '', r.costCenterId ?? '', r.description.trim(), r.debit ?? 0, r.credit ?? 0])])
 
 function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDto }) {
   const { t } = useTranslation()
@@ -68,6 +68,11 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   const queryClient = useQueryClient()
   const accountsQuery = useAccounts()
   const accounts = accountsQuery.data ?? []
+  const modules = useModules()
+  const partiesQuery = useParties()
+  const parties = partiesQuery.data ?? []
+  const costCentersQuery = useCostCenters()
+  const costCenters = costCentersQuery.data ?? []
   const company = useCurrentCompany()
   const currencies = useCurrencies()
   const host = useHost()
@@ -298,7 +303,22 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
         </div>
       </div>
 
-      <VoucherLinesGrid kind={kind} rows={rows} onChange={setRows} accounts={accounts} issues={issues?.rows ?? {}} minorUnits={minorUnits} />
+      <VoucherLinesGrid
+        kind={kind}
+        rows={rows}
+        onChange={(next) => {
+          setRows(next)
+          setIssues(undefined) // an edit takes the old complaints away; saving checks again
+        }}
+        accounts={accounts}
+        parties={parties}
+        costCenters={costCenters}
+        // The columns are offered when the module is on, and also whenever the voucher already has such a tag (switching a module off hides nothing that was recorded).
+        showParty={modules.has('customers-suppliers') || rows.some((r) => r.partyId)}
+        showCostCenter={modules.has('cost-centers') || rows.some((r) => r.costCenterId)}
+        issues={issues?.rows ?? {}}
+        minorUnits={minorUnits}
+      />
       {issues?.header.lines && <div className="cell-error">{problem(issues.header.lines)}</div>}
 
       <div className="voucher-totals" aria-live="polite">

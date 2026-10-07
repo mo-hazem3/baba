@@ -30,6 +30,7 @@ public class PrintServiceTests
         public Task<CompanyInfo> CreateAsync(string path, string password, NewCompanyData company, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<CompanyInfo> OpenAsync(string path, string password, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public void Close() { }
+        public Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task BackupAsync(string destinationPath, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 

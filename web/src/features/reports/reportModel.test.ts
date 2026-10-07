@@ -51,6 +51,12 @@ describe('drill-down', () => {
     expect(drillPath({ kind: 'account', id: 'abc' })).toBe('/reports/statement-of-account?accountId=abc')
   })
 
+  it('goes from an aging row to the party statement and from a cost center row to its profit and loss', () => {
+    expect(drillPath({ kind: 'party', id: 'p1' })).toBe('/reports/party-statement?partyId=p1')
+    expect(drillPath({ kind: 'costCenter', id: 'c1', from: '2026-10-01', to: '2026-10-31' }))
+      .toBe('/reports/profit-and-loss?costCenterId=c1&from=2026-10-01&to=2026-10-31')
+  })
+
   it('goes from a voucher row to the voucher', () => {
     expect(drillPath({ kind: 'voucher', id: 'v1' })).toBe('/vouchers/open/v1')
     expect(voucherPath('Payment', 'v1')).toBe('/vouchers/payment/v1')
@@ -60,8 +66,11 @@ describe('drill-down', () => {
 
 describe('the reports', () => {
   it('each say which inputs they need', () => {
-    expect(reportKeys).toHaveLength(6)
-    expect(reportInputs['trial-balance']).toEqual({ range: true, asOf: false, account: false, comparison: false })
+    expect(reportKeys).toHaveLength(10)
+    expect(reportInputs['trial-balance']).toEqual({ range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false })
+    expect(reportInputs['party-statement'].party).toBe(true)
+    expect(reportInputs['aging-receivable'].asOf).toBe(true) // aging is "as of" a date
+    expect(reportInputs['profit-and-loss'].costCenter).toBe(true)
     expect(reportInputs['balance-sheet'].asOf).toBe(true) // a balance sheet is "as of" a date, not for a range
     expect(reportInputs['profit-and-loss'].comparison).toBe(true)
     expect(reportInputs['statement-of-account'].account).toBe(true)

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useParams, useSearchParams } from 'react-router'
 import { getReport } from '../../api/generated/baba'
 import { ApiError } from '../../api/http'
-import { useAccounts, useCurrentCompany } from '../../api/hooks'
+import { useAccounts, useCostCenters, useCurrentCompany, useParties } from '../../api/hooks'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
 import { ExportControls } from '../../layout/ExportControls'
@@ -13,6 +13,7 @@ import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { toIsoDate } from '../../utils/format'
 import { AccountSelect } from '../accounting/AccountSelect'
+import { CostCenterSelect, PartySelect } from '../accounting/LookupSelects'
 import { exportAndShow, type ReportParams } from './exportReport'
 import { ReportTable } from './ReportTable'
 import { isReportKey, matchPreset, presetRange, reportInputs, reportSubtitle, reportTitle, type RangePreset } from './reportModel'
@@ -34,6 +35,8 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
   const { settings } = useSettings()
   const company = useCurrentCompany()
   const accounts = useAccounts()
+  const parties = useParties()
+  const costCenters = useCostCenters()
   const [params, setParams] = useSearchParams()
   const inputs = reportInputs[reportKey]
   const fiscalStart = company.data?.fiscalYearStartMonth ?? 1
@@ -48,6 +51,8 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
   const to = params.get('to') ?? (all || params.has('from') ? undefined : defaults.to)
   const asOf = params.get('asOf') ?? defaults.asOf
   const accountId = params.get('accountId') ?? undefined
+  const partyId = params.get('partyId') ?? undefined
+  const costCenterId = params.get('costCenterId') ?? undefined
   const compare = params.get('comparison') === 'PreviousYear'
 
   const set = (changes: Record<string, string | undefined>) =>
@@ -70,10 +75,12 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
     ...(inputs.range ? { From: from, To: to } : {}),
     ...(inputs.asOf ? { AsOf: asOf } : {}),
     ...(inputs.account ? { AccountId: accountId } : {}),
+    ...(inputs.party ? { PartyId: partyId } : {}),
+    ...(inputs.costCenter ? { CostCenterId: costCenterId } : {}),
     ...(inputs.comparison && compare ? { Comparison: 'PreviousYear' } : {}),
   }
 
-  const ready = !inputs.account || accountId !== undefined
+  const ready = (!inputs.account || accountId !== undefined) && (!inputs.party || partyId !== undefined)
   const query = useQuery({
     queryKey: ['/api/reports', reportKey, requestParams],
     enabled: ready,
@@ -106,6 +113,33 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
               accounts={accounts.data ?? []}
               usableOnly={false}
               placeholder={t('reports.chooseAccount')}
+            />
+          </div>
+        )}
+        {inputs.party && (
+          <div className="field field-wide">
+            <label htmlFor="report-party">{t('reports.party')}</label>
+            <PartySelect
+              id="report-party"
+              value={partyId}
+              onChange={(id) => set({ partyId: id })}
+              parties={parties.data ?? []}
+              placeholder={t('reports.chooseParty')}
+              ariaLabel={t('reports.party')}
+              allowClear={false}
+            />
+          </div>
+        )}
+        {inputs.costCenter && ((costCenters.data?.length ?? 0) > 0 || costCenterId) && (
+          <div className="field field-wide">
+            <label htmlFor="report-cost-center">{t('reports.costCenter')}</label>
+            <CostCenterSelect
+              id="report-cost-center"
+              value={costCenterId}
+              onChange={(id) => set({ costCenterId: id })}
+              costCenters={costCenters.data ?? []}
+              placeholder={t('reports.allCostCenters')}
+              ariaLabel={t('reports.costCenter')}
             />
           </div>
         )}
@@ -151,7 +185,7 @@ function Report({ reportKey }: { reportKey: keyof typeof reportInputs }) {
         )}
       </div>
 
-      {!ready && <Alert type="info" showIcon message={t('reports.chooseAccountFirst')} />}
+      {!ready && <Alert type="info" showIcon message={t(inputs.party ? 'reports.choosePartyFirst' : 'reports.chooseAccountFirst')} />}
       {query.isPending && ready && <Spin size="large" className="page-spinner" />}
       {query.isError && <Alert type="error" showIcon message={errorMessage(query.error, t)} />}
       {query.data && (

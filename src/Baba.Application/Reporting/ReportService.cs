@@ -10,7 +10,8 @@ namespace Baba.Application.Reporting;
 /// and journal. Every one is computed from the ledger entries on the spot (balances are never stored), takes a date range or an
 /// "as of" date, and lets you drill down: figure, statement of account, voucher.
 /// </summary>
-public sealed class ReportService(IAccountStore accounts, ILedgerQuery ledger, ICompanyFiles files)
+public sealed partial class ReportService(
+    IAccountStore accounts, IPartyStore parties, ICostCenterStore costCenters, ILedgerQuery ledger, ICompanyFiles files)
 {
     // ---------------------------------------------------------------- Trial balance
 
@@ -83,15 +84,30 @@ public sealed class ReportService(IAccountStore accounts, ILedgerQuery ledger, I
 
     // ---------------------------------------------------------------- Profit and loss
 
+    public Task<ReportResult> ProfitAndLossAsync(
+        DateOnly? from, DateOnly? to, Comparison comparison = Comparison.None, CancellationToken cancellationToken = default) =>
+        ProfitAndLossCoreAsync(from, to, comparison, ReportLabels.ProfitAndLoss, (f, t) => ledger.TotalsAsync(f, t, cancellationToken), cancellationToken);
+
+    /// <summary>The profit and loss of the entries tagged with one cost center or project (brief section 10.2).</summary>
     public async Task<ReportResult> ProfitAndLossAsync(
-        DateOnly? from, DateOnly? to, Comparison comparison = Comparison.None, CancellationToken cancellationToken = default)
+        Guid costCenterId, DateOnly? from, DateOnly? to, Comparison comparison = Comparison.None, CancellationToken cancellationToken = default)
+    {
+        var costCenter = (await costCenters.ListAsync(cancellationToken)).FirstOrDefault(c => c.Id == costCenterId) ?? throw new NotFoundException("cost-center");
+        var title = (ReportLabels.ProfitAndLoss.En + ": " + costCenter.Code + " " + costCenter.NameEn,
+                     ReportLabels.ProfitAndLoss.Ar + ": " + costCenter.Code + " " + costCenter.NameAr);
+        return await ProfitAndLossCoreAsync(from, to, comparison, title, (f, t) => ledger.TotalsForCostCenterAsync(costCenterId, f, t, cancellationToken), cancellationToken);
+    }
+
+    private async Task<ReportResult> ProfitAndLossCoreAsync(
+        DateOnly? from, DateOnly? to, Comparison comparison, (string En, string Ar) reportTitle,
+        Func<DateOnly?, DateOnly?, Task<IReadOnlyList<AccountTotal>>> totals, CancellationToken cancellationToken)
     {
         var (company, currency) = Company();
         var tree = new AccountTree(await accounts.ListAsync(cancellationToken));
 
-        var current = Totals(await ledger.TotalsAsync(from, to, cancellationToken));
+        var current = Totals(await totals(from, to));
         var previous = comparison == Comparison.PreviousYear
-            ? Totals(await ledger.TotalsAsync(from?.AddYears(-1), to?.AddYears(-1), cancellationToken))
+            ? Totals(await totals(from?.AddYears(-1), to?.AddYears(-1)))
             : null;
 
         var rows = new List<ReportRow>();
@@ -109,7 +125,7 @@ public sealed class ReportService(IAccountStore accounts, ILedgerQuery ledger, I
 
         rows.Add(new ReportRow(AmountCells(Label(ReportLabels.NetProfit), net.Current, net.Previous, previous is not null), 0, RowStyle.Total));
 
-        return Result("profit-and-loss", ReportLabels.ProfitAndLoss, ReportLabels.Range(from, to), company, currency,
+        return Result("profit-and-loss", reportTitle, ReportLabels.Range(from, to), company, currency,
             AmountColumns(previous is not null), rows, []);
     }
 

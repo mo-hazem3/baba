@@ -56,6 +56,13 @@ export const reportSubtitle = (report: Pick<ReportResult, 'subtitleEn' | 'subtit
  */
 export const drillPath = (link: ReportLink): string => {
   if (link.kind === 'voucher') return `/vouchers/open/${link.id}`
+  if (link.kind === 'party' || link.kind === 'costCenter') {
+    const dates = new URLSearchParams()
+    if (link.from) dates.set('from', link.from)
+    if (link.to) dates.set('to', link.to)
+    const rest = dates.size > 0 ? `&${dates.toString()}` : ''
+    return link.kind === 'party' ? `/reports/party-statement?partyId=${link.id}${rest}` : `/reports/profit-and-loss?costCenterId=${link.id}${rest}`
+  }
   const query = new URLSearchParams({ accountId: link.id })
   if (link.from) query.set('from', link.from)
   if (link.to) query.set('to', link.to)
@@ -64,17 +71,43 @@ export const drillPath = (link: ReportLink): string => {
 
 export const voucherPath = (kind: VoucherKind, id: string): string => `/vouchers/${kind.toLowerCase()}/${id}`
 
-export const reportKeys = ['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal'] as const
+export const reportKeys = [
+  'trial-balance',
+  'profit-and-loss',
+  'balance-sheet',
+  'statement-of-account',
+  'general-ledger',
+  'journal',
+  'party-statement',
+  'aging-receivable',
+  'aging-payable',
+  'cost-centers',
+] as const
 export type ReportKey = (typeof reportKeys)[number]
 
 /** What a report asks for: a date range, an "as of" date, an account, a comparison with last year. */
-export const reportInputs: Record<ReportKey, { range: boolean; asOf: boolean; account: boolean; comparison: boolean }> = {
-  'trial-balance': { range: true, asOf: false, account: false, comparison: false },
-  'profit-and-loss': { range: true, asOf: false, account: false, comparison: true },
-  'balance-sheet': { range: false, asOf: true, account: false, comparison: true },
-  'statement-of-account': { range: true, asOf: false, account: true, comparison: false },
-  'general-ledger': { range: true, asOf: false, account: false, comparison: false },
-  journal: { range: true, asOf: false, account: false, comparison: false },
+export const reportInputs: Record<
+  ReportKey,
+  { range: boolean; asOf: boolean; account: boolean; comparison: boolean; party: boolean; costCenter: boolean }
+> = {
+  'trial-balance': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+  'profit-and-loss': { range: true, asOf: false, account: false, comparison: true, party: false, costCenter: true },
+  'balance-sheet': { range: false, asOf: true, account: false, comparison: true, party: false, costCenter: false },
+  'statement-of-account': { range: true, asOf: false, account: true, comparison: false, party: false, costCenter: false },
+  'general-ledger': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+  journal: { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+  'party-statement': { range: true, asOf: false, account: false, comparison: false, party: true, costCenter: false },
+  'aging-receivable': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
+  'aging-payable': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
+  'cost-centers': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+}
+
+/** The optional module a report belongs to. Reports of a module that is switched off are not offered on the Reports page. */
+export const reportModule: Partial<Record<ReportKey, string>> = {
+  'party-statement': 'customers-suppliers',
+  'aging-receivable': 'customers-suppliers',
+  'aging-payable': 'customers-suppliers',
+  'cost-centers': 'cost-centers',
 }
 
 export const isReportKey = (key: string | undefined): key is ReportKey => reportKeys.includes(key as ReportKey)

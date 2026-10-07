@@ -7,6 +7,10 @@ export interface LineRow {
   /** The id of the line when this row came from a saved voucher, so editing keeps it. */
   id?: string
   accountId?: string
+  /** The customer or supplier, for a line on a receivable or payable account. */
+  partyId?: string
+  /** The optional cost center or project tag. */
+  costCenterId?: string
   description: string
   debit: number | null
   credit: number | null
@@ -20,6 +24,8 @@ export const rowsFromVoucher = (voucher: VoucherDto): LineRow[] =>
     key: `row-${++counter}`,
     id: line.id,
     accountId: line.accountId,
+    partyId: line.partyId ?? undefined,
+    costCenterId: line.costCenterId ?? undefined,
     description: line.description ?? '',
     debit: line.debit === 0 ? null : line.debit,
     credit: line.credit === 0 ? null : line.credit,
@@ -74,6 +80,8 @@ export const toVoucherInput = (kind: VoucherKind, header: VoucherHeader, rows: r
     id: r.id ?? null,
     accountId: r.accountId ?? '00000000-0000-0000-0000-000000000000',
     description: r.description.trim() ? r.description.trim() : null,
+    partyId: r.partyId ?? null,
+    costCenterId: r.costCenterId ?? null,
     debit: kind === 'Receipt' ? 0 : (r.debit ?? 0),
     credit: kind === 'Payment' ? 0 : (r.credit ?? 0),
   })),
@@ -83,7 +91,7 @@ export interface MappedIssues {
   /** Problems with the form as a whole (date, bank account, balance...), by field. */
   header: Record<string, string>
   /** Problems on rows, by the row's key: `account` and/or `amount` with the problem code. */
-  rows: Record<string, { account?: string; amount?: string }>
+  rows: Record<string, { account?: string; amount?: string; party?: string; costCenter?: string }>
   /** The same problems in reading order for the list at the top of the form, with the row's number (1, 2, 3...) when it has one. */
   list: { code: string; line?: number }[]
 }
@@ -95,7 +103,7 @@ export interface MappedIssues {
 export const mapIssues = (issues: readonly ApiIssue[], sent: readonly LineRow[]): MappedIssues => {
   const result: MappedIssues = { header: {}, rows: {}, list: [] }
   for (const issue of issues) {
-    const match = /^lines\[(\d+)\]\.(account|amount)$/.exec(issue.field)
+    const match = /^lines\[(\d+)\]\.(account|amount|party|costCenter)$/.exec(issue.field)
     if (match) {
       const index = Number(match[1])
       const row = sent[index]

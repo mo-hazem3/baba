@@ -16,4 +16,6 @@ AccountId?: string;
 Comparison?: Comparison;
 Kind?: VoucherKind;
 Status?: VoucherStatus;
+PartyId?: string;
+CostCenterId?: string;
 };

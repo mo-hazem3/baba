@@ -17,6 +17,11 @@ public sealed class LedgerEntry : Entity, ICompanyScoped, INotAudited
     public Guid AccountId { get; private set; }
     public string? Description { get; private set; }
 
+    /// <summary>The customer or supplier of a receivable or payable entry (the sub-ledger tag).</summary>
+    public Guid? PartyId { get; private set; }
+
+    public Guid? CostCenterId { get; private set; }
+
     /// <summary>The position within its voucher (0, 1, 2 ...), so statements list a voucher's entries in a stable order.</summary>
     public int Sequence { get; private set; }
 
@@ -40,13 +45,15 @@ public sealed class LedgerEntry : Entity, ICompanyScoped, INotAudited
     internal static LedgerEntry Create(
         Guid companyId, Guid voucherId, DateOnly date, Guid accountId, string? description, int sequence,
         long debitScaled, long creditScaled, string currencyCode, long fxRateScaled,
-        long baseDebitScaled, long baseCreditScaled) => new()
+        long baseDebitScaled, long baseCreditScaled, Guid? partyId = null, Guid? costCenterId = null) => new()
     {
         CompanyId = companyId,
         VoucherId = voucherId,
         Date = date,
         AccountId = accountId,
         Description = description,
+        PartyId = partyId,
+        CostCenterId = costCenterId,
         Sequence = sequence,
         DebitScaled = debitScaled,
         CreditScaled = creditScaled,

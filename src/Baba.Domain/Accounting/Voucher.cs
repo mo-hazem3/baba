@@ -85,6 +85,12 @@ public sealed class VoucherLine : Entity, ICompanyScoped
     public Guid AccountId { get; set; }
     public string? Description { get; set; }
 
+    /// <summary>The customer or supplier this line belongs to. Required on receivable and payable accounts, not allowed on others.</summary>
+    public Guid? PartyId { get; set; }
+
+    /// <summary>An optional cost center or project tag.</summary>
+    public Guid? CostCenterId { get; set; }
+
     public long DebitScaled { get; set; }
     public long CreditScaled { get; set; }
 

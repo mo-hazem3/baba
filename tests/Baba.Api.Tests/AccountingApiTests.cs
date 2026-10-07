@@ -277,11 +277,71 @@ public class AccountingApiTests : ApiFixture
         Assert.Equal(-25m, dashboard.ProfitThisMonth);
     }
 
+    // ------------------------------------------------------------------ Customers, suppliers and cost centers
+
+    [Fact]
+    public async Task Customers_can_be_added_used_on_a_receipt_and_read_back_in_their_statement_and_the_aging_over_http()
+    {
+        await StartCompanyAsync();
+
+        var created = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "C100", "", "Gulf Traders", null, null, null, null, 0, 30, null));
+        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
+        var party = await ReadAsync<PartyDto>(created);
+
+        var duplicate = await PostAsync("/api/parties", new PartyInput(PartyKind.Customer, "c100", "", "Other", null, null, null, null, 0, 30, null));
+        Assert.Contains((await ReadAsync<ApiProblem>(duplicate)).Issues!, i => i is { Field: "code", Code: "party.code-duplicate" });
+
+        // Without the customer, posting to receivables is refused with a problem the screen can show on that line.
+        var withoutParty = new VoucherInput(VoucherKind.Receipt, Oct6, Id("112"), null, null, [new VoucherLineInput(null, Id("113"), null, 0, 75m)]);
+        var refused = await PostAsync("/api/vouchers/post", new SaveVoucherRequest(null, withoutParty));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains((await ReadAsync<ApiProblem>(refused)).Issues!, i => i is { Field: "lines[0].party", Code: "line.party-required" });
+
+        await PostVoucherAsync(withoutParty with { Lines = [withoutParty.Lines[0] with { PartyId = party.Id }] });
+
+        var statement = await ReadAsync<ReportResult>(await Http.GetAsync($"/api/reports/party-statement?partyId={party.Id}"));
+        Assert.Equal("party-statement", statement.Key);
+        Assert.Equal(-75m, statement.Rows.Last().Cells[^1].Amount);
+
+        var aging = await ReadAsync<ReportResult>(await Http.GetAsync("/api/reports/aging-receivable?asOf=2026-10-31"));
+        Assert.Equal("aging-receivable", aging.Key);
+        Assert.Equal(-75m, aging.Rows.Last().Cells[7].Amount);
+
+        var missing = await Http.GetAsync("/api/reports/party-statement");
+        Assert.Contains((await ReadAsync<ApiProblem>(missing)).Issues!, i => i.Code == "report.party-required");
+
+        var list = await ReadAsync<List<PartyDto>>(await Http.GetAsync("/api/parties?kind=Customer"));
+        Assert.Equal(-75m, list.Single().Balance);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Http.DeleteAsync($"/api/parties/{party.Id}")).StatusCode); // already used
+    }
+
+    [Fact]
+    public async Task Cost_centers_can_be_managed_and_give_a_profit_and_loss_per_center_over_http()
+    {
+        await StartCompanyAsync();
+        var created = await PostAsync("/api/cost-centers", new CostCenterInput("HQ", "المقر الرئيسي", "Head office"));
+        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
+        var costCenter = await ReadAsync<CostCenterDto>(created);
+
+        var payment = Payment(Oct6, ("422", 120m));
+        await PostVoucherAsync(payment with { Lines = [payment.Lines[0] with { CostCenterId = costCenter.Id }] });
+
+        var summary = await ReadAsync<ReportResult>(await Http.GetAsync("/api/reports/cost-centers"));
+        Assert.Equal(-120m, summary.Rows[0].Cells[4].Amount);
+
+        var profit = await ReadAsync<ReportResult>(await Http.GetAsync($"/api/reports/profit-and-loss?costCenterId={costCenter.Id}"));
+        Assert.Contains("HQ", profit.TitleEn);
+        Assert.Equal(-120m, profit.Rows.Last().Cells[^1].Amount);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await Http.DeleteAsync($"/api/cost-centers/{costCenter.Id}")).StatusCode);
+        Assert.False((await ReadAsync<CostCenterDto>(await PostAsync($"/api/cost-centers/{costCenter.Id}/active", new SetActiveRequest(false)))).IsActive);
+    }
+
     [Fact]
     public async Task Everything_needs_an_open_company()
     {
         // No company has been created in this test.
-        foreach (var url in new[] { "/api/accounts", "/api/vouchers", "/api/dashboard", "/api/reports/trial-balance", "/api/periods?fiscalYear=2026" })
+        foreach (var url in new[] { "/api/accounts", "/api/parties", "/api/cost-centers", "/api/vouchers", "/api/dashboard", "/api/reports/trial-balance", "/api/periods?fiscalYear=2026" })
         {
             var response = await Http.GetAsync(url);
             Assert.True(response.StatusCode is HttpStatusCode.Conflict, $"{url} answered {response.StatusCode}");

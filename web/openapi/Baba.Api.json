@@ -312,6 +312,36 @@
         }
       }
     },
+    "/api/company/modules": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "SetEnabledModules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetModulesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/company/backup": {
       "post": {
         "tags": [
@@ -821,6 +851,325 @@
         }
       }
     },
+    "/api/parties": {
+      "get": {
+        "tags": [
+          "Customers and suppliers"
+        ],
+        "operationId": "ListParties",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PartyKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PartyDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Customers and suppliers"
+        ],
+        "operationId": "CreateParty",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartyInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parties/{id}": {
+      "put": {
+        "tags": [
+          "Customers and suppliers"
+        ],
+        "operationId": "UpdateParty",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartyInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartyDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Customers and suppliers"
+        ],
+        "operationId": "DeleteParty",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{id}/active": {
+      "post": {
+        "tags": [
+          "Customers and suppliers"
+        ],
+        "operationId": "SetPartyActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cost-centers": {
+      "get": {
+        "tags": [
+          "Cost centers"
+        ],
+        "operationId": "ListCostCenters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CostCenterDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cost centers"
+        ],
+        "operationId": "CreateCostCenter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostCenterInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostCenterDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cost-centers/{id}": {
+      "put": {
+        "tags": [
+          "Cost centers"
+        ],
+        "operationId": "UpdateCostCenter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostCenterInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostCenterDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cost centers"
+        ],
+        "operationId": "DeleteCostCenter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cost-centers/{id}/active": {
+      "post": {
+        "tags": [
+          "Cost centers"
+        ],
+        "operationId": "SetCostCenterActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostCenterDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/periods": {
       "get": {
         "tags": [
@@ -946,6 +1295,22 @@
             "schema": {
               "$ref": "#/components/schemas/VoucherStatus"
             }
+          },
+          {
+            "name": "PartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "CostCenterId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1047,6 +1412,22 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/VoucherStatus"
+            }
+          },
+          {
+            "name": "PartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "CostCenterId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1425,6 +1806,57 @@
           "PreviousYear"
         ]
       },
+      "CostCenterDto": {
+        "required": [
+          "id",
+          "code",
+          "nameAr",
+          "nameEn",
+          "isActive",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CostCenterInput": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          }
+        }
+      },
       "CountryDto": {
         "required": [
           "code",
@@ -1785,6 +2217,166 @@
             "type": "string"
           }
         }
+      },
+      "PartyDto": {
+        "required": [
+          "id",
+          "kind",
+          "code",
+          "nameAr",
+          "nameEn",
+          "phone",
+          "email",
+          "address",
+          "taxNumber",
+          "creditLimit",
+          "paymentTermsDays",
+          "isActive",
+          "notes",
+          "inUse",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PartyKind"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentTermsDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "inUse": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PartyInput": {
+        "required": [
+          "kind",
+          "code",
+          "nameAr",
+          "nameEn",
+          "phone",
+          "email",
+          "address",
+          "taxNumber",
+          "creditLimit",
+          "paymentTermsDays",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/PartyKind"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentTermsDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PartyKind": {
+        "enum": [
+          "Customer",
+          "Supplier"
+        ]
       },
       "PathChoice": {
         "required": [
@@ -2248,6 +2840,20 @@
           }
         }
       },
+      "SetModulesRequest": {
+        "required": [
+          "modules"
+        ],
+        "type": "object",
+        "properties": {
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "StartupInfo": {
         "required": [
           "openPath"
@@ -2464,6 +3070,20 @@
           "credit": {
             "type": "number",
             "format": "double"
+          },
+          "partyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -2501,6 +3121,20 @@
           "credit": {
             "type": "number",
             "format": "double"
+          },
+          "partyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "costCenterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -2592,6 +3226,12 @@
     },
     {
       "name": "Vouchers"
+    },
+    {
+      "name": "Customers and suppliers"
+    },
+    {
+      "name": "Cost centers"
     },
     {
       "name": "Periods"

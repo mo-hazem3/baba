@@ -16,13 +16,19 @@ public class PostingEngineTests
     private readonly Account _group = new() { Code = "42", Type = AccountType.Expense, IsPosting = false };
     private readonly Account _closed = Posting("4290", AccountType.Expense, active: false);
     private readonly Account _receivable = Posting("1130", AccountType.Asset, AccountRole.Receivable);
+    private readonly Party _customer = new() { CompanyId = CompanyId, Kind = PartyKind.Customer, Code = "C1", NameEn = "Customer" };
+    private readonly Party _dormant = new() { CompanyId = CompanyId, Kind = PartyKind.Customer, Code = "C2", NameEn = "Dormant", IsActive = false };
+    private readonly CostCenter _project = new() { CompanyId = CompanyId, Code = "P1", NameEn = "Project" };
+    private readonly CostCenter _closedProject = new() { CompanyId = CompanyId, Code = "P2", NameEn = "Old project", IsActive = false };
 
     private static Account Posting(string code, AccountType type, AccountRole role = AccountRole.None, bool active = true) =>
         new() { CompanyId = CompanyId, Code = code, NameEn = code, Type = type, IsPosting = true, IsActive = active, Role = role };
 
     private PostingContext Context(Currency? voucherCurrency = null, Func<DateOnly, bool>? isOpen = null) =>
         new(new[] { _cash, _bank, _rent, _utilities, _sales, _group, _closed, _receivable }.ToDictionary(a => a.Id),
-            Base, voucherCurrency ?? Base, isOpen ?? (_ => true));
+            Base, voucherCurrency ?? Base, isOpen ?? (_ => true),
+            new[] { _customer, _dormant }.ToDictionary(p => p.Id),
+            new[] { _project, _closedProject }.ToDictionary(c => c.Id));
 
     private Voucher NewVoucher(VoucherKind kind, params (Account Account, decimal Debit, decimal Credit)[] lines) => new()
     {
@@ -37,6 +43,8 @@ public class PostingEngineTests
             CompanyId = CompanyId,
             LineNumber = i + 1,
             AccountId = l.Account.Id,
+            // The customer or supplier that a receivable or payable line has to name.
+            PartyId = l.Account.Role is AccountRole.Receivable or AccountRole.Payable ? _customer.Id : null,
             Debit = l.Debit,
             Credit = l.Credit,
         }).ToList(),
@@ -314,6 +322,73 @@ public class PostingEngineTests
         var voucher = NewVoucher(VoucherKind.Journal, (_rent, 5m, 0), (_sales, 0, 5m));
 
         Assert.Empty(PostingEngine.ValidateForPosting(voucher, Context()));
+    }
+
+    // ---- Customers, suppliers and cost centers (brief section 10.2) ----
+
+    [Fact]
+    public void A_line_on_a_receivable_account_must_name_the_customer_and_the_tag_travels_to_the_ledger()
+    {
+        var voucher = NewVoucher(VoucherKind.Receipt, (_receivable, 0, 80m));
+        voucher.Lines[0].PartyId = null;
+        Assert.Contains(new PostingIssue("lines[0].party", "line.party-required"), PostingEngine.ValidateForPosting(voucher, Context()));
+
+        voucher.Lines[0].PartyId = _customer.Id;
+        var context = Context();
+        Assert.Empty(PostingEngine.ValidateForPosting(voucher, context));
+
+        var entries = PostingEngine.GenerateEntries(voucher, context);
+        Assert.Equal(_customer.Id, entries[0].PartyId);
+        Assert.Null(entries[1].PartyId); // the bank side belongs to nobody
+    }
+
+    [Fact]
+    public void A_draft_may_leave_the_customer_out_but_posting_may_not()
+    {
+        var voucher = NewVoucher(VoucherKind.Receipt, (_receivable, 0, 80m));
+        voucher.Lines[0].PartyId = null;
+
+        Assert.Empty(PostingEngine.ValidateDraft(voucher, Context()));
+        Assert.Contains("line.party-required", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
+    }
+
+    [Fact]
+    public void Only_receivable_and_payable_accounts_take_a_customer_or_supplier()
+    {
+        var voucher = NewVoucher(VoucherKind.Payment, (_rent, 20m, 0));
+        voucher.Lines[0].PartyId = _customer.Id;
+
+        Assert.Contains(new PostingIssue("lines[0].party", "line.party-not-allowed"), PostingEngine.ValidateForPosting(voucher, Context()));
+    }
+
+    [Fact]
+    public void An_unknown_or_switched_off_customer_is_refused()
+    {
+        var voucher = NewVoucher(VoucherKind.Receipt, (_receivable, 0, 80m));
+
+        voucher.Lines[0].PartyId = Guid.NewGuid();
+        Assert.Contains("line.party-unknown", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
+
+        voucher.Lines[0].PartyId = _dormant.Id;
+        Assert.Contains("line.party-inactive", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
+    }
+
+    [Fact]
+    public void A_cost_center_is_optional_on_any_line_but_must_exist_and_be_active()
+    {
+        var voucher = NewVoucher(VoucherKind.Payment, (_rent, 20m, 0));
+        Assert.Empty(PostingEngine.ValidateForPosting(voucher, Context()));
+
+        voucher.Lines[0].CostCenterId = _project.Id;
+        var context = Context();
+        Assert.Empty(PostingEngine.ValidateForPosting(voucher, context));
+        Assert.Equal(_project.Id, PostingEngine.GenerateEntries(voucher, context)[0].CostCenterId);
+
+        voucher.Lines[0].CostCenterId = _closedProject.Id;
+        Assert.Contains("line.cost-center-inactive", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
+
+        voucher.Lines[0].CostCenterId = Guid.NewGuid();
+        Assert.Contains("line.cost-center-unknown", Codes(PostingEngine.ValidateForPosting(voucher, Context())));
     }
 
     [Fact]

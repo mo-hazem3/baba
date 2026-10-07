@@ -28,6 +28,8 @@ import type {
   AccountInput,
   BackupRequest,
   CompanyInfo,
+  CostCenterDto,
+  CostCenterInput,
   CountryDto,
   CreateCompanyRequest,
   CurrencyDto,
@@ -35,6 +37,7 @@ import type {
   ExportReportParams,
   GetReportParams,
   HostInfo,
+  ListPartiesParams,
   ListPeriodsParams,
   ListVouchersParams,
   LockPeriodRequest,
@@ -42,6 +45,8 @@ import type {
   MoveEntriesRequest,
   MoveEntriesResult,
   OpenCompanyRequest,
+  PartyDto,
+  PartyInput,
   PathChoice,
   PeriodDto,
   PrintSettingsDto,
@@ -53,6 +58,7 @@ import type {
   SaveDialogRequest,
   SaveVoucherRequest,
   SetActiveRequest,
+  SetModulesRequest,
   StartupInfo,
   TestPageRequest,
   VoucherDto,
@@ -1388,6 +1394,100 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCloseCompanyMutationOptions(options), queryClient);
+    }
+
+export type setEnabledModulesResponse200 = {
+  data: CompanyInfo
+  status: 200
+}
+
+export type setEnabledModulesResponseSuccess = (setEnabledModulesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setEnabledModulesResponse = (setEnabledModulesResponseSuccess)
+
+export const getSetEnabledModulesUrl = () => {
+
+
+
+
+  return `/api/company/modules`
+}
+
+export const setEnabledModules = async (setModulesRequest: SetModulesRequest, options?: Parameters<typeof http>[1]): Promise<setEnabledModulesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setEnabledModulesResponse>(getSetEnabledModulesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setModulesRequest)
+  }
+);}
+
+
+
+
+
+export const getSetEnabledModulesMutationKey = () => ['setEnabledModules'] as const;
+
+export const getSetEnabledModulesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEnabledModules>>, TError,SetEnabledModulesMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setEnabledModules>>, TError,SetEnabledModulesMutationVariables, TContext> => {
+
+const mutationKey = getSetEnabledModulesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setEnabledModules>>, SetEnabledModulesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setEnabledModules(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetEnabledModulesMutationResult = NonNullable<Awaited<ReturnType<typeof setEnabledModules>>>
+    export type SetEnabledModulesMutationBody = SetModulesRequest
+    export type SetEnabledModulesMutationError = unknown
+    export type SetEnabledModulesMutationVariables = {data: SetModulesRequest}
+
+    export const useSetEnabledModules = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEnabledModules>>, TError,SetEnabledModulesMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setEnabledModules>>,
+        TError,
+        SetEnabledModulesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetEnabledModulesMutationOptions(options), queryClient);
     }
 
 export type backupCompanyResponse200 = {
@@ -2955,6 +3055,955 @@ export function usePrintVoucher<TData = Awaited<ReturnType<typeof printVoucher>>
 
 
 
+
+export type listPartiesResponse200 = {
+  data: PartyDto[]
+  status: 200
+}
+
+export type listPartiesResponseSuccess = (listPartiesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPartiesResponse = (listPartiesResponseSuccess)
+
+export const getListPartiesUrl = (params?: ListPartiesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/parties?${stringifiedParams}` : `/api/parties`
+}
+
+export const listParties = async (params?: ListPartiesParams, options?: Parameters<typeof http>[1]): Promise<listPartiesResponse> => {
+
+  return http<listPartiesResponse>(getListPartiesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPartiesQueryKey = (params?: ListPartiesParams,) => {
+    return [
+    `/api/parties`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPartiesQueryOptions = <TData = Awaited<ReturnType<typeof listParties>>, TError = unknown>(params?: ListPartiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPartiesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listParties>>> = ({ signal }) => listParties(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPartiesQueryResult = NonNullable<Awaited<ReturnType<typeof listParties>>>
+export type ListPartiesQueryError = unknown
+
+
+export function useListParties<TData = Awaited<ReturnType<typeof listParties>>, TError = unknown>(
+ params: undefined |  ListPartiesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listParties>>,
+          TError,
+          Awaited<ReturnType<typeof listParties>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListParties<TData = Awaited<ReturnType<typeof listParties>>, TError = unknown>(
+ params?: ListPartiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listParties>>,
+          TError,
+          Awaited<ReturnType<typeof listParties>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListParties<TData = Awaited<ReturnType<typeof listParties>>, TError = unknown>(
+ params?: ListPartiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListParties<TData = Awaited<ReturnType<typeof listParties>>, TError = unknown>(
+ params?: ListPartiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listParties>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPartiesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createPartyResponse200 = {
+  data: PartyDto
+  status: 200
+}
+
+export type createPartyResponseSuccess = (createPartyResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createPartyResponse = (createPartyResponseSuccess)
+
+export const getCreatePartyUrl = () => {
+
+
+
+
+  return `/api/parties`
+}
+
+export const createParty = async (partyInput: PartyInput, options?: Parameters<typeof http>[1]): Promise<createPartyResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createPartyResponse>(getCreatePartyUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(partyInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePartyMutationKey = () => ['createParty'] as const;
+
+export const getCreatePartyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createParty>>, TError,CreatePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createParty>>, TError,CreatePartyMutationVariables, TContext> => {
+
+const mutationKey = getCreatePartyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createParty>>, CreatePartyMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createParty(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePartyMutationResult = NonNullable<Awaited<ReturnType<typeof createParty>>>
+    export type CreatePartyMutationBody = PartyInput
+    export type CreatePartyMutationError = unknown
+    export type CreatePartyMutationVariables = {data: PartyInput}
+
+    export const useCreateParty = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createParty>>, TError,CreatePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createParty>>,
+        TError,
+        CreatePartyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePartyMutationOptions(options), queryClient);
+    }
+
+export type updatePartyResponse200 = {
+  data: PartyDto
+  status: 200
+}
+
+export type updatePartyResponseSuccess = (updatePartyResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updatePartyResponse = (updatePartyResponseSuccess)
+
+export const getUpdatePartyUrl = (id: string,) => {
+
+
+
+
+  return `/api/parties/${id}`
+}
+
+export const updateParty = async (id: string,
+    partyInput: PartyInput, options?: Parameters<typeof http>[1]): Promise<updatePartyResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updatePartyResponse>(getUpdatePartyUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(partyInput)
+  }
+);}
+
+
+
+
+
+export const getUpdatePartyMutationKey = () => ['updateParty'] as const;
+
+export const getUpdatePartyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateParty>>, TError,UpdatePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateParty>>, TError,UpdatePartyMutationVariables, TContext> => {
+
+const mutationKey = getUpdatePartyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateParty>>, UpdatePartyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateParty(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePartyMutationResult = NonNullable<Awaited<ReturnType<typeof updateParty>>>
+    export type UpdatePartyMutationBody = PartyInput
+    export type UpdatePartyMutationError = unknown
+    export type UpdatePartyMutationVariables = {id: string;data: PartyInput}
+
+    export const useUpdateParty = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateParty>>, TError,UpdatePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateParty>>,
+        TError,
+        UpdatePartyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdatePartyMutationOptions(options), queryClient);
+    }
+
+export type deletePartyResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deletePartyResponseSuccess = (deletePartyResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deletePartyResponse = (deletePartyResponseSuccess)
+
+export const getDeletePartyUrl = (id: string,) => {
+
+
+
+
+  return `/api/parties/${id}`
+}
+
+export const deleteParty = async (id: string, options?: Parameters<typeof http>[1]): Promise<deletePartyResponse> => {
+
+  return http<deletePartyResponse>(getDeletePartyUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePartyMutationKey = () => ['deleteParty'] as const;
+
+export const getDeletePartyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteParty>>, TError,DeletePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteParty>>, TError,DeletePartyMutationVariables, TContext> => {
+
+const mutationKey = getDeletePartyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteParty>>, DeletePartyMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteParty(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePartyMutationResult = NonNullable<Awaited<ReturnType<typeof deleteParty>>>
+
+    export type DeletePartyMutationError = unknown
+    export type DeletePartyMutationVariables = {id: string}
+
+    export const useDeleteParty = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteParty>>, TError,DeletePartyMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteParty>>,
+        TError,
+        DeletePartyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePartyMutationOptions(options), queryClient);
+    }
+
+export type setPartyActiveResponse200 = {
+  data: PartyDto
+  status: 200
+}
+
+export type setPartyActiveResponseSuccess = (setPartyActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setPartyActiveResponse = (setPartyActiveResponseSuccess)
+
+export const getSetPartyActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/parties/${id}/active`
+}
+
+export const setPartyActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setPartyActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setPartyActiveResponse>(getSetPartyActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetPartyActiveMutationKey = () => ['setPartyActive'] as const;
+
+export const getSetPartyActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setPartyActive>>, TError,SetPartyActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setPartyActive>>, TError,SetPartyActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetPartyActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setPartyActive>>, SetPartyActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setPartyActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetPartyActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setPartyActive>>>
+    export type SetPartyActiveMutationBody = SetActiveRequest
+    export type SetPartyActiveMutationError = unknown
+    export type SetPartyActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetPartyActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setPartyActive>>, TError,SetPartyActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setPartyActive>>,
+        TError,
+        SetPartyActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetPartyActiveMutationOptions(options), queryClient);
+    }
+
+export type listCostCentersResponse200 = {
+  data: CostCenterDto[]
+  status: 200
+}
+
+export type listCostCentersResponseSuccess = (listCostCentersResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listCostCentersResponse = (listCostCentersResponseSuccess)
+
+export const getListCostCentersUrl = () => {
+
+
+
+
+  return `/api/cost-centers`
+}
+
+export const listCostCenters = async ( options?: Parameters<typeof http>[1]): Promise<listCostCentersResponse> => {
+
+  return http<listCostCentersResponse>(getListCostCentersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCostCentersQueryKey = () => {
+    return [
+    `/api/cost-centers`
+    ] as const;
+    }
+
+
+export const getListCostCentersQueryOptions = <TData = Awaited<ReturnType<typeof listCostCenters>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCostCentersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCostCenters>>> = ({ signal }) => listCostCenters({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCostCentersQueryResult = NonNullable<Awaited<ReturnType<typeof listCostCenters>>>
+export type ListCostCentersQueryError = unknown
+
+
+export function useListCostCenters<TData = Awaited<ReturnType<typeof listCostCenters>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCostCenters>>,
+          TError,
+          Awaited<ReturnType<typeof listCostCenters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCostCenters<TData = Awaited<ReturnType<typeof listCostCenters>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCostCenters>>,
+          TError,
+          Awaited<ReturnType<typeof listCostCenters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCostCenters<TData = Awaited<ReturnType<typeof listCostCenters>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListCostCenters<TData = Awaited<ReturnType<typeof listCostCenters>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCostCenters>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCostCentersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createCostCenterResponse200 = {
+  data: CostCenterDto
+  status: 200
+}
+
+export type createCostCenterResponseSuccess = (createCostCenterResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createCostCenterResponse = (createCostCenterResponseSuccess)
+
+export const getCreateCostCenterUrl = () => {
+
+
+
+
+  return `/api/cost-centers`
+}
+
+export const createCostCenter = async (costCenterInput: CostCenterInput, options?: Parameters<typeof http>[1]): Promise<createCostCenterResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createCostCenterResponse>(getCreateCostCenterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(costCenterInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCostCenterMutationKey = () => ['createCostCenter'] as const;
+
+export const getCreateCostCenterMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCostCenter>>, TError,CreateCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCostCenter>>, TError,CreateCostCenterMutationVariables, TContext> => {
+
+const mutationKey = getCreateCostCenterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCostCenter>>, CreateCostCenterMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCostCenter(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCostCenterMutationResult = NonNullable<Awaited<ReturnType<typeof createCostCenter>>>
+    export type CreateCostCenterMutationBody = CostCenterInput
+    export type CreateCostCenterMutationError = unknown
+    export type CreateCostCenterMutationVariables = {data: CostCenterInput}
+
+    export const useCreateCostCenter = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCostCenter>>, TError,CreateCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCostCenter>>,
+        TError,
+        CreateCostCenterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCostCenterMutationOptions(options), queryClient);
+    }
+
+export type updateCostCenterResponse200 = {
+  data: CostCenterDto
+  status: 200
+}
+
+export type updateCostCenterResponseSuccess = (updateCostCenterResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateCostCenterResponse = (updateCostCenterResponseSuccess)
+
+export const getUpdateCostCenterUrl = (id: string,) => {
+
+
+
+
+  return `/api/cost-centers/${id}`
+}
+
+export const updateCostCenter = async (id: string,
+    costCenterInput: CostCenterInput, options?: Parameters<typeof http>[1]): Promise<updateCostCenterResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateCostCenterResponse>(getUpdateCostCenterUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(costCenterInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateCostCenterMutationKey = () => ['updateCostCenter'] as const;
+
+export const getUpdateCostCenterMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCostCenter>>, TError,UpdateCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCostCenter>>, TError,UpdateCostCenterMutationVariables, TContext> => {
+
+const mutationKey = getUpdateCostCenterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCostCenter>>, UpdateCostCenterMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateCostCenter(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCostCenterMutationResult = NonNullable<Awaited<ReturnType<typeof updateCostCenter>>>
+    export type UpdateCostCenterMutationBody = CostCenterInput
+    export type UpdateCostCenterMutationError = unknown
+    export type UpdateCostCenterMutationVariables = {id: string;data: CostCenterInput}
+
+    export const useUpdateCostCenter = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCostCenter>>, TError,UpdateCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateCostCenter>>,
+        TError,
+        UpdateCostCenterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateCostCenterMutationOptions(options), queryClient);
+    }
+
+export type deleteCostCenterResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteCostCenterResponseSuccess = (deleteCostCenterResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteCostCenterResponse = (deleteCostCenterResponseSuccess)
+
+export const getDeleteCostCenterUrl = (id: string,) => {
+
+
+
+
+  return `/api/cost-centers/${id}`
+}
+
+export const deleteCostCenter = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteCostCenterResponse> => {
+
+  return http<deleteCostCenterResponse>(getDeleteCostCenterUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCostCenterMutationKey = () => ['deleteCostCenter'] as const;
+
+export const getDeleteCostCenterMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCostCenter>>, TError,DeleteCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCostCenter>>, TError,DeleteCostCenterMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCostCenterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCostCenter>>, DeleteCostCenterMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCostCenter(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCostCenterMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCostCenter>>>
+
+    export type DeleteCostCenterMutationError = unknown
+    export type DeleteCostCenterMutationVariables = {id: string}
+
+    export const useDeleteCostCenter = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCostCenter>>, TError,DeleteCostCenterMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCostCenter>>,
+        TError,
+        DeleteCostCenterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCostCenterMutationOptions(options), queryClient);
+    }
+
+export type setCostCenterActiveResponse200 = {
+  data: CostCenterDto
+  status: 200
+}
+
+export type setCostCenterActiveResponseSuccess = (setCostCenterActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setCostCenterActiveResponse = (setCostCenterActiveResponseSuccess)
+
+export const getSetCostCenterActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/cost-centers/${id}/active`
+}
+
+export const setCostCenterActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setCostCenterActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setCostCenterActiveResponse>(getSetCostCenterActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetCostCenterActiveMutationKey = () => ['setCostCenterActive'] as const;
+
+export const getSetCostCenterActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCostCenterActive>>, TError,SetCostCenterActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCostCenterActive>>, TError,SetCostCenterActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetCostCenterActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCostCenterActive>>, SetCostCenterActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setCostCenterActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCostCenterActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setCostCenterActive>>>
+    export type SetCostCenterActiveMutationBody = SetActiveRequest
+    export type SetCostCenterActiveMutationError = unknown
+    export type SetCostCenterActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetCostCenterActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCostCenterActive>>, TError,SetCostCenterActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setCostCenterActive>>,
+        TError,
+        SetCostCenterActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetCostCenterActiveMutationOptions(options), queryClient);
+    }
 
 export type listPeriodsResponse200 = {
   data: PeriodDto[]

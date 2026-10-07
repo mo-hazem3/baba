@@ -24,6 +24,8 @@ public static class DependencyInjection
         services.AddSingleton<IAccountStore, AccountStore>();
         services.AddSingleton<IVoucherStore, VoucherStore>();
         services.AddSingleton<IPeriodStore, PeriodStore>();
+        services.AddSingleton<IPartyStore, PartyStore>();
+        services.AddSingleton<ICostCenterStore, CostCenterStore>();
         services.AddSingleton<ILedgerQuery, LedgerQuery>();
         return services;
     }

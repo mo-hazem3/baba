@@ -5,7 +5,8 @@ using Baba.Localization;
 
 namespace Baba.Application.Accounting;
 
-public sealed record VoucherLineInput(Guid? Id, Guid AccountId, string? Description, decimal Debit, decimal Credit);
+public sealed record VoucherLineInput(
+    Guid? Id, Guid AccountId, string? Description, decimal Debit, decimal Credit, Guid? PartyId = null, Guid? CostCenterId = null);
 
 /// <summary>What the voucher form sends. Rows the user left completely empty must be left out; every row sent is checked.</summary>
 public sealed record VoucherInput(
@@ -16,7 +17,8 @@ public sealed record VoucherInput(
     string? Memo,
     IReadOnlyList<VoucherLineInput> Lines);
 
-public sealed record VoucherLineDto(Guid Id, Guid AccountId, string? Description, decimal Debit, decimal Credit);
+public sealed record VoucherLineDto(
+    Guid Id, Guid AccountId, string? Description, decimal Debit, decimal Credit, Guid? PartyId = null, Guid? CostCenterId = null);
 
 public sealed record VoucherDto(
     Guid Id,
@@ -40,6 +42,8 @@ public sealed record VoucherDto(
 public sealed class VoucherService(
     IVoucherStore vouchers,
     IAccountStore accounts,
+    IPartyStore parties,
+    ICostCenterStore costCenters,
     IPeriodStore periods,
     ICompanyFiles files,
     TimeProvider clock)
@@ -149,6 +153,8 @@ public sealed class VoucherService(
             VoucherId = voucher.Id,
             LineNumber = index + 1,
             AccountId = line.AccountId,
+            PartyId = line.PartyId == Guid.Empty ? null : line.PartyId,
+            CostCenterId = line.CostCenterId == Guid.Empty ? null : line.CostCenterId,
             Description = Clean(line.Description),
             Debit = line.Debit,
             Credit = line.Credit,
@@ -163,8 +169,11 @@ public sealed class VoucherService(
         var baseCurrency = CurrencyCatalog.Find(company.BaseCurrencyCode)?.Currency ?? new Currency(company.BaseCurrencyCode, 2);
         var locked = (await periods.ListAsync(cancellationToken)).Where(p => p.IsLocked).ToList();
         var allAccounts = (await accounts.ListAsync(cancellationToken)).ToDictionary(a => a.Id);
+        var allParties = (await parties.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+        var allCostCenters = (await costCenters.ListAsync(cancellationToken)).ToDictionary(c => c.Id);
 
-        return new PostingContext(allAccounts, baseCurrency, baseCurrency, date => !locked.Any(p => p.Start <= date && date <= p.End));
+        return new PostingContext(
+            allAccounts, baseCurrency, baseCurrency, date => !locked.Any(p => p.Start <= date && date <= p.End), allParties, allCostCenters);
     }
 
     private static void AddLockedPeriodIssue(List<PostingIssue> issues, DateOnly date, PostingContext context)
@@ -183,7 +192,7 @@ public sealed class VoucherService(
 
     private static VoucherDto ToDto(Voucher v) => new(
         v.Id, v.Kind, v.Number, v.Date, v.Status, v.CurrencyCode, v.CashAccountId, v.Reference, v.Memo,
-        v.Lines.OrderBy(l => l.LineNumber).Select(l => new VoucherLineDto(l.Id, l.AccountId, l.Description, l.Debit, l.Credit)).ToList(),
+        v.Lines.OrderBy(l => l.LineNumber).Select(l => new VoucherLineDto(l.Id, l.AccountId, l.Description, l.Debit, l.Credit, l.PartyId, l.CostCenterId)).ToList(),
         v.Kind == VoucherKind.Receipt ? v.TotalCredit : v.TotalDebit,
         v.PostedAt);
 }

@@ -10,7 +10,7 @@ namespace Baba.Api.Endpoints;
 /// <summary>The inputs a report may take. Each report uses the ones it needs: date range, "as of" date, account, comparison.</summary>
 public sealed record ReportQuery(
     DateOnly? From, DateOnly? To, DateOnly? AsOf, Guid? AccountId, Comparison Comparison = Comparison.None,
-    VoucherKind? Kind = null, VoucherStatus? Status = null);
+    VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null);
 
 /// <summary>
 /// The reports (trial balance, profit and loss, balance sheet, statement of account, general ledger, journal) and the two
@@ -21,6 +21,7 @@ public static class ReportEndpoints
     public static readonly string[] Keys =
     [
         "trial-balance", "profit-and-loss", "balance-sheet", "statement-of-account", "general-ledger", "journal", "chart-of-accounts", "vouchers",
+        "party-statement", "aging-receivable", "aging-payable", "cost-centers",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -58,12 +59,22 @@ public static class ReportEndpoints
         switch (key)
         {
             case "trial-balance": return await reports.TrialBalanceAsync(q.From, q.To, ct);
-            case "profit-and-loss": return await reports.ProfitAndLossAsync(q.From, q.To, q.Comparison, ct);
+            case "profit-and-loss":
+                return q.CostCenterId is { } costCenterId
+                    ? await reports.ProfitAndLossAsync(costCenterId, q.From, q.To, q.Comparison, ct)
+                    : await reports.ProfitAndLossAsync(q.From, q.To, q.Comparison, ct);
             case "balance-sheet": return await reports.BalanceSheetAsync(q.AsOf ?? q.To ?? today, q.Comparison, ct);
             case "general-ledger": return await reports.GeneralLedgerAsync(q.From, q.To, ct);
             case "journal": return await reports.JournalAsync(q.From, q.To, ct);
             case "chart-of-accounts": return await listings.ChartOfAccountsAsync(ct);
             case "vouchers": return await listings.VouchersAsync(new VoucherSearch(q.Kind, q.Status, q.From, q.To), ct);
+            case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
+            case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);
+            case "cost-centers": return await reports.CostCenterSummaryAsync(q.From, q.To, ct);
+            case "party-statement":
+                if (q.PartyId is not { } partyId)
+                    throw new ValidationException([new ValidationIssue("partyId", "report.party-required")]);
+                return await reports.PartyStatementAsync(partyId, q.From, q.To, ct);
             case "statement-of-account":
                 if (q.AccountId is not { } accountId)
                     throw new ValidationException([new ValidationIssue("accountId", "report.account-required")]);

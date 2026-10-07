@@ -14,7 +14,10 @@
     "receipts": "Receipts",
     "journal": "Journal vouchers",
     "reports": "Reports",
-    "shortcuts": "Keyboard shortcuts"
+    "shortcuts": "Keyboard shortcuts",
+    "customers": "Customers",
+    "suppliers": "Suppliers",
+    "costCenters": "Cost centers"
   },
   "header": {
     "language": "Language",
@@ -65,7 +68,9 @@
     "vouchers": "Vouchers are your records of money coming in, going out, or being moved between accounts. A draft can be changed freely and does not affect your reports. Once you post a voucher it gets a number and appears in your books.",
     "voucher": "Fill in the date and the accounts, then save. \"Save as draft\" keeps your work without recording it. \"Save and post\" records it in your books and gives it a number. A posted voucher can still be corrected unless its month is locked.",
     "reports": "Every report is worked out from your posted vouchers. Click any amount in a report to see the entries behind it.",
-    "report": "Choose the dates at the top. Click any amount to see the entries behind it. Use Export to print the report or save it as PDF, Excel or CSV."
+    "report": "Choose the dates at the top. Click any amount to see the entries behind it. Use Export to print the report or save it as PDF, Excel or CSV.",
+    "parties": "Customers owe you money and suppliers are owed money by you. Every entry on a receivable or payable account names the customer or supplier it is for, which is what lets Baba show each one's statement and how long their balance has been outstanding. A customer or supplier that has been used cannot be deleted, only switched off.",
+    "costCenters": "A cost center (or project) is an optional tag you can put on any voucher line, for example a branch or a job. The profit and loss can then be read for each one."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -220,7 +225,11 @@
       "unavailable": "Printing to PDF is available in the Baba desktop app."
     },
     "hijri": "Hijri dates",
-    "hijriHelp": "Show the Hijri date next to dates. Baba always records the Gregorian date."
+    "hijriHelp": "Show the Hijri date next to dates. Baba always records the Gregorian date.",
+    "modules": {
+      "title": "Optional parts of Baba",
+      "intro": "Switch on only what you use. Switching one off only hides its screens: nothing you recorded is deleted, and it all comes back when you switch it on again."
+    }
   },
   "errors": {
     "WrongPasswordOrNotABabaFile": "The password is wrong, or this is not a Baba file.",
@@ -286,7 +295,11 @@
     "findAccount": "Find an account",
     "findAccountHint": "Type part of a code or name, use the arrow keys, and press Enter to choose.",
     "noAccountFound": "No account matches.",
-    "searchAccounts": "Search accounts"
+    "searchAccounts": "Search accounts",
+    "party": "Customer / supplier",
+    "costCenter": "Cost center",
+    "chooseCustomer": "Choose the customer",
+    "chooseSupplier": "Choose the supplier"
   },
   "accounts": {
     "title": "Chart of accounts",
@@ -444,7 +457,13 @@
         "amount-negative": "Line {{line}}: the amount cannot be negative.",
         "amount-both-sides": "Line {{line}}: use either debit or credit, not both.",
         "amount-decimals": "Line {{line}}: too many decimal places for this currency.",
-        "amount-wrong-side": "Line {{line}}: this amount is on the wrong side."
+        "amount-wrong-side": "Line {{line}}: this amount is on the wrong side.",
+        "party-required": "Line {{line}}: choose the customer or supplier this is for.",
+        "party-unknown": "Line {{line}}: this customer or supplier no longer exists.",
+        "party-inactive": "Line {{line}}: this customer or supplier is switched off.",
+        "party-not-allowed": "Line {{line}}: only receivable and payable accounts take a customer or supplier.",
+        "cost-center-unknown": "Line {{line}}: this cost center no longer exists.",
+        "cost-center-inactive": "Line {{line}}: this cost center is switched off."
       },
       "balance": {
         "unbalanced": "Debits and credits are not equal.",
@@ -479,7 +498,11 @@
       "balance-sheet": "Balance sheet",
       "statement-of-account": "Account statement",
       "general-ledger": "General ledger",
-      "journal": "Journal"
+      "journal": "Journal",
+      "party-statement": "Customer or supplier statement",
+      "aging-receivable": "Customers aging",
+      "aging-payable": "Suppliers aging",
+      "cost-centers": "Cost centers"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -487,7 +510,11 @@
       "balance-sheet": "What you own, what you owe and what is left for the owners, on one day.",
       "statement-of-account": "Every entry on one account with a running balance.",
       "general-ledger": "The entries of every account, one account after another.",
-      "journal": "Every entry in date order, as it was recorded."
+      "journal": "Every entry in date order, as it was recorded.",
+      "party-statement": "Every entry of one customer or supplier with a running balance.",
+      "aging-receivable": "Who owes you, and for how long it has been overdue.",
+      "aging-payable": "Whom you owe, and for how long it has been overdue.",
+      "cost-centers": "Revenue, expenses and profit of each cost center."
     },
     "presets": {
       "thisMonth": "This month",
@@ -504,7 +531,12 @@
     "compare": "Compare with last year",
     "chooseAccount": "Choose an account",
     "chooseAccountFirst": "Choose an account to see its statement.",
-    "checkFailed": "check failed"
+    "checkFailed": "check failed",
+    "party": "Customer or supplier",
+    "chooseParty": "Choose a customer or supplier",
+    "choosePartyFirst": "Choose a customer or supplier to see the statement.",
+    "costCenter": "Cost center",
+    "allCostCenters": "All (the whole company)"
   },
   "export": {
     "export": "Export",
@@ -589,6 +621,95 @@
       "nextRow": "Next row",
       "textSize": "Make text larger or smaller",
       "back": "Go back"
+    }
+  },
+  "lookup": {
+    "nothingFound": "Nothing found."
+  },
+  "parties": {
+    "customers": "Customers",
+    "suppliers": "Suppliers",
+    "newCustomer": "New customer",
+    "newSupplier": "New supplier",
+    "editCustomer": "Edit customer",
+    "editSupplier": "Edit supplier",
+    "search": "Search by code, name or phone",
+    "code": "Code",
+    "name": "Name",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "nameHelp": "Enter at least one name. If you leave one empty, the other is used for both.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "taxNumber": "Tax or registration number",
+    "taxNumberHelp": "Their own number, printed on documents. It is kept as you type it.",
+    "creditLimit": "Credit limit",
+    "creditLimitHelp": "The most this customer should owe you. Leave 0 for no limit.",
+    "noLimit": "No limit",
+    "terms": "Payment terms",
+    "termsHelp": "Days after the date of an entry that the amount falls due. 0 means due at once.",
+    "days": "{{count}} days",
+    "notes": "Notes",
+    "owesYou": "Owes you",
+    "youOwe": "You owe",
+    "overLimit": "Over limit",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "statement": "Statement",
+    "edit": "Edit",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody": "This cannot be undone.",
+    "deleted": "Deleted.",
+    "emptyCustomersTitle": "No customers yet",
+    "emptyCustomersBody": "Add the people and businesses that buy from you.",
+    "emptySuppliersTitle": "No suppliers yet",
+    "emptySuppliersBody": "Add the people and businesses you buy from.",
+    "issues": {
+      "party": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another customer or supplier already uses this code.",
+        "name-required": "Enter a name.",
+        "credit-limit-negative": "The credit limit cannot be negative.",
+        "terms-invalid": "Payment terms must be between 0 and 365 days.",
+        "kind-in-use": "This one already has entries, so it cannot change between customer and supplier.",
+        "in-use": "This one has entries, so it cannot be deleted. Switch it off instead."
+      }
+    }
+  },
+  "costCenters": {
+    "title": "Cost centers",
+    "new": "New cost center",
+    "edit": "Edit cost center",
+    "editShort": "Edit",
+    "code": "Code",
+    "name": "Name",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "nameHelp": "Enter at least one name. If you leave one empty, the other is used for both.",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "profitAndLoss": "Profit and loss",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody": "This cannot be undone.",
+    "deleted": "Deleted.",
+    "emptyTitle": "No cost centers yet",
+    "emptyBody": "Add a branch, department or project to tag voucher lines with.",
+    "issues": {
+      "cost-center": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another cost center already uses this code.",
+        "name-required": "Enter a name.",
+        "in-use": "This one has entries, so it cannot be deleted. Switch it off instead."
+      }
     }
   }
 }

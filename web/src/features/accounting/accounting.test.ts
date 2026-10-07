@@ -146,8 +146,8 @@ describe('voucher rows', () => {
     const payment = toVoucherInput('Payment', header, rows)
     expect(payment).toMatchObject({ kind: 'Payment', date: '2026-10-06', cashAccountId: 'cash', reference: 'CHQ-1', memo: null })
     expect(payment.lines).toEqual([
-      { id: 'line-1', accountId: 'acc-1', description: 'rent', debit: 750, credit: 0 }, // a payment line is a debit only
-      { id: null, accountId: 'acc-2', description: null, debit: 20, credit: 0 },
+      { id: 'line-1', accountId: 'acc-1', partyId: null, costCenterId: null, description: 'rent', debit: 750, credit: 0 }, // a payment line is a debit only
+      { id: null, accountId: 'acc-2', partyId: null, costCenterId: null, description: null, debit: 20, credit: 0 },
     ])
 
     const receipt = toVoucherInput('Receipt', header, rows)
@@ -156,6 +156,11 @@ describe('voucher rows', () => {
     const journal = toVoucherInput('Journal', header, rows)
     expect(journal.cashAccountId).toBeNull();
     expect(journal.lines.map((l) => [l.debit, l.credit])).toEqual([[750, 5], [20, 0]])
+  })
+
+  it('carry the customer and the cost center of a line to the request', () => {
+    const [line] = toVoucherInput('Receipt', { date: '2026-10-06', cashAccountId: 'cash' }, [row({ accountId: 'a', partyId: 'cust', costCenterId: 'cc', credit: 9 })]).lines
+    expect(line).toMatchObject({ partyId: 'cust', costCenterId: 'cc' })
   })
 
   it('come back from a saved voucher without zeros in the way', () => {

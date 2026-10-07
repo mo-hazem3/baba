@@ -26,6 +26,22 @@ internal static class ReportLabels
     public static (string En, string Ar) GeneralLedger => ("General ledger", "دفتر الأستاذ العام");
     public static (string En, string Ar) Journal => ("Journal", "دفتر اليومية");
 
+    public static (string En, string Ar) PartyStatement => ("Statement", "كشف حساب");
+    public static (string En, string Ar) AgingReceivable => ("Customers aging", "أعمار ديون العملاء");
+    public static (string En, string Ar) AgingPayable => ("Suppliers aging", "أعمار ديون الموردين");
+    public static (string En, string Ar) CostCenters => ("Cost centers", "مراكز التكلفة");
+    public static (string En, string Ar) Customer => ("Customer", "العميل");
+    public static (string En, string Ar) Supplier => ("Supplier", "المورد");
+    public static (string En, string Ar) NotDue => ("Not due", "غير مستحق");
+    public static (string En, string Ar) Overdue1To30 => ("1–30 days", "١–٣٠ يومًا");
+    public static (string En, string Ar) Overdue31To60 => ("31–60 days", "٣١–٦٠ يومًا");
+    public static (string En, string Ar) Overdue61To90 => ("61–90 days", "٦١–٩٠ يومًا");
+    public static (string En, string Ar) OverdueOver90 => ("Over 90 days", "أكثر من ٩٠ يومًا");
+    public static (string En, string Ar) Total => ("Total", "الإجمالي");
+    public static (string En, string Ar) CreditLimit => ("Credit limit", "الحد الائتماني");
+    public static (string En, string Ar) WithinCreditLimits => ("No customer is over its credit limit", "لا يتجاوز أي عميل حده الائتماني");
+    public static (string En, string Ar) Profit => ("Profit (loss)", "الربح (الخسارة)");
+
     public static (string En, string Ar) Revenues => ("Revenues", "الإيرادات");
     public static (string En, string Ar) Expenses => ("Expenses", "المصروفات");
     public static (string En, string Ar) TotalRevenues => ("Total revenues", "إجمالي الإيرادات");

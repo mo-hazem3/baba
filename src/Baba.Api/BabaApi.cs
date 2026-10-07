@@ -48,6 +48,8 @@ public static class BabaApi
         services.AddSingleton<StartupRequest>();
         services.AddBabaInfrastructure();
         services.AddSingleton<ChartOfAccountsService>();
+        services.AddSingleton<PartyService>();
+        services.AddSingleton<CostCenterService>();
         services.AddSingleton<VoucherService>();
         services.AddSingleton<PeriodService>();
         services.AddSingleton<ReportService>();
@@ -91,6 +93,7 @@ public static class BabaApi
         api.MapPrintEndpoints();
         api.MapAccountEndpoints();
         api.MapVoucherEndpoints();
+        api.MapPartyEndpoints();
         api.MapPeriodEndpoints();
         api.MapReportEndpoints();
         api.MapBrandingEndpoints();
