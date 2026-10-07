@@ -66,6 +66,7 @@ async function main() {
     process.exit(2)
   }, 780000)
 
+  let page
   try {
     for (let i = 0; i < 60; i++) {
       if (appExit !== null) throw new Error(`The app exited at start with code ${appExit}`)
@@ -78,7 +79,6 @@ async function main() {
     context.setDefaultNavigationTimeout(30000)
 
     // The window may still be on about:blank while the app starts: wait for the real app page.
-    let page
     for (let i = 0; i < 120 && !page; i++) {
       page = context.pages().find((p) => p.url().startsWith('http://127.0.0.1'))
       if (!page) await sleep(500)
@@ -443,7 +443,7 @@ async function main() {
     await expect(page.locator('.company-details')).toContainText('Real Vat Trading', { timeout: 60000 })
 
     await menu('Tax codes')
-    await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('Default')
+    await expect(page.getByRole('row', { name: /SA-VAT-STD/ })).toContainText('Default', { timeout: 60000 }) // the first read of a new company seeds the pack's codes
     await page.screenshot({ path: path.join(shots, '22-tax-codes.png') })
 
     await page.evaluate(async () => {
@@ -476,6 +476,74 @@ async function main() {
     await expect(page.locator('.check-bad')).toHaveCount(0)
     await page.screenshot({ path: path.join(shots, '24-tax-return.png') })
     log('tax return: 150.00 tax on sales, and it agrees with the ledger')
+    await menu('Summary')
+
+    // ---- Phase 5: inventory (switched on in this company), stock in, a sale at cost, the valuation against the books ----
+    await page.evaluate(async () => {
+      await fetch('/api/company/modules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modules: ['bank-cash', 'customers-suppliers', 'sales', 'purchases', 'inventory'] }) })
+    })
+    await page.reload()
+    await expect(page.getByRole('menuitem', { name: 'Stock', exact: true })).toBeVisible({ timeout: 60000 })
+    await menu('Warehouses')
+    await expect(page.getByRole('row', { name: /MAIN/ })).toContainText('Main warehouse')
+    await page.screenshot({ path: path.join(shots, '25-warehouses.png') })
+
+    await menu('Products and prices')
+    await page.getByRole('button', { name: 'New product' }).click()
+    await page.getByLabel('Name (English)').fill('Real widget')
+    await page.getByLabel('Sale price').fill('100')
+    await pickAccount('Revenue account', '511')
+    await page.getByRole('switch', { name: 'Stock item' }).click()
+    await page.getByLabel('Reorder level').fill('5')
+    await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByRole('row', { name: /Real widget/ })).toContainText('Stock')
+    log('a stock item created with its reorder level')
+
+    await menu('Stock')
+    await page.getByRole('button', { name: '+ Opening stock' }).click()
+    await pickAccount('Product 1', 'Real widget')
+    await page.getByLabel('Quantity 1').fill('10')
+    await page.getByLabel('Cost per unit 1').fill('20')
+    await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByRole('row', { name: /Real widget/ })).toContainText('200.00')
+    await page.screenshot({ path: path.join(shots, '26-stock-on-hand.png') })
+    log('opening stock recorded: 10 at 20 = 200.00')
+
+    await menu('Sales')
+    await page.getByRole('button', { name: 'New invoice' }).click()
+    await pickAccount('Customer', 'Riyadh')
+    await pickAccount('Product 1', 'Real widget')
+    await page.getByLabel('Quantity 1').fill('8')
+    await page.getByRole('button', { name: 'Issue and post' }).click()
+    await expect(page.getByText(/Issued as SI-\d{4}-0002/)).toBeVisible()
+    await menu('Summary')
+    await expect(page.getByText('1 products are at or below their reorder level.')).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '27-low-stock.png') })
+    log('sold 8: the low-stock warning shows on the Summary')
+
+    await page.goto(new URL('/reports/stock-valuation', page.url()).toString())
+    await expect(page.getByRole('row', { name: /Real widget/ })).toContainText('40.00')
+    await expect(page.locator('.check-ok').first()).toBeVisible()
+    await expect(page.locator('.check-bad')).toHaveCount(0)
+    await page.screenshot({ path: path.join(shots, '28-stock-valuation.png') })
+    log('stock valuation: 2 left worth 40.00, and it agrees with the stock account of the ledger')
+
+    {
+      const out = await page.evaluate(async () => {
+        const result = {}
+        for (const key of ['stock-valuation', 'stock-movements', 'stock-reorder', 'warehouses', 'stock-documents']) {
+          const r = await fetch('/api/reports/' + key + '/export?format=Xlsx&layout=Both')
+          const b = new Uint8Array(await r.arrayBuffer())
+          result[key] = r.status + ':' + String.fromCharCode(...b.slice(0, 2))
+        }
+        const t = await fetch('/api/import/templates/opening-stock')
+        result.template = t.status
+        return result
+      })
+      for (const [key, value] of Object.entries(out)) if (key !== 'template' && value !== '200:PK') throw new Error('The Excel export of ' + key + ' is wrong: ' + value)
+      if (out.template !== 200) throw new Error('The opening-stock template is missing')
+      log('Excel exports of the stock reports and lists are real .xlsx files; the opening-stock template downloads')
+    }
     await menu('Summary')
 
     // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).
@@ -530,6 +598,10 @@ async function main() {
 
     await browser.close().catch(() => {})
     console.log('\nREAL WINDOW FLOW: ALL STEPS PASSED')
+  } catch (e) {
+    // A picture of the window at the moment of failure is worth more than the message.
+    try { await Promise.race([page.screenshot({ path: path.join(shots, 'FAILED.png') }), sleep(8000)]) } catch { /* no page */ }
+    throw e
   } finally {
     clearTimeout(watchdog)
     app.kill()

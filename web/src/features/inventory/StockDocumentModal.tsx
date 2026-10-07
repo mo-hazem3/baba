@@ -150,7 +150,7 @@ function StockDocumentDialog({ kind, editing, onClose }: { kind: StockDocumentKi
       destroyOnHidden
       width={900}
     >
-      <Form form={form} layout="vertical" onFinish={submit} requiredMark="optional">
+      <Form form={form} layout="vertical" onFinish={submit} requiredMark={false}>
         {problems.length > 0 && (
           <Alert type="error" showIcon className="form-alert" message={problems.length === 1 ? problems[0] : <ul className="problem-list">{problems.map((p) => <li key={p}>{p}</li>)}</ul>} />
         )}

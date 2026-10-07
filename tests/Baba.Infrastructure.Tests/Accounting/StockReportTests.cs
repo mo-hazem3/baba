@@ -111,4 +111,19 @@ public class StockReportTests : AccountingFixture
         Assert.Equal(250m, row.Cells[5].Amount);
         Assert.Empty((await e.Listings.StockDocumentsAsync(StockDocumentKind.Transfer, null, null)).Rows);
     }
+    [Fact]
+    public async Task The_valuation_still_agrees_with_the_ledger_after_opening_stock_a_sale_and_a_count_loss()
+    {
+        var (e, product) = await EnvAsync(reorderLevel: 5m);
+        var main = (await e.Warehouses.ListAsync()).Single().Id;
+        await e.StockDocs.SaveAsync(null, new StockDocumentInput(StockDocumentKind.Opening, Oct1, null, null, [new StockLineInput(product.Id, main, null, 10m, 20m)]));
+        await e.Trade.IssueAsync(null, Sell(e, product, 8m, Oct5));
+        await e.StockDocs.SaveAsync(null, new StockDocumentInput(StockDocumentKind.Adjustment, Oct10, null, null, [new StockLineInput(product.Id, main, null, -1m, null)]));
+
+        var report = await e.Listings.StockValuationAsync(Oct10, null);
+
+        Assert.Equal(20m, report.Rows.Last().Cells[5].Amount);
+        Assert.Equal(20m, await BalanceAsync(e, "114"));
+        Assert.All(report.Checks, c => Assert.True(c.Passed));
+    }
 }
