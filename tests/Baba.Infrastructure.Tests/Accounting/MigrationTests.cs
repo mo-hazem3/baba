@@ -17,7 +17,7 @@ public class MigrationTests : AccountingFixture
     {
         var path = NewPath("old");
         SQLitePCL.Batteries_V2.Init();
-        var connectionString = new SqliteConnectionStringBuilder { DataSource = path, Password = Password }.ToString();
+        var connectionString = new SqliteConnectionStringBuilder { DataSource = path, Password = Password, Pooling = false }.ToString();
         var scope = new Persistence.CompanyScope();
         var options = new DbContextOptionsBuilder<Persistence.CompanyDbContext>().UseSqlite(connectionString).Options;
 
@@ -42,7 +42,6 @@ public class MigrationTests : AccountingFixture
                 """);
         }
 
-        SqliteConnection.ClearAllPools();
         return path;
     }
 

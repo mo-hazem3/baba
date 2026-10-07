@@ -89,14 +89,13 @@ public class SqliteCompanyFilesTests : CompanyFilesFixture
         var path = NewPath("other-app");
         SQLitePCL.Batteries_V2.Init();
         await using (var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder { DataSource = path, Password = Password }.ToString()))
+            new SqliteConnectionStringBuilder { DataSource = path, Password = Password, Pooling = false }.ToString()))
         {
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandText = "CREATE TABLE Notes (Id INTEGER);";
             await command.ExecuteNonQueryAsync();
         }
-        SqliteConnection.ClearAllPools();
 
         var error = await Assert.ThrowsAsync<CompanyFileException>(() => NewManager().OpenAsync(path, Password));
 
@@ -243,14 +242,13 @@ public class SqliteCompanyFilesTests : CompanyFilesFixture
         files.Close();
 
         await using (var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder { DataSource = path, Password = Password }.ToString()))
+            new SqliteConnectionStringBuilder { DataSource = path, Password = Password, Pooling = false }.ToString()))
         {
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandText = "INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES ('29990101000000_FromTheFuture', '99.0.0');";
             await command.ExecuteNonQueryAsync();
         }
-        SqliteConnection.ClearAllPools();
 
         var error = await Assert.ThrowsAsync<CompanyFileException>(() => NewManager().OpenAsync(path, Password));
 

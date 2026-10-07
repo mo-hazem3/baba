@@ -19,14 +19,13 @@ public sealed class SqlCipherSpikeTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
         try { Directory.Delete(_folder, recursive: true); } catch (IOException) { /* best effort */ }
     }
 
     private string NewPath() => Path.Combine(_folder, "Company.baba");
 
     private static string ConnectionString(string path, string password) =>
-        new SqliteConnectionStringBuilder { DataSource = path, Password = password }.ToString();
+        new SqliteConnectionStringBuilder { DataSource = path, Password = password, Pooling = false }.ToString();
 
     private static SpikeContext Open(string path, string password) => new(ConnectionString(path, password));
 
@@ -49,7 +48,6 @@ public sealed class SqlCipherSpikeTests : IDisposable
             context.Lines.Add(new SpikeLine { Id = Guid.CreateVersion7(), Amount = 1.5m, Memo = "visible-text" });
             context.SaveChanges();
         }
-        SqliteConnection.ClearAllPools();
 
         var bytes = File.ReadAllBytes(path);
         var header = System.Text.Encoding.ASCII.GetString(bytes, 0, 15);
@@ -67,7 +65,6 @@ public sealed class SqlCipherSpikeTests : IDisposable
             context.Lines.Add(new SpikeLine { Id = Guid.CreateVersion7(), Amount = 12.5m, Memo = "a" });
             context.SaveChanges();
         }
-        SqliteConnection.ClearAllPools();
 
         using var reopened = Open(path, "secret-1");
 
@@ -83,7 +80,6 @@ public sealed class SqlCipherSpikeTests : IDisposable
             context.Lines.Add(new SpikeLine { Id = Guid.CreateVersion7(), Amount = 1m, Memo = "a" });
             context.SaveChanges();
         }
-        SqliteConnection.ClearAllPools();
 
         using var wrong = Open(path, "not-the-password");
         var error = Assert.Throws<SqliteException>(() => wrong.Lines.ToList());
@@ -159,7 +155,6 @@ public sealed class SqlCipherSpikeTests : IDisposable
 
             Assert.Equal("delete", JournalMode(context));
         }
-        SqliteConnection.ClearAllPools();
 
         Assert.Equal([path], Directory.GetFiles(_folder));
 
@@ -180,7 +175,6 @@ public sealed class SqlCipherSpikeTests : IDisposable
             context.SaveChanges();
         }
 
-        SqliteConnection.ClearAllPools();
         File.Delete(path);
 
         Assert.False(File.Exists(path));

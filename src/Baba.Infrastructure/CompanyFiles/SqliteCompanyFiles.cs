@@ -56,7 +56,7 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         catch
         {
             fileLock.Dispose();
-            SqliteConnection.ClearAllPools();
+            ReleasePools(path, password);
             _scope.CompanyId = Guid.Empty;
             TryDelete(path); // never leave a half-made company file behind
             throw;
@@ -112,15 +112,17 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         catch
         {
             fileLock.Dispose();
-            SqliteConnection.ClearAllPools();
+            ReleasePools(path, password);
             throw;
         }
     }
 
     public void Close()
     {
+        string? closedPath, closedPassword;
         lock (_gate)
         {
+            (closedPath, closedPassword) = (_path, _password);
             _lock?.Dispose();
             _lock = null;
             _current = null;
@@ -130,7 +132,24 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
         }
 
         // Pooling keeps the file open after contexts are disposed; release it so it can be moved or deleted.
-        SqliteConnection.ClearAllPools();
+        ReleasePools(closedPath, closedPassword);
+    }
+
+    /// <summary>
+    /// Closes the pooled connections of one company file (a pool is kept per connection string, one for each open mode). Never
+    /// <c>ClearAllPools</c>: that would close connections other company files are using at the same moment.
+    /// </summary>
+    private static void ReleasePools(string? path, string? password)
+    {
+        if (path is null)
+            return;
+
+        SqliteBootstrap.Ensure();
+        foreach (var mode in new[] { SqliteOpenMode.ReadWrite, SqliteOpenMode.ReadWriteCreate })
+        {
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Password = password, Mode = mode }.ToString());
+            SqliteConnection.ClearPool(connection);
+        }
     }
 
     public async Task<CompanyInfo> SetEnabledModulesAsync(IReadOnlyList<string> modules, CancellationToken cancellationToken = default)

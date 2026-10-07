@@ -22,7 +22,6 @@ public abstract class CompanyFilesFixture : IDisposable
     {
         foreach (var manager in _managers)
             manager.Dispose();
-        SqliteConnection.ClearAllPools();
         try { Directory.Delete(Folder, recursive: true); } catch (IOException) { /* best effort */ }
     }
 

@@ -61,7 +61,6 @@ public abstract class ApiFixture : IAsyncLifetime
     {
         Client.Dispose();
         await _app!.DisposeAsync();
-        SqliteConnection.ClearAllPools();
         try { Directory.Delete(Folder, recursive: true); } catch (IOException) { /* best effort */ }
     }
 
