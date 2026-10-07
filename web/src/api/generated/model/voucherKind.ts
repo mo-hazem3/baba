@@ -22,4 +22,6 @@ export const VoucherKind = {
   FxSettlement: 'FxSettlement',
   StockCost: 'StockCost',
   StockAdjustment: 'StockAdjustment',
+  Depreciation: 'Depreciation',
+  AssetDisposal: 'AssetDisposal',
 } as const;

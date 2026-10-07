@@ -20,4 +20,7 @@ export const AccountRole = {
   Inventory: 'Inventory',
   CostOfSales: 'CostOfSales',
   InventoryAdjustment: 'InventoryAdjustment',
+  AccumulatedDepreciation: 'AccumulatedDepreciation',
+  DepreciationExpense: 'DepreciationExpense',
+  AssetDisposal: 'AssetDisposal',
 } as const;

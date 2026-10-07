@@ -26,6 +26,8 @@ import type {
 import type {
   AccountDto,
   AccountInput,
+  AssetDto,
+  AssetInput,
   BackupRequest,
   BankAccountDto,
   ClearedStatement,
@@ -42,6 +44,8 @@ import type {
   CurrencyRateDto,
   CurrencyRateInput,
   DashboardDto,
+  DepreciationRunResult,
+  DisposeInput,
   DocumentDto,
   DocumentSummary,
   ExportReportParams,
@@ -92,6 +96,7 @@ import type {
   ReportResult,
   RestoreRequest,
   RestoredFile,
+  RunDepreciationRequest,
   SaveDialogRequest,
   SaveDocumentRequest,
   SaveStockDocumentRequest,
@@ -9251,6 +9256,925 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDeleteStockDocumentMutationOptions(options), queryClient);
     }
 
+export type listAssetsResponse200 = {
+  data: AssetDto[]
+  status: 200
+}
+
+export type listAssetsResponseSuccess = (listAssetsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listAssetsResponse = (listAssetsResponseSuccess)
+
+export const getListAssetsUrl = () => {
+
+
+
+
+  return `/api/assets`
+}
+
+export const listAssets = async ( options?: Parameters<typeof http>[1]): Promise<listAssetsResponse> => {
+
+  return http<listAssetsResponse>(getListAssetsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssetsQueryKey = () => {
+    return [
+    `/api/assets`
+    ] as const;
+    }
+
+
+export const getListAssetsQueryOptions = <TData = Awaited<ReturnType<typeof listAssets>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssetsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssets>>> = ({ signal }) => listAssets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof listAssets>>>
+export type ListAssetsQueryError = unknown
+
+
+export function useListAssets<TData = Awaited<ReturnType<typeof listAssets>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssets>>,
+          TError,
+          Awaited<ReturnType<typeof listAssets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAssets<TData = Awaited<ReturnType<typeof listAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssets>>,
+          TError,
+          Awaited<ReturnType<typeof listAssets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAssets<TData = Awaited<ReturnType<typeof listAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListAssets<TData = Awaited<ReturnType<typeof listAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssets>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAssetsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createAssetResponse200 = {
+  data: AssetDto
+  status: 200
+}
+
+export type createAssetResponseSuccess = (createAssetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createAssetResponse = (createAssetResponseSuccess)
+
+export const getCreateAssetUrl = () => {
+
+
+
+
+  return `/api/assets`
+}
+
+export const createAsset = async (assetInput: AssetInput, options?: Parameters<typeof http>[1]): Promise<createAssetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createAssetResponse>(getCreateAssetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assetInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAssetMutationKey = () => ['createAsset'] as const;
+
+export const getCreateAssetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAsset>>, TError,CreateAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAsset>>, TError,CreateAssetMutationVariables, TContext> => {
+
+const mutationKey = getCreateAssetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAsset>>, CreateAssetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAsset(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssetMutationResult = NonNullable<Awaited<ReturnType<typeof createAsset>>>
+    export type CreateAssetMutationBody = AssetInput
+    export type CreateAssetMutationError = unknown
+    export type CreateAssetMutationVariables = {data: AssetInput}
+
+    export const useCreateAsset = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAsset>>, TError,CreateAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAsset>>,
+        TError,
+        CreateAssetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAssetMutationOptions(options), queryClient);
+    }
+
+export type getAssetResponse200 = {
+  data: AssetDto
+  status: 200
+}
+
+export type getAssetResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getAssetResponseSuccess = (getAssetResponse200) & {
+  headers: Headers;
+};
+export type getAssetResponseError = (getAssetResponse404) & {
+  headers: Headers;
+};
+
+export type getAssetResponse = (getAssetResponseSuccess | getAssetResponseError)
+
+export const getGetAssetUrl = (id: string,) => {
+
+
+
+
+  return `/api/assets/${id}`
+}
+
+export const getAsset = async (id: string, options?: Parameters<typeof http>[1]): Promise<getAssetResponse> => {
+
+  return http<getAssetResponse>(getGetAssetUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssetQueryKey = (id: string,) => {
+    return [
+    `/api/assets/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssetQueryOptions = <TData = Awaited<ReturnType<typeof getAsset>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssetQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAsset>>> = ({ signal }) => getAsset(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAssetQueryResult = NonNullable<Awaited<ReturnType<typeof getAsset>>>
+export type GetAssetQueryError = void
+
+
+export function useGetAsset<TData = Awaited<ReturnType<typeof getAsset>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAsset>>,
+          TError,
+          Awaited<ReturnType<typeof getAsset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAsset<TData = Awaited<ReturnType<typeof getAsset>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAsset>>,
+          TError,
+          Awaited<ReturnType<typeof getAsset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAsset<TData = Awaited<ReturnType<typeof getAsset>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetAsset<TData = Awaited<ReturnType<typeof getAsset>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAssetQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type updateAssetResponse200 = {
+  data: AssetDto
+  status: 200
+}
+
+export type updateAssetResponseSuccess = (updateAssetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateAssetResponse = (updateAssetResponseSuccess)
+
+export const getUpdateAssetUrl = (id: string,) => {
+
+
+
+
+  return `/api/assets/${id}`
+}
+
+export const updateAsset = async (id: string,
+    assetInput: AssetInput, options?: Parameters<typeof http>[1]): Promise<updateAssetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateAssetResponse>(getUpdateAssetUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assetInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateAssetMutationKey = () => ['updateAsset'] as const;
+
+export const getUpdateAssetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAsset>>, TError,UpdateAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAsset>>, TError,UpdateAssetMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAssetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAsset>>, UpdateAssetMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAsset(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAssetMutationResult = NonNullable<Awaited<ReturnType<typeof updateAsset>>>
+    export type UpdateAssetMutationBody = AssetInput
+    export type UpdateAssetMutationError = unknown
+    export type UpdateAssetMutationVariables = {id: string;data: AssetInput}
+
+    export const useUpdateAsset = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAsset>>, TError,UpdateAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAsset>>,
+        TError,
+        UpdateAssetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAssetMutationOptions(options), queryClient);
+    }
+
+export type deleteAssetResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteAssetResponseSuccess = (deleteAssetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteAssetResponse = (deleteAssetResponseSuccess)
+
+export const getDeleteAssetUrl = (id: string,) => {
+
+
+
+
+  return `/api/assets/${id}`
+}
+
+export const deleteAsset = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteAssetResponse> => {
+
+  return http<deleteAssetResponse>(getDeleteAssetUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAssetMutationKey = () => ['deleteAsset'] as const;
+
+export const getDeleteAssetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError,DeleteAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError,DeleteAssetMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAssetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAsset>>, DeleteAssetMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAsset(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAssetMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAsset>>>
+
+    export type DeleteAssetMutationError = unknown
+    export type DeleteAssetMutationVariables = {id: string}
+
+    export const useDeleteAsset = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError,DeleteAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAsset>>,
+        TError,
+        DeleteAssetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAssetMutationOptions(options), queryClient);
+    }
+
+export type disposeAssetResponse200 = {
+  data: AssetDto
+  status: 200
+}
+
+export type disposeAssetResponseSuccess = (disposeAssetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type disposeAssetResponse = (disposeAssetResponseSuccess)
+
+export const getDisposeAssetUrl = (id: string,) => {
+
+
+
+
+  return `/api/assets/${id}/dispose`
+}
+
+export const disposeAsset = async (id: string,
+    disposeInput: DisposeInput, options?: Parameters<typeof http>[1]): Promise<disposeAssetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<disposeAssetResponse>(getDisposeAssetUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(disposeInput)
+  }
+);}
+
+
+
+
+
+export const getDisposeAssetMutationKey = () => ['disposeAsset'] as const;
+
+export const getDisposeAssetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disposeAsset>>, TError,DisposeAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof disposeAsset>>, TError,DisposeAssetMutationVariables, TContext> => {
+
+const mutationKey = getDisposeAssetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disposeAsset>>, DisposeAssetMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  disposeAsset(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisposeAssetMutationResult = NonNullable<Awaited<ReturnType<typeof disposeAsset>>>
+    export type DisposeAssetMutationBody = DisposeInput
+    export type DisposeAssetMutationError = unknown
+    export type DisposeAssetMutationVariables = {id: string;data: DisposeInput}
+
+    export const useDisposeAsset = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disposeAsset>>, TError,DisposeAssetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disposeAsset>>,
+        TError,
+        DisposeAssetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDisposeAssetMutationOptions(options), queryClient);
+    }
+
+export type undoAssetDisposalResponse200 = {
+  data: AssetDto
+  status: 200
+}
+
+export type undoAssetDisposalResponseSuccess = (undoAssetDisposalResponse200) & {
+  headers: Headers;
+};
+;
+
+export type undoAssetDisposalResponse = (undoAssetDisposalResponseSuccess)
+
+export const getUndoAssetDisposalUrl = (id: string,) => {
+
+
+
+
+  return `/api/assets/${id}/undispose`
+}
+
+export const undoAssetDisposal = async (id: string, options?: Parameters<typeof http>[1]): Promise<undoAssetDisposalResponse> => {
+
+  return http<undoAssetDisposalResponse>(getUndoAssetDisposalUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUndoAssetDisposalMutationKey = () => ['undoAssetDisposal'] as const;
+
+export const getUndoAssetDisposalMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoAssetDisposal>>, TError,UndoAssetDisposalMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoAssetDisposal>>, TError,UndoAssetDisposalMutationVariables, TContext> => {
+
+const mutationKey = getUndoAssetDisposalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoAssetDisposal>>, UndoAssetDisposalMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  undoAssetDisposal(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoAssetDisposalMutationResult = NonNullable<Awaited<ReturnType<typeof undoAssetDisposal>>>
+
+    export type UndoAssetDisposalMutationError = unknown
+    export type UndoAssetDisposalMutationVariables = {id: string}
+
+    export const useUndoAssetDisposal = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoAssetDisposal>>, TError,UndoAssetDisposalMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof undoAssetDisposal>>,
+        TError,
+        UndoAssetDisposalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUndoAssetDisposalMutationOptions(options), queryClient);
+    }
+
+export type runDepreciationResponse200 = {
+  data: DepreciationRunResult
+  status: 200
+}
+
+export type runDepreciationResponseSuccess = (runDepreciationResponse200) & {
+  headers: Headers;
+};
+;
+
+export type runDepreciationResponse = (runDepreciationResponseSuccess)
+
+export const getRunDepreciationUrl = () => {
+
+
+
+
+  return `/api/assets/depreciation/run`
+}
+
+export const runDepreciation = async (runDepreciationRequest: RunDepreciationRequest, options?: Parameters<typeof http>[1]): Promise<runDepreciationResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<runDepreciationResponse>(getRunDepreciationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(runDepreciationRequest)
+  }
+);}
+
+
+
+
+
+export const getRunDepreciationMutationKey = () => ['runDepreciation'] as const;
+
+export const getRunDepreciationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDepreciation>>, TError,RunDepreciationMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDepreciation>>, TError,RunDepreciationMutationVariables, TContext> => {
+
+const mutationKey = getRunDepreciationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDepreciation>>, RunDepreciationMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  runDepreciation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDepreciationMutationResult = NonNullable<Awaited<ReturnType<typeof runDepreciation>>>
+    export type RunDepreciationMutationBody = RunDepreciationRequest
+    export type RunDepreciationMutationError = unknown
+    export type RunDepreciationMutationVariables = {data: RunDepreciationRequest}
+
+    export const useRunDepreciation = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDepreciation>>, TError,RunDepreciationMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runDepreciation>>,
+        TError,
+        RunDepreciationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRunDepreciationMutationOptions(options), queryClient);
+    }
+
+export type runDueDepreciationResponse200 = {
+  data: DepreciationRunResult
+  status: 200
+}
+
+export type runDueDepreciationResponseSuccess = (runDueDepreciationResponse200) & {
+  headers: Headers;
+};
+;
+
+export type runDueDepreciationResponse = (runDueDepreciationResponseSuccess)
+
+export const getRunDueDepreciationUrl = () => {
+
+
+
+
+  return `/api/assets/depreciation/run-due`
+}
+
+export const runDueDepreciation = async ( options?: Parameters<typeof http>[1]): Promise<runDueDepreciationResponse> => {
+
+  return http<runDueDepreciationResponse>(getRunDueDepreciationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRunDueDepreciationMutationKey = () => ['runDueDepreciation'] as const;
+
+export const getRunDueDepreciationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueDepreciation>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDueDepreciation>>, TError,void, TContext> => {
+
+const mutationKey = getRunDueDepreciationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDueDepreciation>>, void> = () => {
+
+
+          return  runDueDepreciation(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDueDepreciationMutationResult = NonNullable<Awaited<ReturnType<typeof runDueDepreciation>>>
+
+    export type RunDueDepreciationMutationError = unknown
+
+
+    export const useRunDueDepreciation = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueDepreciation>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runDueDepreciation>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunDueDepreciationMutationOptions(options), queryClient);
+    }
+
+export type undoLastDepreciationResponse200 = {
+  data: void
+  status: 200
+}
+
+export type undoLastDepreciationResponseSuccess = (undoLastDepreciationResponse200) & {
+  headers: Headers;
+};
+;
+
+export type undoLastDepreciationResponse = (undoLastDepreciationResponseSuccess)
+
+export const getUndoLastDepreciationUrl = () => {
+
+
+
+
+  return `/api/assets/depreciation/undo-last`
+}
+
+export const undoLastDepreciation = async ( options?: Parameters<typeof http>[1]): Promise<undoLastDepreciationResponse> => {
+
+  return http<undoLastDepreciationResponse>(getUndoLastDepreciationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUndoLastDepreciationMutationKey = () => ['undoLastDepreciation'] as const;
+
+export const getUndoLastDepreciationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoLastDepreciation>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoLastDepreciation>>, TError,void, TContext> => {
+
+const mutationKey = getUndoLastDepreciationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoLastDepreciation>>, void> = () => {
+
+
+          return  undoLastDepreciation(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoLastDepreciationMutationResult = NonNullable<Awaited<ReturnType<typeof undoLastDepreciation>>>
+
+    export type UndoLastDepreciationMutationError = unknown
+
+
+    export const useUndoLastDepreciation = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoLastDepreciation>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof undoLastDepreciation>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getUndoLastDepreciationMutationOptions(options), queryClient);
+    }
+
 export type listExchangeRatesResponse200 = {
   data: CurrencyRateDto[]
   status: 200
@@ -10085,6 +11009,86 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getImportOpeningStockMutationOptions(options), queryClient);
+    }
+
+export type importAssetsResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importAssetsResponseSuccess = (importAssetsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importAssetsResponse = (importAssetsResponseSuccess)
+
+export const getImportAssetsUrl = () => {
+
+
+
+
+  return `/api/import/assets`
+}
+
+export const importAssets = async ( options?: Parameters<typeof http>[1]): Promise<importAssetsResponse> => {
+
+  return http<importAssetsResponse>(getImportAssetsUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportAssetsMutationKey = () => ['importAssets'] as const;
+
+export const getImportAssetsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importAssets>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importAssets>>, TError,void, TContext> => {
+
+const mutationKey = getImportAssetsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importAssets>>, void> = () => {
+
+
+          return  importAssets(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportAssetsMutationResult = NonNullable<Awaited<ReturnType<typeof importAssets>>>
+
+    export type ImportAssetsMutationError = unknown
+
+
+    export const useImportAssets = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importAssets>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importAssets>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportAssetsMutationOptions(options), queryClient);
     }
 
 export type importExchangeRatesResponse200 = {

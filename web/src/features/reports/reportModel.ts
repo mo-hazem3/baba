@@ -90,6 +90,7 @@ export const reportKeys = [
   'stock-valuation',
   'stock-movements',
   'stock-reorder',
+  'asset-register',
 ] as const
 export type ReportKey = (typeof reportKeys)[number]
 
@@ -112,6 +113,7 @@ export const reportInputs: Record<
   'stock-valuation': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false, warehouse: true },
   'stock-movements': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false, warehouse: true, product: true },
   'stock-reorder': { range: false, asOf: false, account: false, comparison: false, party: false, costCenter: false },
+  'asset-register': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
 }
 
 /** The optional module a report belongs to. Reports of a module that is switched off are not offered on the Reports page. */
@@ -123,6 +125,7 @@ export const reportModule: Partial<Record<ReportKey, string>> = {
   'stock-valuation': 'inventory',
   'stock-movements': 'inventory',
   'stock-reorder': 'inventory',
+  'asset-register': 'fixed-assets',
 }
 
 /** Reports that exist only where the country's pack supports them (the capability, never the country). */

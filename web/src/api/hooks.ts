@@ -9,6 +9,7 @@ import {
   useGetHostInfo,
   useGetPrintSettings,
   useGetStockLevels,
+  useListAssets,
   useListAccounts,
   useListBankAccounts,
   useListFiscalYears,
@@ -84,6 +85,8 @@ export const useExchangeRates = () => useListExchangeRates(undefined, { query: {
 export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
 
 export const useFiscalYears = () => useListFiscalYears({ query: { select: (r) => r.data } })
+
+export const useAssets = () => useListAssets({ query: { select: (r) => r.data } })
 
 export const useWarehouses = () => useListWarehouses({ query: { select: (r) => r.data } })
 

@@ -45,6 +45,7 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
           { key: '/warehouses', label: t('nav.warehouses') },
         ]
       : []),
+    ...(modules.has('fixed-assets') ? [{ key: '/assets', label: t('nav.assets') }] : []),
     ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
     ...(capabilities?.hasTaxCodes && (modules.has('sales') || modules.has('purchases')) ? [{ key: '/tax-codes', label: t('nav.taxCodes') }] : []),
     { key: '/recurring', label: t('nav.recurring') },

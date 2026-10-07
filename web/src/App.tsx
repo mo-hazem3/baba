@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router'
 import { useCurrentCompany } from './api/hooks'
 import { ChartOfAccountsPage } from './features/accounts/ChartOfAccountsPage'
+import { AssetsPage } from './features/assets/AssetsPage'
 import { StockPage } from './features/inventory/StockPage'
 import { WarehousesPage } from './features/inventory/WarehousesPage'
 import { CostCentersPage } from './features/costcenters/CostCentersPage'
@@ -69,6 +70,7 @@ export function App() {
         <Route path="/purchases" element={<DocumentListPage side="purchases" />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/tax-codes" element={<TaxCodesPage />} />
+        <Route path="/assets" element={<AssetsPage />} />
         <Route path="/stock" element={<StockPage />} />
         <Route path="/warehouses" element={<WarehousesPage />} />
         <Route path="/recurring" element={<RecurringPage />} />

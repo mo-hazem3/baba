@@ -29,7 +29,8 @@
     "recurring": "Recurring",
     "taxCodes": "Tax codes",
     "stock": "Stock",
-    "warehouses": "Warehouses"
+    "warehouses": "Warehouses",
+    "assets": "Fixed assets"
   },
   "header": {
     "language": "Language",
@@ -95,7 +96,8 @@
     "recurring": "Invoices and entries that Baba makes again by itself, such as monthly rent. Open an invoice or a journal entry and choose Repeat to set one up. When the app is opened, whatever came due is made: as drafts to check, or issued straight away if you chose that.",
     "taxCodes": "The tax codes you can put on invoice lines. The codes of your country come ready made with their rates; you choose which accounts they post to, which one new lines start with, and you can add your own. A line keeps the rate it was written with, so changing a code never changes an old invoice.",
     "stock": "What is in stock and what it is worth. Opening stock is what you already had when you started. A stock count compares what you counted with what is recorded and books only the difference. A transfer moves stock between warehouses without changing its value. Sales and purchase invoices move stock by themselves.",
-    "warehouses": "Warehouses are the places where you keep stock. Every movement of stock names one. One warehouse is the default, and new documents use it unless you choose another."
+    "warehouses": "Warehouses are the places where you keep stock. Every movement of stock names one. One warehouse is the default, and new documents use it unless you choose another.",
+    "assets": "Your fixed assets (and intangible ones such as software) with their cost, depreciation and book value. Baba posts each month's depreciation by itself for the months that have ended, and you can run it up to any date. When you sell or scrap an asset, Baba takes it off the books and records the gain or loss."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -439,7 +441,11 @@
       "Transfer": "Transfer voucher",
       "Opening": "Opening balances",
       "Closing": "Closing entry",
-      "FxSettlement": "Exchange difference"
+      "FxSettlement": "Exchange difference",
+      "StockCost": "Cost of stock sold",
+      "StockAdjustment": "Stock entry",
+      "Depreciation": "Depreciation",
+      "AssetDisposal": "Asset disposal"
     },
     "plural": {
       "Payment": "Payments",
@@ -448,7 +454,11 @@
       "Transfer": "Transfers",
       "Opening": "Opening balances",
       "Closing": "Closing entries",
-      "FxSettlement": "Exchange differences"
+      "FxSettlement": "Exchange differences",
+      "StockCost": "Cost of stock sold",
+      "StockAdjustment": "Stock entries",
+      "Depreciation": "Depreciation",
+      "AssetDisposal": "Asset disposals"
     },
     "new": {
       "Payment": "New payment",
@@ -457,7 +467,11 @@
       "Transfer": "New transfer",
       "Opening": "Opening balances",
       "Closing": "Closing entry",
-      "FxSettlement": "Exchange difference"
+      "FxSettlement": "Exchange difference",
+      "StockCost": "Cost of stock sold",
+      "StockAdjustment": "Stock entry",
+      "Depreciation": "Depreciation",
+      "AssetDisposal": "Asset disposal"
     },
     "emptyTitle": {
       "Payment": "No payments yet",
@@ -576,7 +590,8 @@
     "currency": "Currency",
     "exchangeRate": "Rate: 1 {{from}} = ? {{to}}",
     "noRateOnFile": "No rate on file for this date. Type one, or add it in Exchange rates.",
-    "fxNote": "This entry books the exchange gain or loss of a payment. It is deleted with the payment."
+    "fxNote": "This entry books the exchange gain or loss of a payment. It is deleted with the payment.",
+    "systemNote": "Baba made this entry from stock, depreciation or an asset disposal. It cannot be changed here: change or delete what made it."
   },
   "reports": {
     "title": "Reports",
@@ -594,7 +609,8 @@
       "tax-return": "Tax return",
       "stock-valuation": "Stock valuation",
       "stock-movements": "Stock movements",
-      "stock-reorder": "Products to reorder"
+      "stock-reorder": "Products to reorder",
+      "asset-register": "Fixed asset register"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -610,7 +626,8 @@
       "tax-return": "What was sold and bought under each tax code in a period, and the tax to pay or claim back.",
       "stock-valuation": "What is in stock on a day and what it is worth. Checked against the stock accounts of the ledger.",
       "stock-movements": "Every movement of stock in a period: what came in, what went out, and at what value.",
-      "stock-reorder": "Products whose stock has fallen to their reorder level."
+      "stock-reorder": "Products whose stock has fallen to their reorder level.",
+      "asset-register": "Cost, depreciation so far and book value of every asset on a day, checked against the ledger."
     },
     "presets": {
       "thisMonth": "This month",
@@ -988,6 +1005,12 @@
         "warehouse-unknown": "No active warehouse has this code.",
         "quantity-invalid": "The quantity must be a number above zero.",
         "cost-invalid": "The cost must be a number, zero or more."
+      },
+      "assets": {
+        "cost-column-missing": "The file needs a Cost column."
+      },
+      "asset": {
+        "account-unknown": "No account has this code."
       }
     },
     "productsButton": "Import…",
@@ -1435,6 +1458,93 @@
         "quantity-zero": "The change cannot be zero.",
         "same-warehouse": "Choose a different warehouse to move the stock to.",
         "warehouse-invalid": "Choose an active warehouse."
+      }
+    }
+  },
+  "assets": {
+    "title": "Fixed assets",
+    "new": "New asset",
+    "edit": "Edit asset",
+    "deleted": "Asset deleted.",
+    "undone": "The latest month of depreciation was taken back.",
+    "type": "Type",
+    "kinds": {
+      "Tangible": "Fixed asset",
+      "Intangible": "Intangible"
+    },
+    "methods": {
+      "StraightLine": "Straight line",
+      "DecliningBalance": "Declining balance"
+    },
+    "acquired": "Acquired",
+    "cost": "Cost",
+    "depreciation": "Depreciation",
+    "bookValue": "Book value",
+    "disposed": "Disposed",
+    "inUse": "In use",
+    "dispose": "Sell or scrap",
+    "undoDisposal": "Undo disposal",
+    "deleteTitle": "Delete {{name}}?",
+    "import": "Import assets",
+    "importTitle": "Import assets",
+    "importIntro": "Upload an Excel or CSV file with one row per asset. The whole file is rejected if any row has a problem. Assets already in use can say how much they have been depreciated so far.",
+    "register": "Asset register",
+    "undoLast": "Undo last month",
+    "runDepreciation": "Post depreciation",
+    "run": "Post",
+    "runIntro": "Depreciation is posted for every month up to and including the month of this date that is not done yet.",
+    "through": "Post up to",
+    "nothingToDepreciate": "There was nothing to depreciate.",
+    "depreciated": "Depreciation posted for {{count}} months.",
+    "ranOnOpen": "Depreciation was posted for {{count}} months that had ended.",
+    "emptyTitle": "No assets yet",
+    "emptyBody": "Add the things you own that last for years, such as equipment, vehicles or software, and Baba will depreciate them every month.",
+    "disposeTitle": "Sell or scrap {{name}}",
+    "disposeIntro": "Depreciation is brought up to the month of this date, then the asset leaves the books. What you receive, less its book value, is the gain or loss.",
+    "proceeds": "Amount received",
+    "proceedsAccount": "Received into",
+    "gainLossAccount": "Gain or loss account",
+    "gainLossHelp": "Leave empty to use the gain or loss on disposal account.",
+    "salvage": "Salvage value",
+    "salvageHelp": "What it should be worth at the end of its life. It is never depreciated below this.",
+    "method": "Depreciation method",
+    "annualRate": "Yearly rate (%)",
+    "annualRateHelp": "A share of what is left, taken every month.",
+    "life": "Useful life (months)",
+    "lifeHelp": "For example 60 for five years.",
+    "assetAccount": "Asset account",
+    "assetAccountHelp": "The account that holds its cost, where the purchase was posted.",
+    "accumulatedAccount": "Accumulated depreciation account",
+    "expenseAccount": "Depreciation expense account",
+    "defaultAccountHelp": "Leave empty to use the account made for this.",
+    "alreadyInUse": "Already in use before you started with Baba? Say how much has been depreciated so far, and up to which month.",
+    "depreciationSoFar": "Depreciation so far",
+    "depreciatedThrough": "Depreciated up to",
+    "depreciatedThroughHelp": "Any date in the last month already depreciated.",
+    "lockedNote": "Depreciation has been posted for this asset, so what it was worked out from cannot change. You can still change its name, cost center and notes.",
+    "issues": {
+      "asset": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another asset already uses this code.",
+        "name-required": "Enter a name.",
+        "cost-center-unknown": "That cost center no longer exists.",
+        "account-invalid": "Choose an active account that takes entries and fits (asset accounts for the cost and the depreciation, an expense account for the expense).",
+        "accounts-same": "The depreciation account must differ from the asset account.",
+        "date-required": "Enter the date it was acquired.",
+        "cost-invalid": "The cost must be more than zero.",
+        "salvage-invalid": "The salvage value must be zero or more, and less than the cost.",
+        "life-invalid": "Enter the useful life in months (more than zero).",
+        "rate-invalid": "The yearly rate must be above 0 and at most 100.",
+        "opening-invalid": "Depreciation so far cannot be more than the cost less the salvage value.",
+        "terms-locked": "Depreciation has been posted, so the cost, dates, method and accounts cannot change.",
+        "in-use": "This asset has depreciation or was disposed of, so it cannot be deleted.",
+        "nothing-to-undo": "There is no depreciation to take back.",
+        "disposed-since": "An asset was disposed of in that month or later, so its depreciation cannot be taken back.",
+        "already-disposed": "This asset was already disposed of.",
+        "disposal-before-acquisition": "The disposal cannot be before the asset was acquired.",
+        "proceeds-invalid": "The amount received cannot be negative.",
+        "disposal-account-missing": "Choose the account for the gain or loss.",
+        "not-disposed": "This asset has not been disposed of."
       }
     }
   }

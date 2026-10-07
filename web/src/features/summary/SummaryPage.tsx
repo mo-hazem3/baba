@@ -2,7 +2,7 @@ import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
+import { runDueDepreciation, runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
 import { refreshBooks, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
 import { Link } from 'react-router'
@@ -40,6 +40,16 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   useEffect(() => {
     if (recurringCheckedFor === company.id) return
     recurringCheckedFor = company.id
+    if (company.enabledModules.includes('fixed-assets')) {
+      // Depreciation of the months that have ended is posted by itself (brief section 13: "posts automatically").
+      void runDueDepreciation().then(async (response) => {
+        const made = response.data.items.filter((i) => !i.problemCode).length
+        if (made > 0) {
+          await refreshBooks(queryClient)
+          void message.info(t('assets.ranOnOpen', { count: made }), 6)
+        }
+      })
+    }
     void runDueRecurring().then(async (response) => {
       const made = response.data.items.filter((i) => !i.problemCode).length
       if (made > 0) {
