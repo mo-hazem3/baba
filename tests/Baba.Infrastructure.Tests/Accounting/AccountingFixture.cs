@@ -121,7 +121,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var warehouseService = new Baba.Application.Inventory.WarehouseService(stockStore, files);
         var stockService = new Baba.Application.Inventory.StockService(stockStore, productStore, accounts, documentStore, vouchers, files);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
-        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), files, Clock);
+        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();

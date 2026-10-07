@@ -1,7 +1,9 @@
 using Baba.Application.Accounting;
 using Baba.Application.Companies;
+using Baba.Application.Inventory;
 using Baba.Domain;
 using Baba.Domain.Accounting;
+using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
 using Baba.Localization;
 
@@ -29,7 +31,9 @@ public sealed record DocumentInput(
     string? Reference,
     string? Memo,
     decimal DiscountPercent,
-    IReadOnlyList<DocumentLineInput> Lines);
+    IReadOnlyList<DocumentLineInput> Lines,
+    /// <summary>The warehouse the stock of the lines goes to or comes from; empty takes the default one.</summary>
+    Guid? WarehouseId = null);
 
 public sealed record DocumentLineDto(
     Guid Id, Guid? ProductId, Guid? AccountId, string? Description, decimal Quantity, decimal UnitPrice, decimal DiscountPercent, Guid? CostCenterId, decimal Amount,
@@ -58,7 +62,8 @@ public sealed record DocumentDto(
     decimal Net = 0,
     decimal TaxTotal = 0,
     DateTime? IssuedAt = null,
-    bool Immutable = false);
+    bool Immutable = false,
+    Guid? WarehouseId = null);
 
 /// <summary>One row of a document list.</summary>
 public sealed record DocumentSummary(
@@ -81,6 +86,8 @@ public sealed class DocumentService(
     IAllocationStore allocations,
     VoucherService vouchers,
     CountryPackRegistry countryPacks,
+    StockService stock,
+    WarehouseService warehouses,
     ICompanyFiles files,
     TimeProvider clock)
 {
@@ -147,6 +154,7 @@ public sealed class DocumentService(
         var company = Company();
         var currency = CurrencyOf(document.CurrencyCode, company);
         var totals = DocumentMath.Compute(document.Lines, document.DiscountPercent, currency);
+        StockChange? stockChange = null;
 
         if (document.Kind.Posts())
         {
@@ -180,6 +188,10 @@ public sealed class DocumentService(
 
             Throw(issues);
 
+            // Stock first (nothing is posted if it would leave stock short or change a cost in a locked month), then the books, then the stock.
+            stockChange = await StockChangeOfAsync(document, totals, cancellationToken);
+            await stock.CheckAsync(stockChange, cancellationToken);
+
             var (input, included) = ToVoucherInput(document, totals, control!.Id, taxAccounts);
             try
             {
@@ -200,6 +212,50 @@ public sealed class DocumentService(
         document.Status = DocumentStatus.Issued;
         document.IssuedAt ??= clock.GetUtcNow().UtcDateTime;
         await documents.SaveAsync([document], cancellationToken);
+
+        if (stockChange is not null)
+        {
+            // The document now has its creation time, which orders its movements among others of the same day.
+            var created = (await documents.FindAsync(document.Id, cancellationToken))!.CreatedAt;
+            await stock.ApplyAsync(stockChange with { OwnerCreatedAt = created }, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// What an invoice or note does to the stock (brief section 10.4): a purchase brings stock in at its invoice amount, a sale takes it out at
+    /// the average cost, a credit note brings it back at what it cost when sold, a debit note sends it back at the note's amount. Only
+    /// products that are stock items count. The movements of an invoice that no longer has any are taken away.
+    /// </summary>
+    private async Task<StockChange> StockChangeOfAsync(Document document, DocumentTotals totals, CancellationToken cancellationToken)
+    {
+        var baseCurrency = CurrencyOf(Company().BaseCurrencyCode, Company());
+        var stockProducts = (await products.ListAsync(cancellationToken)).Where(p => p.IsStockItem).ToDictionary(p => p.Id);
+        var movements = new List<NewMovement>();
+
+        if (document.Lines.Any(l => l.ProductId is { } p && stockProducts.ContainsKey(p)))
+        {
+            var warehouse = document.WarehouseId ?? (await warehouses.EnsureDefaultAsync(cancellationToken)).Id;
+            document.WarehouseId = warehouse;
+
+            for (var i = 0; i < document.Lines.Count; i++)
+            {
+                var line = document.Lines[i];
+                if (line.ProductId is not { } productId || !stockProducts.ContainsKey(productId) || line.QuantityScaled == 0)
+                    continue;
+
+                var worth = Scaled.ToScaled(Money.Round(totals.PostedAmounts[i] * document.ExchangeRate, baseCurrency)); // what the invoice line is worth in the company's currency
+                movements.Add(document.Kind switch
+                {
+                    DocumentKind.PurchaseInvoice => new NewMovement(i, productId, warehouse, document.Date, StockMovementKind.Purchase, line.QuantityScaled, CostMode.Given, worth),
+                    DocumentKind.PurchaseDebitNote => new NewMovement(i, productId, warehouse, document.Date, StockMovementKind.PurchaseReturn, -line.QuantityScaled, CostMode.Given, -worth),
+                    DocumentKind.SalesInvoice => new NewMovement(i, productId, warehouse, document.Date, StockMovementKind.Sale, -line.QuantityScaled, CostMode.OutAtAverage),
+                    _ => new NewMovement(i, productId, warehouse, document.Date, StockMovementKind.SaleReturn, line.QuantityScaled, CostMode.InAtSourceCost, 0, document.SourceDocumentId),
+                });
+            }
+        }
+
+        var createdAt = document.CreatedAt == default ? clock.GetUtcNow().UtcDateTime : document.CreatedAt;
+        return new StockChange(document.Id, IsDocument: true, createdAt, movements);
     }
 
     /// <summary>
@@ -294,6 +350,7 @@ public sealed class DocumentService(
             Memo = source.Memo,
             DiscountPercentScaled = source.DiscountPercentScaled,
             SourceDocumentId = source.Id,
+            WarehouseId = source.WarehouseId,
         };
         copy.Lines = source.Lines.OrderBy(l => l.LineNumber).Select((l, i) => new DocumentLine
         {
@@ -336,7 +393,15 @@ public sealed class DocumentService(
         await RefuseIfSettledAsync(document, cancellationToken);
 
         if (document.VoucherId is { } voucherId)
+        {
+            if (!await vouchers.IsDateOpenAsync(document.Date, cancellationToken))
+                throw Refused("date", "date.locked-period"); // checked before the stock is touched, so nothing is half done
+
+            if (document.Status == DocumentStatus.Issued)
+                await stock.RemoveAsync(document.Id, isDocument: true, cancellationToken); // refused if later sales would be left short
+
             await vouchers.DeleteSystemAsync(voucherId, cancellationToken);
+        }
 
         if (document.SourceDocumentId is { } sourceId
             && await documents.FindAsync(sourceId, cancellationToken) is { } source
@@ -470,6 +535,10 @@ public sealed class DocumentService(
             // The account the line posts to, or the product's own account for this direction of trade.
             var accountId = line.AccountId == Guid.Empty ? null : line.AccountId;
             accountId ??= input.Kind.IsSales() ? product?.SalesAccountId : product?.PurchaseAccountId;
+            // Stock that is bought or sent back is always posted to the stock account, whatever was chosen: the stock and the ledger agree that way.
+            if (product is { IsStockItem: true } && input.Kind is DocumentKind.PurchaseInvoice or DocumentKind.PurchaseDebitNote
+                && (product.InventoryAccountId ?? chart.Values.Where(a => a.Role == AccountRole.Inventory && a.IsPosting && a.IsActive).OrderBy(a => a.Code, StringComparer.OrdinalIgnoreCase).FirstOrDefault()?.Id) is { } stockAccount)
+                accountId = stockAccount;
             if (accountId is { } id && (!chart.TryGetValue(id, out var account) || !account.IsPosting || !account.IsActive))
                 issues.Add(new(Field("account"), "line.account-invalid"));
 
@@ -490,6 +559,17 @@ public sealed class DocumentService(
                 TaxCodeId = taxCode?.Id,
                 TaxRate = taxCode?.Rate ?? 0m,
             });
+        }
+
+        if (input.WarehouseId is { } warehouseId && warehouseId != Guid.Empty)
+        {
+            if ((await warehouses.ListAsync(cancellationToken)).All(w => w.Id != warehouseId || !w.IsActive))
+                issues.Add(new("warehouse", "document.warehouse-invalid"));
+            document.WarehouseId = warehouseId;
+        }
+        else
+        {
+            document.WarehouseId = null;
         }
 
         document.Date = input.Date;
@@ -526,7 +606,7 @@ public sealed class DocumentService(
         return new DocumentDto(
             d.Id, d.Kind, d.Number, d.Date, d.DueDate, d.Status, d.PartyId, d.CurrencyCode, d.ExchangeRate, d.Reference, d.Memo, d.DiscountPercent,
             ordered.Select((l, i) => new DocumentLineDto(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, totals.LineAmounts[i], l.TaxCodeId, l.TaxRate, totals.TaxAmounts[i])).ToList(),
-            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId, totals.Net, totals.TaxTotal, d.IssuedAt, IsImmutable(d));
+            totals.Subtotal, totals.DiscountAmount, totals.Total, d.SourceDocumentId, d.ConvertedToId, d.VoucherId, totals.Net, totals.TaxTotal, d.IssuedAt, IsImmutable(d), d.WarehouseId);
     }
 
     private CompanyInfo Company() => files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
