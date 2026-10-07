@@ -67,6 +67,7 @@ export function ImportModal({
         `voucher.issues.${code}`,
         `inventory.issues.${code}`,
         `assets.issues.${code}`,
+        `employees.issues.${code}`,
       ],
       { defaultValue: code },
     )

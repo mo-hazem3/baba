@@ -24,4 +24,7 @@ export const VoucherKind = {
   StockAdjustment: 'StockAdjustment',
   Depreciation: 'Depreciation',
   AssetDisposal: 'AssetDisposal',
+  Payroll: 'Payroll',
+  SalaryPayment: 'SalaryPayment',
+  EndOfServiceAccrual: 'EndOfServiceAccrual',
 } as const;

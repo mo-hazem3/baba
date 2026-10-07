@@ -84,6 +84,17 @@ describe('translation keys used in the code', () => {
       'asset.terms-locked', 'asset.in-use', 'asset.nothing-to-undo', 'asset.disposed-since', 'asset.already-disposed', 'asset.disposal-before-acquisition',
       'asset.proceeds-invalid', 'asset.disposal-account-missing', 'asset.not-disposed',
     ]
+    const employeeCodes = [
+      'employee.code-required', 'employee.code-duplicate', 'employee.name-required', 'employee.join-required', 'employee.leave-before-join', 'employee.basic-invalid',
+      'employee.leave-days-invalid', 'employee.cost-center-unknown', 'employee.component-unknown', 'employee.component-twice', 'employee.component-value-invalid', 'employee.in-use',
+      'component.code-required', 'component.code-duplicate', 'component.name-required', 'component.value-invalid', 'component.account-required', 'component.account-invalid', 'component.in-use',
+      'leave.employee-unknown', 'leave.dates-invalid', 'leave.days-invalid',
+    ]
+    const payrollCodes = [
+      'payroll.run-exists', 'payroll.no-employees', 'payroll.not-draft', 'payroll.paid', 'payroll.not-posted', 'payroll.not-paid', 'payroll.cash-account-invalid',
+      'payroll.accounts-missing', 'payroll.nothing-to-pay', 'payroll.net-negative', 'payroll.eos-done', 'payroll.eos-not-applicable', 'payroll.eos-nothing-to-undo',
+      'payroll.percent-invalid', 'payroll.limits-invalid', 'payroll.account-invalid', 'payslip.label-required', 'payslip.amount-invalid', 'payslip.account-invalid', 'payslip.account-required',
+    ]
     const inventoryCodes = [
       'warehouse.code-required', 'warehouse.code-duplicate', 'warehouse.name-required', 'warehouse.in-use', 'warehouse.last-one', 'warehouse.inactive',
       'stockdoc.cost-negative', 'stockdoc.counter-account-invalid', 'stockdoc.kind-cannot-change', 'stockdoc.product-not-stock', 'stockdoc.quantity-positive',
@@ -100,6 +111,16 @@ describe('translation keys used in the code', () => {
       ...tradeCodes.map((code) => `trade.issues.${code}`),
       ...inventoryCodes.map((code) => `inventory.issues.${code}`),
       ...assetCodes.map((code) => `assets.issues.${code}`),
+      ...employeeCodes.map((code) => `employees.issues.${code}`),
+      ...payrollCodes.map((code) => `payroll.issues.${code}`),
+      'import.issues.employees.salary-column-missing',
+      ...['Draft', 'Posted', 'Paid'].map((s) => `payroll.status.${s}`),
+      ...['employees', 'leave', 'components'].flatMap((k) => [`employees.new.${k}`, `employees.tabs.${k}`]),
+      ...['Annual', 'Sick', 'Unpaid', 'Other'].map((k) => `employees.leaveKinds.${k}`),
+      ...['Earning', 'Deduction'].map((k) => `employees.componentKinds.${k}`),
+      ...['Fixed', 'PercentOfBasic'].map((k) => `employees.calculations.${k}`),
+      ...['AccumulatedDepreciation', 'DepreciationExpense', 'AssetDisposal', 'SalaryExpense', 'SalariesPayable', 'SocialInsuranceExpense', 'SocialInsurancePayable', 'EndOfServiceExpense', 'EndOfServiceProvision'].map((r) => `accounts.roles.${r}`),
+      ...['Payroll', 'SalaryPayment', 'EndOfServiceAccrual'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`]),
       ...['assets.cost-column-missing', 'asset.account-unknown'].map((code) => `import.issues.${code}`),
       ...['Tangible', 'Intangible'].map((k) => `assets.kinds.${k}`),
       ...['StraightLine', 'DecliningBalance'].map((m) => `assets.methods.${m}`),
@@ -125,11 +146,11 @@ describe('translation keys used in the code', () => {
 
   it('name every report, voucher kind, account type and special use', () => {
     const missing = [
-      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers', 'tax-return', 'stock-valuation', 'stock-movements', 'stock-reorder', 'asset-register'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
+      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers', 'tax-return', 'stock-valuation', 'stock-movements', 'stock-reorder', 'asset-register', 'payroll-summary', 'leave-balances', 'end-of-service'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets', 'employees', 'payroll'].map((h) => `help.${h}`),
       ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])

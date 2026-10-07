@@ -117,3 +117,82 @@ test('Arabic: the fixed assets page reads right-to-left', async ({ page, request
   await expect(page.getByRole('dialog')).toContainText('أصل جديد')
   await page.screenshot({ path: 'test-results/ar-asset-form.png' })
 })
+
+test('English: employees, a month of payroll with insurance, posted and paid, and an end-of-service provision', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await createKuwaitCompany(page, companyFile('p6-payroll'), wizardEn)
+  await page.getByRole('button', { name: wizardEn.create }).click()
+  await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
+  await request.post('/api/company/modules', { data: { modules } })
+  await request.post('/api/employees', {
+    data: { code: 'E001', nameAr: '', nameEn: 'Sara Ahmed', jobTitle: 'Accountant', nationalId: null, isNational: true, joinDate: '2023-01-01', leaveDate: null, basicSalary: 1000, bankName: null, bankAccount: null, costCenterId: null, annualLeaveDays: 30, leaveBalanceDays: 0, leaveBalanceDate: null, notes: null, components: [] },
+  })
+  await page.reload()
+
+  // An employee through the form.
+  await menu(page, 'Employees').click()
+  await expect(page.getByRole('row', { name: /Sara Ahmed/ })).toContainText('1,000.000')
+  await page.getByRole('button', { name: '+ New employee' }).click()
+  await page.getByLabel('Name (English)').fill('Omar Hassan')
+  await page.getByLabel('Basic salary').fill('400')
+  await page.screenshot({ path: 'test-results/en-employee-form.png' })
+  await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByRole('row', { name: /Omar Hassan/ })).toContainText('400.000')
+  await page.screenshot({ path: 'test-results/en-employees.png' })
+
+  // Make last month's payroll: Sara is a national, so the social insurance of the country applies (10.5% by the employee).
+  await menu(page, 'Payroll').click()
+  await expect(page.getByText('No payroll yet')).toBeVisible()
+  await page.getByRole('button', { name: '+ New payroll month' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Make payslips' }).click()
+  await expect(page.getByRole('row', { name: /Sara Ahmed/ })).toContainText('895.000') // 1,000 - 105
+  await expect(page.getByRole('row', { name: /Sara Ahmed/ })).toContainText('105.000')
+  await page.screenshot({ path: 'test-results/en-payroll-run.png' })
+
+  await page.getByRole('button', { name: 'Post to the books' }).click()
+  await expect(page.getByText('Posted').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Pay salaries' }).first().click()
+  await page.getByLabel('Paid from').click()
+  await page.getByLabel('Paid from').fill('111')
+  await page.locator('.ant-select-dropdown:visible .ant-select-item-option', { hasText: '111' }).first().click()
+  await page.screenshot({ path: 'test-results/en-payroll-pay.png' })
+  await page.getByRole('dialog').getByRole('button', { name: 'Pay', exact: true }).click()
+  await expect(page.getByText('Paid').first()).toBeVisible()
+
+  // The books: salaries expense, the employer's insurance, and nothing left owed to employees.
+  await page.goto('/reports/trial-balance')
+  await expect(page.getByRole('row', { name: /^421/ })).toContainText('1,000.000')
+  await expect(page.getByRole('row', { name: /^431/ })).toContainText('115.000')
+  await expect(page.locator('.check-ok').first()).toBeVisible()
+
+  // The payroll summary report and the end-of-service provision.
+  await page.goto('/reports/payroll-summary?all=1')
+  await expect(page.getByRole('row', { name: /Sara Ahmed/ })).toContainText('895.000')
+  await page.goto('/payroll?tab=end-of-service')
+  await expect(page.getByRole('row', { name: /Sara Ahmed/ })).toBeVisible()
+  await page.screenshot({ path: 'test-results/en-end-of-service.png' })
+})
+
+test('Arabic: the employees and payroll pages read right-to-left', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'ar')
+  await createKuwaitCompany(page, companyFile('p6-payroll-ar'), wizardAr)
+  await page.getByRole('button', { name: wizardAr.create }).click()
+  await expect(page.getByRole('heading', { name: 'الملخص' })).toBeVisible()
+  await request.post('/api/company/modules', { data: { modules } })
+  await page.reload()
+
+  await menu(page, 'الموظفون').click()
+  await expect(page.getByRole('heading', { name: 'الموظفون' })).toBeVisible()
+  await expect(page.getByText('لا يوجد موظفون بعد')).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-employees.png' })
+
+  await menu(page, 'الرواتب').click()
+  await expect(page.getByText('لا توجد رواتب بعد')).toBeVisible()
+  await page.getByRole('button', { name: 'إعدادات الرواتب' }).click()
+  await expect(page.getByRole('dialog')).toContainText('التأمينات الاجتماعية')
+  await page.screenshot({ path: 'test-results/ar-payroll-settings.png' })
+})

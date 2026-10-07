@@ -26,6 +26,7 @@ import type {
 import type {
   AccountDto,
   AccountInput,
+  AccrueEndOfServiceRequest,
   AssetDto,
   AssetInput,
   BackupRequest,
@@ -39,6 +40,7 @@ import type {
   CostCenterInput,
   CountryDto,
   CreateCompanyRequest,
+  CreatePayrollRunRequest,
   CreateRecurringRequest,
   CurrencyDto,
   CurrencyRateDto,
@@ -48,15 +50,24 @@ import type {
   DisposeInput,
   DocumentDto,
   DocumentSummary,
+  EmployeeDto,
+  EmployeeInput,
+  EndOfServicePosition,
+  EndOfServiceResult,
   ExportReportParams,
   FiscalYearDto,
+  GetEndOfServicePositionParams,
   GetExchangeRateOnParams,
+  GetLeaveBalancesParams,
   GetProductPriceParams,
   GetReconciliationParams,
   GetReportParams,
   GetStockLevelsParams,
   HostInfo,
   ImportResult,
+  LeaveBalanceDto,
+  LeaveDto,
+  LeaveInput,
   ListDocumentsParams,
   ListExchangeRatesParams,
   ListOutstandingInvoicesParams,
@@ -75,10 +86,18 @@ import type {
   PartyInput,
   PartyKind,
   PathChoice,
+  PayInput,
+  PayrollAutoResult,
+  PayrollRunDto,
+  PayrollRunSummary,
+  PayrollSettingsDto,
+  PayrollSettingsInput,
   PeriodDto,
   PriceListDto,
   PriceListInput,
   PrintDocumentParams,
+  PrintPayslipParams,
+  PrintPayslipsParams,
   PrintSettingsDto,
   PrintSettingsInput,
   PrintVoucherParams,
@@ -97,8 +116,11 @@ import type {
   RestoreRequest,
   RestoredFile,
   RunDepreciationRequest,
+  SalaryComponentDto,
+  SalaryComponentInput,
   SaveDialogRequest,
   SaveDocumentRequest,
+  SavePayslipRequest,
   SaveStockDocumentRequest,
   SaveVoucherRequest,
   SetActiveRequest,
@@ -10175,6 +10197,3342 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getUndoLastDepreciationMutationOptions(options), queryClient);
     }
 
+export type listEmployeesResponse200 = {
+  data: EmployeeDto[]
+  status: 200
+}
+
+export type listEmployeesResponseSuccess = (listEmployeesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listEmployeesResponse = (listEmployeesResponseSuccess)
+
+export const getListEmployeesUrl = () => {
+
+
+
+
+  return `/api/employees`
+}
+
+export const listEmployees = async ( options?: Parameters<typeof http>[1]): Promise<listEmployeesResponse> => {
+
+  return http<listEmployeesResponse>(getListEmployeesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEmployeesQueryKey = () => {
+    return [
+    `/api/employees`
+    ] as const;
+    }
+
+
+export const getListEmployeesQueryOptions = <TData = Awaited<ReturnType<typeof listEmployees>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEmployeesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEmployees>>> = ({ signal }) => listEmployees({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListEmployeesQueryResult = NonNullable<Awaited<ReturnType<typeof listEmployees>>>
+export type ListEmployeesQueryError = unknown
+
+
+export function useListEmployees<TData = Awaited<ReturnType<typeof listEmployees>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEmployees>>,
+          TError,
+          Awaited<ReturnType<typeof listEmployees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListEmployees<TData = Awaited<ReturnType<typeof listEmployees>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEmployees>>,
+          TError,
+          Awaited<ReturnType<typeof listEmployees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListEmployees<TData = Awaited<ReturnType<typeof listEmployees>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListEmployees<TData = Awaited<ReturnType<typeof listEmployees>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployees>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListEmployeesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createEmployeeResponse200 = {
+  data: EmployeeDto
+  status: 200
+}
+
+export type createEmployeeResponseSuccess = (createEmployeeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createEmployeeResponse = (createEmployeeResponseSuccess)
+
+export const getCreateEmployeeUrl = () => {
+
+
+
+
+  return `/api/employees`
+}
+
+export const createEmployee = async (employeeInput: EmployeeInput, options?: Parameters<typeof http>[1]): Promise<createEmployeeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createEmployeeResponse>(getCreateEmployeeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(employeeInput)
+  }
+);}
+
+
+
+
+
+export const getCreateEmployeeMutationKey = () => ['createEmployee'] as const;
+
+export const getCreateEmployeeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEmployee>>, TError,CreateEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEmployee>>, TError,CreateEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getCreateEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEmployee>>, CreateEmployeeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEmployee(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof createEmployee>>>
+    export type CreateEmployeeMutationBody = EmployeeInput
+    export type CreateEmployeeMutationError = unknown
+    export type CreateEmployeeMutationVariables = {data: EmployeeInput}
+
+    export const useCreateEmployee = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEmployee>>, TError,CreateEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createEmployee>>,
+        TError,
+        CreateEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateEmployeeMutationOptions(options), queryClient);
+    }
+
+export type updateEmployeeResponse200 = {
+  data: EmployeeDto
+  status: 200
+}
+
+export type updateEmployeeResponseSuccess = (updateEmployeeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateEmployeeResponse = (updateEmployeeResponseSuccess)
+
+export const getUpdateEmployeeUrl = (id: string,) => {
+
+
+
+
+  return `/api/employees/${id}`
+}
+
+export const updateEmployee = async (id: string,
+    employeeInput: EmployeeInput, options?: Parameters<typeof http>[1]): Promise<updateEmployeeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateEmployeeResponse>(getUpdateEmployeeUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(employeeInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateEmployeeMutationKey = () => ['updateEmployee'] as const;
+
+export const getUpdateEmployeeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEmployee>>, TError,UpdateEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEmployee>>, TError,UpdateEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getUpdateEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEmployee>>, UpdateEmployeeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEmployee(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof updateEmployee>>>
+    export type UpdateEmployeeMutationBody = EmployeeInput
+    export type UpdateEmployeeMutationError = unknown
+    export type UpdateEmployeeMutationVariables = {id: string;data: EmployeeInput}
+
+    export const useUpdateEmployee = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEmployee>>, TError,UpdateEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateEmployee>>,
+        TError,
+        UpdateEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateEmployeeMutationOptions(options), queryClient);
+    }
+
+export type deleteEmployeeResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteEmployeeResponseSuccess = (deleteEmployeeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteEmployeeResponse = (deleteEmployeeResponseSuccess)
+
+export const getDeleteEmployeeUrl = (id: string,) => {
+
+
+
+
+  return `/api/employees/${id}`
+}
+
+export const deleteEmployee = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteEmployeeResponse> => {
+
+  return http<deleteEmployeeResponse>(getDeleteEmployeeUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteEmployeeMutationKey = () => ['deleteEmployee'] as const;
+
+export const getDeleteEmployeeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEmployee>>, TError,DeleteEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEmployee>>, TError,DeleteEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getDeleteEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEmployee>>, DeleteEmployeeMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEmployee(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEmployee>>>
+
+    export type DeleteEmployeeMutationError = unknown
+    export type DeleteEmployeeMutationVariables = {id: string}
+
+    export const useDeleteEmployee = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEmployee>>, TError,DeleteEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEmployee>>,
+        TError,
+        DeleteEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteEmployeeMutationOptions(options), queryClient);
+    }
+
+export type setEmployeeActiveResponse200 = {
+  data: EmployeeDto
+  status: 200
+}
+
+export type setEmployeeActiveResponseSuccess = (setEmployeeActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setEmployeeActiveResponse = (setEmployeeActiveResponseSuccess)
+
+export const getSetEmployeeActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/employees/${id}/active`
+}
+
+export const setEmployeeActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setEmployeeActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setEmployeeActiveResponse>(getSetEmployeeActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetEmployeeActiveMutationKey = () => ['setEmployeeActive'] as const;
+
+export const getSetEmployeeActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEmployeeActive>>, TError,SetEmployeeActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setEmployeeActive>>, TError,SetEmployeeActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetEmployeeActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setEmployeeActive>>, SetEmployeeActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setEmployeeActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetEmployeeActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setEmployeeActive>>>
+    export type SetEmployeeActiveMutationBody = SetActiveRequest
+    export type SetEmployeeActiveMutationError = unknown
+    export type SetEmployeeActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetEmployeeActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEmployeeActive>>, TError,SetEmployeeActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setEmployeeActive>>,
+        TError,
+        SetEmployeeActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetEmployeeActiveMutationOptions(options), queryClient);
+    }
+
+export type listSalaryComponentsResponse200 = {
+  data: SalaryComponentDto[]
+  status: 200
+}
+
+export type listSalaryComponentsResponseSuccess = (listSalaryComponentsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listSalaryComponentsResponse = (listSalaryComponentsResponseSuccess)
+
+export const getListSalaryComponentsUrl = () => {
+
+
+
+
+  return `/api/salary-components`
+}
+
+export const listSalaryComponents = async ( options?: Parameters<typeof http>[1]): Promise<listSalaryComponentsResponse> => {
+
+  return http<listSalaryComponentsResponse>(getListSalaryComponentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSalaryComponentsQueryKey = () => {
+    return [
+    `/api/salary-components`
+    ] as const;
+    }
+
+
+export const getListSalaryComponentsQueryOptions = <TData = Awaited<ReturnType<typeof listSalaryComponents>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSalaryComponentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSalaryComponents>>> = ({ signal }) => listSalaryComponents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSalaryComponentsQueryResult = NonNullable<Awaited<ReturnType<typeof listSalaryComponents>>>
+export type ListSalaryComponentsQueryError = unknown
+
+
+export function useListSalaryComponents<TData = Awaited<ReturnType<typeof listSalaryComponents>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSalaryComponents>>,
+          TError,
+          Awaited<ReturnType<typeof listSalaryComponents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSalaryComponents<TData = Awaited<ReturnType<typeof listSalaryComponents>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSalaryComponents>>,
+          TError,
+          Awaited<ReturnType<typeof listSalaryComponents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSalaryComponents<TData = Awaited<ReturnType<typeof listSalaryComponents>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListSalaryComponents<TData = Awaited<ReturnType<typeof listSalaryComponents>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSalaryComponents>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSalaryComponentsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createSalaryComponentResponse200 = {
+  data: SalaryComponentDto
+  status: 200
+}
+
+export type createSalaryComponentResponseSuccess = (createSalaryComponentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createSalaryComponentResponse = (createSalaryComponentResponseSuccess)
+
+export const getCreateSalaryComponentUrl = () => {
+
+
+
+
+  return `/api/salary-components`
+}
+
+export const createSalaryComponent = async (salaryComponentInput: SalaryComponentInput, options?: Parameters<typeof http>[1]): Promise<createSalaryComponentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createSalaryComponentResponse>(getCreateSalaryComponentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(salaryComponentInput)
+  }
+);}
+
+
+
+
+
+export const getCreateSalaryComponentMutationKey = () => ['createSalaryComponent'] as const;
+
+export const getCreateSalaryComponentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSalaryComponent>>, TError,CreateSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSalaryComponent>>, TError,CreateSalaryComponentMutationVariables, TContext> => {
+
+const mutationKey = getCreateSalaryComponentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSalaryComponent>>, CreateSalaryComponentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSalaryComponent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSalaryComponentMutationResult = NonNullable<Awaited<ReturnType<typeof createSalaryComponent>>>
+    export type CreateSalaryComponentMutationBody = SalaryComponentInput
+    export type CreateSalaryComponentMutationError = unknown
+    export type CreateSalaryComponentMutationVariables = {data: SalaryComponentInput}
+
+    export const useCreateSalaryComponent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSalaryComponent>>, TError,CreateSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createSalaryComponent>>,
+        TError,
+        CreateSalaryComponentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSalaryComponentMutationOptions(options), queryClient);
+    }
+
+export type updateSalaryComponentResponse200 = {
+  data: SalaryComponentDto
+  status: 200
+}
+
+export type updateSalaryComponentResponseSuccess = (updateSalaryComponentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateSalaryComponentResponse = (updateSalaryComponentResponseSuccess)
+
+export const getUpdateSalaryComponentUrl = (id: string,) => {
+
+
+
+
+  return `/api/salary-components/${id}`
+}
+
+export const updateSalaryComponent = async (id: string,
+    salaryComponentInput: SalaryComponentInput, options?: Parameters<typeof http>[1]): Promise<updateSalaryComponentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateSalaryComponentResponse>(getUpdateSalaryComponentUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(salaryComponentInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateSalaryComponentMutationKey = () => ['updateSalaryComponent'] as const;
+
+export const getUpdateSalaryComponentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSalaryComponent>>, TError,UpdateSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSalaryComponent>>, TError,UpdateSalaryComponentMutationVariables, TContext> => {
+
+const mutationKey = getUpdateSalaryComponentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSalaryComponent>>, UpdateSalaryComponentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSalaryComponent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSalaryComponentMutationResult = NonNullable<Awaited<ReturnType<typeof updateSalaryComponent>>>
+    export type UpdateSalaryComponentMutationBody = SalaryComponentInput
+    export type UpdateSalaryComponentMutationError = unknown
+    export type UpdateSalaryComponentMutationVariables = {id: string;data: SalaryComponentInput}
+
+    export const useUpdateSalaryComponent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSalaryComponent>>, TError,UpdateSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateSalaryComponent>>,
+        TError,
+        UpdateSalaryComponentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateSalaryComponentMutationOptions(options), queryClient);
+    }
+
+export type deleteSalaryComponentResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteSalaryComponentResponseSuccess = (deleteSalaryComponentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteSalaryComponentResponse = (deleteSalaryComponentResponseSuccess)
+
+export const getDeleteSalaryComponentUrl = (id: string,) => {
+
+
+
+
+  return `/api/salary-components/${id}`
+}
+
+export const deleteSalaryComponent = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteSalaryComponentResponse> => {
+
+  return http<deleteSalaryComponentResponse>(getDeleteSalaryComponentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSalaryComponentMutationKey = () => ['deleteSalaryComponent'] as const;
+
+export const getDeleteSalaryComponentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSalaryComponent>>, TError,DeleteSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSalaryComponent>>, TError,DeleteSalaryComponentMutationVariables, TContext> => {
+
+const mutationKey = getDeleteSalaryComponentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSalaryComponent>>, DeleteSalaryComponentMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSalaryComponent(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSalaryComponentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSalaryComponent>>>
+
+    export type DeleteSalaryComponentMutationError = unknown
+    export type DeleteSalaryComponentMutationVariables = {id: string}
+
+    export const useDeleteSalaryComponent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSalaryComponent>>, TError,DeleteSalaryComponentMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSalaryComponent>>,
+        TError,
+        DeleteSalaryComponentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteSalaryComponentMutationOptions(options), queryClient);
+    }
+
+export type setSalaryComponentActiveResponse200 = {
+  data: SalaryComponentDto
+  status: 200
+}
+
+export type setSalaryComponentActiveResponseSuccess = (setSalaryComponentActiveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type setSalaryComponentActiveResponse = (setSalaryComponentActiveResponseSuccess)
+
+export const getSetSalaryComponentActiveUrl = (id: string,) => {
+
+
+
+
+  return `/api/salary-components/${id}/active`
+}
+
+export const setSalaryComponentActive = async (id: string,
+    setActiveRequest: SetActiveRequest, options?: Parameters<typeof http>[1]): Promise<setSalaryComponentActiveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<setSalaryComponentActiveResponse>(getSetSalaryComponentActiveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest)
+  }
+);}
+
+
+
+
+
+export const getSetSalaryComponentActiveMutationKey = () => ['setSalaryComponentActive'] as const;
+
+export const getSetSalaryComponentActiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSalaryComponentActive>>, TError,SetSalaryComponentActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof setSalaryComponentActive>>, TError,SetSalaryComponentActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetSalaryComponentActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSalaryComponentActive>>, SetSalaryComponentActiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  setSalaryComponentActive(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetSalaryComponentActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setSalaryComponentActive>>>
+    export type SetSalaryComponentActiveMutationBody = SetActiveRequest
+    export type SetSalaryComponentActiveMutationError = unknown
+    export type SetSalaryComponentActiveMutationVariables = {id: string;data: SetActiveRequest}
+
+    export const useSetSalaryComponentActive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSalaryComponentActive>>, TError,SetSalaryComponentActiveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setSalaryComponentActive>>,
+        TError,
+        SetSalaryComponentActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetSalaryComponentActiveMutationOptions(options), queryClient);
+    }
+
+export type listLeaveResponse200 = {
+  data: LeaveDto[]
+  status: 200
+}
+
+export type listLeaveResponseSuccess = (listLeaveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listLeaveResponse = (listLeaveResponseSuccess)
+
+export const getListLeaveUrl = () => {
+
+
+
+
+  return `/api/leave`
+}
+
+export const listLeave = async ( options?: Parameters<typeof http>[1]): Promise<listLeaveResponse> => {
+
+  return http<listLeaveResponse>(getListLeaveUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLeaveQueryKey = () => {
+    return [
+    `/api/leave`
+    ] as const;
+    }
+
+
+export const getListLeaveQueryOptions = <TData = Awaited<ReturnType<typeof listLeave>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLeaveQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLeave>>> = ({ signal }) => listLeave({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLeaveQueryResult = NonNullable<Awaited<ReturnType<typeof listLeave>>>
+export type ListLeaveQueryError = unknown
+
+
+export function useListLeave<TData = Awaited<ReturnType<typeof listLeave>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLeave>>,
+          TError,
+          Awaited<ReturnType<typeof listLeave>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLeave<TData = Awaited<ReturnType<typeof listLeave>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLeave>>,
+          TError,
+          Awaited<ReturnType<typeof listLeave>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLeave<TData = Awaited<ReturnType<typeof listLeave>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListLeave<TData = Awaited<ReturnType<typeof listLeave>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLeave>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLeaveQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type addLeaveResponse200 = {
+  data: LeaveDto
+  status: 200
+}
+
+export type addLeaveResponseSuccess = (addLeaveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type addLeaveResponse = (addLeaveResponseSuccess)
+
+export const getAddLeaveUrl = () => {
+
+
+
+
+  return `/api/leave`
+}
+
+export const addLeave = async (leaveInput: LeaveInput, options?: Parameters<typeof http>[1]): Promise<addLeaveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<addLeaveResponse>(getAddLeaveUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(leaveInput)
+  }
+);}
+
+
+
+
+
+export const getAddLeaveMutationKey = () => ['addLeave'] as const;
+
+export const getAddLeaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLeave>>, TError,AddLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof addLeave>>, TError,AddLeaveMutationVariables, TContext> => {
+
+const mutationKey = getAddLeaveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addLeave>>, AddLeaveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  addLeave(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddLeaveMutationResult = NonNullable<Awaited<ReturnType<typeof addLeave>>>
+    export type AddLeaveMutationBody = LeaveInput
+    export type AddLeaveMutationError = unknown
+    export type AddLeaveMutationVariables = {data: LeaveInput}
+
+    export const useAddLeave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLeave>>, TError,AddLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addLeave>>,
+        TError,
+        AddLeaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddLeaveMutationOptions(options), queryClient);
+    }
+
+export type getLeaveBalancesResponse200 = {
+  data: LeaveBalanceDto[]
+  status: 200
+}
+
+export type getLeaveBalancesResponseSuccess = (getLeaveBalancesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getLeaveBalancesResponse = (getLeaveBalancesResponseSuccess)
+
+export const getGetLeaveBalancesUrl = (params: GetLeaveBalancesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/leave/balances?${stringifiedParams}` : `/api/leave/balances`
+}
+
+export const getLeaveBalances = async (params: GetLeaveBalancesParams, options?: Parameters<typeof http>[1]): Promise<getLeaveBalancesResponse> => {
+
+  return http<getLeaveBalancesResponse>(getGetLeaveBalancesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeaveBalancesQueryKey = (params?: GetLeaveBalancesParams,) => {
+    return [
+    `/api/leave/balances`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLeaveBalancesQueryOptions = <TData = Awaited<ReturnType<typeof getLeaveBalances>>, TError = unknown>(params: GetLeaveBalancesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaveBalancesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaveBalances>>> = ({ signal }) => getLeaveBalances(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLeaveBalancesQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaveBalances>>>
+export type GetLeaveBalancesQueryError = unknown
+
+
+export function useGetLeaveBalances<TData = Awaited<ReturnType<typeof getLeaveBalances>>, TError = unknown>(
+ params: GetLeaveBalancesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaveBalances>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaveBalances>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaveBalances<TData = Awaited<ReturnType<typeof getLeaveBalances>>, TError = unknown>(
+ params: GetLeaveBalancesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaveBalances>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaveBalances>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaveBalances<TData = Awaited<ReturnType<typeof getLeaveBalances>>, TError = unknown>(
+ params: GetLeaveBalancesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetLeaveBalances<TData = Awaited<ReturnType<typeof getLeaveBalances>>, TError = unknown>(
+ params: GetLeaveBalancesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaveBalances>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLeaveBalancesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type updateLeaveResponse200 = {
+  data: LeaveDto
+  status: 200
+}
+
+export type updateLeaveResponseSuccess = (updateLeaveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateLeaveResponse = (updateLeaveResponseSuccess)
+
+export const getUpdateLeaveUrl = (id: string,) => {
+
+
+
+
+  return `/api/leave/${id}`
+}
+
+export const updateLeave = async (id: string,
+    leaveInput: LeaveInput, options?: Parameters<typeof http>[1]): Promise<updateLeaveResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<updateLeaveResponse>(getUpdateLeaveUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(leaveInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateLeaveMutationKey = () => ['updateLeave'] as const;
+
+export const getUpdateLeaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLeave>>, TError,UpdateLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateLeave>>, TError,UpdateLeaveMutationVariables, TContext> => {
+
+const mutationKey = getUpdateLeaveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateLeave>>, UpdateLeaveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateLeave(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateLeaveMutationResult = NonNullable<Awaited<ReturnType<typeof updateLeave>>>
+    export type UpdateLeaveMutationBody = LeaveInput
+    export type UpdateLeaveMutationError = unknown
+    export type UpdateLeaveMutationVariables = {id: string;data: LeaveInput}
+
+    export const useUpdateLeave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLeave>>, TError,UpdateLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateLeave>>,
+        TError,
+        UpdateLeaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateLeaveMutationOptions(options), queryClient);
+    }
+
+export type deleteLeaveResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteLeaveResponseSuccess = (deleteLeaveResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteLeaveResponse = (deleteLeaveResponseSuccess)
+
+export const getDeleteLeaveUrl = (id: string,) => {
+
+
+
+
+  return `/api/leave/${id}`
+}
+
+export const deleteLeave = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteLeaveResponse> => {
+
+  return http<deleteLeaveResponse>(getDeleteLeaveUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLeaveMutationKey = () => ['deleteLeave'] as const;
+
+export const getDeleteLeaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeave>>, TError,DeleteLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLeave>>, TError,DeleteLeaveMutationVariables, TContext> => {
+
+const mutationKey = getDeleteLeaveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLeave>>, DeleteLeaveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteLeave(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLeaveMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLeave>>>
+
+    export type DeleteLeaveMutationError = unknown
+    export type DeleteLeaveMutationVariables = {id: string}
+
+    export const useDeleteLeave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeave>>, TError,DeleteLeaveMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLeave>>,
+        TError,
+        DeleteLeaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteLeaveMutationOptions(options), queryClient);
+    }
+
+export type getPayrollSettingsResponse200 = {
+  data: PayrollSettingsDto
+  status: 200
+}
+
+export type getPayrollSettingsResponseSuccess = (getPayrollSettingsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getPayrollSettingsResponse = (getPayrollSettingsResponseSuccess)
+
+export const getGetPayrollSettingsUrl = () => {
+
+
+
+
+  return `/api/payroll/settings`
+}
+
+export const getPayrollSettings = async ( options?: Parameters<typeof http>[1]): Promise<getPayrollSettingsResponse> => {
+
+  return http<getPayrollSettingsResponse>(getGetPayrollSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPayrollSettingsQueryKey = () => {
+    return [
+    `/api/payroll/settings`
+    ] as const;
+    }
+
+
+export const getGetPayrollSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getPayrollSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPayrollSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPayrollSettings>>> = ({ signal }) => getPayrollSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPayrollSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getPayrollSettings>>>
+export type GetPayrollSettingsQueryError = unknown
+
+
+export function useGetPayrollSettings<TData = Awaited<ReturnType<typeof getPayrollSettings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayrollSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getPayrollSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayrollSettings<TData = Awaited<ReturnType<typeof getPayrollSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayrollSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getPayrollSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayrollSettings<TData = Awaited<ReturnType<typeof getPayrollSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPayrollSettings<TData = Awaited<ReturnType<typeof getPayrollSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollSettings>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPayrollSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type savePayrollSettingsResponse200 = {
+  data: PayrollSettingsDto
+  status: 200
+}
+
+export type savePayrollSettingsResponseSuccess = (savePayrollSettingsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type savePayrollSettingsResponse = (savePayrollSettingsResponseSuccess)
+
+export const getSavePayrollSettingsUrl = () => {
+
+
+
+
+  return `/api/payroll/settings`
+}
+
+export const savePayrollSettings = async (payrollSettingsInput: PayrollSettingsInput, options?: Parameters<typeof http>[1]): Promise<savePayrollSettingsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<savePayrollSettingsResponse>(getSavePayrollSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(payrollSettingsInput)
+  }
+);}
+
+
+
+
+
+export const getSavePayrollSettingsMutationKey = () => ['savePayrollSettings'] as const;
+
+export const getSavePayrollSettingsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePayrollSettings>>, TError,SavePayrollSettingsMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof savePayrollSettings>>, TError,SavePayrollSettingsMutationVariables, TContext> => {
+
+const mutationKey = getSavePayrollSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof savePayrollSettings>>, SavePayrollSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  savePayrollSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SavePayrollSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof savePayrollSettings>>>
+    export type SavePayrollSettingsMutationBody = PayrollSettingsInput
+    export type SavePayrollSettingsMutationError = unknown
+    export type SavePayrollSettingsMutationVariables = {data: PayrollSettingsInput}
+
+    export const useSavePayrollSettings = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePayrollSettings>>, TError,SavePayrollSettingsMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof savePayrollSettings>>,
+        TError,
+        SavePayrollSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSavePayrollSettingsMutationOptions(options), queryClient);
+    }
+
+export type listPayrollRunsResponse200 = {
+  data: PayrollRunSummary[]
+  status: 200
+}
+
+export type listPayrollRunsResponseSuccess = (listPayrollRunsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPayrollRunsResponse = (listPayrollRunsResponseSuccess)
+
+export const getListPayrollRunsUrl = () => {
+
+
+
+
+  return `/api/payroll/runs`
+}
+
+export const listPayrollRuns = async ( options?: Parameters<typeof http>[1]): Promise<listPayrollRunsResponse> => {
+
+  return http<listPayrollRunsResponse>(getListPayrollRunsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPayrollRunsQueryKey = () => {
+    return [
+    `/api/payroll/runs`
+    ] as const;
+    }
+
+
+export const getListPayrollRunsQueryOptions = <TData = Awaited<ReturnType<typeof listPayrollRuns>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPayrollRunsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPayrollRuns>>> = ({ signal }) => listPayrollRuns({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPayrollRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listPayrollRuns>>>
+export type ListPayrollRunsQueryError = unknown
+
+
+export function useListPayrollRuns<TData = Awaited<ReturnType<typeof listPayrollRuns>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPayrollRuns>>,
+          TError,
+          Awaited<ReturnType<typeof listPayrollRuns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPayrollRuns<TData = Awaited<ReturnType<typeof listPayrollRuns>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPayrollRuns>>,
+          TError,
+          Awaited<ReturnType<typeof listPayrollRuns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPayrollRuns<TData = Awaited<ReturnType<typeof listPayrollRuns>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListPayrollRuns<TData = Awaited<ReturnType<typeof listPayrollRuns>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayrollRuns>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPayrollRunsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type createPayrollRunResponseSuccess = (createPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createPayrollRunResponse = (createPayrollRunResponseSuccess)
+
+export const getCreatePayrollRunUrl = () => {
+
+
+
+
+  return `/api/payroll/runs`
+}
+
+export const createPayrollRun = async (createPayrollRunRequest: CreatePayrollRunRequest, options?: Parameters<typeof http>[1]): Promise<createPayrollRunResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<createPayrollRunResponse>(getCreatePayrollRunUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createPayrollRunRequest)
+  }
+);}
+
+
+
+
+
+export const getCreatePayrollRunMutationKey = () => ['createPayrollRun'] as const;
+
+export const getCreatePayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPayrollRun>>, TError,CreatePayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPayrollRun>>, TError,CreatePayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getCreatePayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPayrollRun>>, CreatePayrollRunMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPayrollRun(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof createPayrollRun>>>
+    export type CreatePayrollRunMutationBody = CreatePayrollRunRequest
+    export type CreatePayrollRunMutationError = unknown
+    export type CreatePayrollRunMutationVariables = {data: CreatePayrollRunRequest}
+
+    export const useCreatePayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPayrollRun>>, TError,CreatePayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPayrollRun>>,
+        TError,
+        CreatePayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePayrollRunMutationOptions(options), queryClient);
+    }
+
+export type getPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type getPayrollRunResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getPayrollRunResponseSuccess = (getPayrollRunResponse200) & {
+  headers: Headers;
+};
+export type getPayrollRunResponseError = (getPayrollRunResponse404) & {
+  headers: Headers;
+};
+
+export type getPayrollRunResponse = (getPayrollRunResponseSuccess | getPayrollRunResponseError)
+
+export const getGetPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}`
+}
+
+export const getPayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<getPayrollRunResponse> => {
+
+  return http<getPayrollRunResponse>(getGetPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPayrollRunQueryKey = (id: string,) => {
+    return [
+    `/api/payroll/runs/${id}`
+    ] as const;
+    }
+
+
+export const getGetPayrollRunQueryOptions = <TData = Awaited<ReturnType<typeof getPayrollRun>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPayrollRunQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPayrollRun>>> = ({ signal }) => getPayrollRun(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPayrollRunQueryResult = NonNullable<Awaited<ReturnType<typeof getPayrollRun>>>
+export type GetPayrollRunQueryError = void
+
+
+export function useGetPayrollRun<TData = Awaited<ReturnType<typeof getPayrollRun>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayrollRun>>,
+          TError,
+          Awaited<ReturnType<typeof getPayrollRun>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayrollRun<TData = Awaited<ReturnType<typeof getPayrollRun>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayrollRun>>,
+          TError,
+          Awaited<ReturnType<typeof getPayrollRun>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayrollRun<TData = Awaited<ReturnType<typeof getPayrollRun>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPayrollRun<TData = Awaited<ReturnType<typeof getPayrollRun>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayrollRun>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPayrollRunQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type deletePayrollRunResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deletePayrollRunResponseSuccess = (deletePayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deletePayrollRunResponse = (deletePayrollRunResponseSuccess)
+
+export const getDeletePayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}`
+}
+
+export const deletePayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<deletePayrollRunResponse> => {
+
+  return http<deletePayrollRunResponse>(getDeletePayrollRunUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePayrollRunMutationKey = () => ['deletePayrollRun'] as const;
+
+export const getDeletePayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePayrollRun>>, TError,DeletePayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePayrollRun>>, TError,DeletePayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getDeletePayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePayrollRun>>, DeletePayrollRunMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePayrollRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof deletePayrollRun>>>
+
+    export type DeletePayrollRunMutationError = unknown
+    export type DeletePayrollRunMutationVariables = {id: string}
+
+    export const useDeletePayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePayrollRun>>, TError,DeletePayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deletePayrollRun>>,
+        TError,
+        DeletePayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePayrollRunMutationOptions(options), queryClient);
+    }
+
+export type runDuePayrollResponse200 = {
+  data: PayrollAutoResult
+  status: 200
+}
+
+export type runDuePayrollResponseSuccess = (runDuePayrollResponse200) & {
+  headers: Headers;
+};
+;
+
+export type runDuePayrollResponse = (runDuePayrollResponseSuccess)
+
+export const getRunDuePayrollUrl = () => {
+
+
+
+
+  return `/api/payroll/runs/run-due`
+}
+
+export const runDuePayroll = async ( options?: Parameters<typeof http>[1]): Promise<runDuePayrollResponse> => {
+
+  return http<runDuePayrollResponse>(getRunDuePayrollUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRunDuePayrollMutationKey = () => ['runDuePayroll'] as const;
+
+export const getRunDuePayrollMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDuePayroll>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDuePayroll>>, TError,void, TContext> => {
+
+const mutationKey = getRunDuePayrollMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDuePayroll>>, void> = () => {
+
+
+          return  runDuePayroll(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDuePayrollMutationResult = NonNullable<Awaited<ReturnType<typeof runDuePayroll>>>
+
+    export type RunDuePayrollMutationError = unknown
+
+
+    export const useRunDuePayroll = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDuePayroll>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runDuePayroll>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunDuePayrollMutationOptions(options), queryClient);
+    }
+
+export type refreshPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type refreshPayrollRunResponseSuccess = (refreshPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type refreshPayrollRunResponse = (refreshPayrollRunResponseSuccess)
+
+export const getRefreshPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/refresh`
+}
+
+export const refreshPayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<refreshPayrollRunResponse> => {
+
+  return http<refreshPayrollRunResponse>(getRefreshPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRefreshPayrollRunMutationKey = () => ['refreshPayrollRun'] as const;
+
+export const getRefreshPayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshPayrollRun>>, TError,RefreshPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshPayrollRun>>, TError,RefreshPayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getRefreshPayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshPayrollRun>>, RefreshPayrollRunMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  refreshPayrollRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshPayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof refreshPayrollRun>>>
+
+    export type RefreshPayrollRunMutationError = unknown
+    export type RefreshPayrollRunMutationVariables = {id: string}
+
+    export const useRefreshPayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshPayrollRun>>, TError,RefreshPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof refreshPayrollRun>>,
+        TError,
+        RefreshPayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRefreshPayrollRunMutationOptions(options), queryClient);
+    }
+
+export type savePayslipResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type savePayslipResponseSuccess = (savePayslipResponse200) & {
+  headers: Headers;
+};
+;
+
+export type savePayslipResponse = (savePayslipResponseSuccess)
+
+export const getSavePayslipUrl = (id: string,
+    payslipId: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/payslips/${payslipId}`
+}
+
+export const savePayslip = async (id: string,
+    payslipId: string,
+    savePayslipRequest: SavePayslipRequest, options?: Parameters<typeof http>[1]): Promise<savePayslipResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<savePayslipResponse>(getSavePayslipUrl(id,payslipId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(savePayslipRequest)
+  }
+);}
+
+
+
+
+
+export const getSavePayslipMutationKey = () => ['savePayslip'] as const;
+
+export const getSavePayslipMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePayslip>>, TError,SavePayslipMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof savePayslip>>, TError,SavePayslipMutationVariables, TContext> => {
+
+const mutationKey = getSavePayslipMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof savePayslip>>, SavePayslipMutationVariables> = (props) => {
+          const {id,payslipId,data} = props ?? {};
+
+          return  savePayslip(id,payslipId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SavePayslipMutationResult = NonNullable<Awaited<ReturnType<typeof savePayslip>>>
+    export type SavePayslipMutationBody = SavePayslipRequest
+    export type SavePayslipMutationError = unknown
+    export type SavePayslipMutationVariables = {id: string;payslipId: string;data: SavePayslipRequest}
+
+    export const useSavePayslip = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePayslip>>, TError,SavePayslipMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof savePayslip>>,
+        TError,
+        SavePayslipMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSavePayslipMutationOptions(options), queryClient);
+    }
+
+export type removePayslipResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type removePayslipResponseSuccess = (removePayslipResponse200) & {
+  headers: Headers;
+};
+;
+
+export type removePayslipResponse = (removePayslipResponseSuccess)
+
+export const getRemovePayslipUrl = (id: string,
+    payslipId: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/payslips/${payslipId}`
+}
+
+export const removePayslip = async (id: string,
+    payslipId: string, options?: Parameters<typeof http>[1]): Promise<removePayslipResponse> => {
+
+  return http<removePayslipResponse>(getRemovePayslipUrl(id,payslipId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemovePayslipMutationKey = () => ['removePayslip'] as const;
+
+export const getRemovePayslipMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePayslip>>, TError,RemovePayslipMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof removePayslip>>, TError,RemovePayslipMutationVariables, TContext> => {
+
+const mutationKey = getRemovePayslipMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePayslip>>, RemovePayslipMutationVariables> = (props) => {
+          const {id,payslipId} = props ?? {};
+
+          return  removePayslip(id,payslipId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemovePayslipMutationResult = NonNullable<Awaited<ReturnType<typeof removePayslip>>>
+
+    export type RemovePayslipMutationError = unknown
+    export type RemovePayslipMutationVariables = {id: string;payslipId: string}
+
+    export const useRemovePayslip = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePayslip>>, TError,RemovePayslipMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removePayslip>>,
+        TError,
+        RemovePayslipMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemovePayslipMutationOptions(options), queryClient);
+    }
+
+export type postPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type postPayrollRunResponseSuccess = (postPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postPayrollRunResponse = (postPayrollRunResponseSuccess)
+
+export const getPostPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/post`
+}
+
+export const postPayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<postPayrollRunResponse> => {
+
+  return http<postPayrollRunResponse>(getPostPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostPayrollRunMutationKey = () => ['postPayrollRun'] as const;
+
+export const getPostPayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPayrollRun>>, TError,PostPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof postPayrollRun>>, TError,PostPayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getPostPayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPayrollRun>>, PostPayrollRunMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  postPayrollRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof postPayrollRun>>>
+
+    export type PostPayrollRunMutationError = unknown
+    export type PostPayrollRunMutationVariables = {id: string}
+
+    export const usePostPayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPayrollRun>>, TError,PostPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postPayrollRun>>,
+        TError,
+        PostPayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostPayrollRunMutationOptions(options), queryClient);
+    }
+
+export type unpostPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type unpostPayrollRunResponseSuccess = (unpostPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type unpostPayrollRunResponse = (unpostPayrollRunResponseSuccess)
+
+export const getUnpostPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/unpost`
+}
+
+export const unpostPayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<unpostPayrollRunResponse> => {
+
+  return http<unpostPayrollRunResponse>(getUnpostPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnpostPayrollRunMutationKey = () => ['unpostPayrollRun'] as const;
+
+export const getUnpostPayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpostPayrollRun>>, TError,UnpostPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof unpostPayrollRun>>, TError,UnpostPayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getUnpostPayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unpostPayrollRun>>, UnpostPayrollRunMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  unpostPayrollRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnpostPayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof unpostPayrollRun>>>
+
+    export type UnpostPayrollRunMutationError = unknown
+    export type UnpostPayrollRunMutationVariables = {id: string}
+
+    export const useUnpostPayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpostPayrollRun>>, TError,UnpostPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unpostPayrollRun>>,
+        TError,
+        UnpostPayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnpostPayrollRunMutationOptions(options), queryClient);
+    }
+
+export type payPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type payPayrollRunResponseSuccess = (payPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type payPayrollRunResponse = (payPayrollRunResponseSuccess)
+
+export const getPayPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/pay`
+}
+
+export const payPayrollRun = async (id: string,
+    payInput: PayInput, options?: Parameters<typeof http>[1]): Promise<payPayrollRunResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<payPayrollRunResponse>(getPayPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(payInput)
+  }
+);}
+
+
+
+
+
+export const getPayPayrollRunMutationKey = () => ['payPayrollRun'] as const;
+
+export const getPayPayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payPayrollRun>>, TError,PayPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof payPayrollRun>>, TError,PayPayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getPayPayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof payPayrollRun>>, PayPayrollRunMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  payPayrollRun(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PayPayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof payPayrollRun>>>
+    export type PayPayrollRunMutationBody = PayInput
+    export type PayPayrollRunMutationError = unknown
+    export type PayPayrollRunMutationVariables = {id: string;data: PayInput}
+
+    export const usePayPayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payPayrollRun>>, TError,PayPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof payPayrollRun>>,
+        TError,
+        PayPayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPayPayrollRunMutationOptions(options), queryClient);
+    }
+
+export type unpayPayrollRunResponse200 = {
+  data: PayrollRunDto
+  status: 200
+}
+
+export type unpayPayrollRunResponseSuccess = (unpayPayrollRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type unpayPayrollRunResponse = (unpayPayrollRunResponseSuccess)
+
+export const getUnpayPayrollRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/payroll/runs/${id}/unpay`
+}
+
+export const unpayPayrollRun = async (id: string, options?: Parameters<typeof http>[1]): Promise<unpayPayrollRunResponse> => {
+
+  return http<unpayPayrollRunResponse>(getUnpayPayrollRunUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnpayPayrollRunMutationKey = () => ['unpayPayrollRun'] as const;
+
+export const getUnpayPayrollRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpayPayrollRun>>, TError,UnpayPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof unpayPayrollRun>>, TError,UnpayPayrollRunMutationVariables, TContext> => {
+
+const mutationKey = getUnpayPayrollRunMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unpayPayrollRun>>, UnpayPayrollRunMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  unpayPayrollRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnpayPayrollRunMutationResult = NonNullable<Awaited<ReturnType<typeof unpayPayrollRun>>>
+
+    export type UnpayPayrollRunMutationError = unknown
+    export type UnpayPayrollRunMutationVariables = {id: string}
+
+    export const useUnpayPayrollRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpayPayrollRun>>, TError,UnpayPayrollRunMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unpayPayrollRun>>,
+        TError,
+        UnpayPayrollRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnpayPayrollRunMutationOptions(options), queryClient);
+    }
+
+export type printPayslipsResponse200 = {
+  data: void
+  status: 200
+}
+
+export type printPayslipsResponse501 = {
+  data: void
+  status: 501
+}
+
+export type printPayslipsResponseSuccess = (printPayslipsResponse200) & {
+  headers: Headers;
+};
+export type printPayslipsResponseError = (printPayslipsResponse501) & {
+  headers: Headers;
+};
+
+export type printPayslipsResponse = (printPayslipsResponseSuccess | printPayslipsResponseError)
+
+export const getPrintPayslipsUrl = (id: string,
+    params?: PrintPayslipsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/payroll/runs/${id}/payslips/pdf?${stringifiedParams}` : `/api/payroll/runs/${id}/payslips/pdf`
+}
+
+export const printPayslips = async (id: string,
+    params?: PrintPayslipsParams, options?: Parameters<typeof http>[1]): Promise<printPayslipsResponse> => {
+
+  return http<printPayslipsResponse>(getPrintPayslipsUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrintPayslipsQueryKey = (id: string,
+    params?: PrintPayslipsParams,) => {
+    return [
+    `/api/payroll/runs/${id}/payslips/pdf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPrintPayslipsQueryOptions = <TData = Awaited<ReturnType<typeof printPayslips>>, TError = void>(id: string,
+    params?: PrintPayslipsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPrintPayslipsQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof printPayslips>>> = ({ signal }) => printPayslips(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PrintPayslipsQueryResult = NonNullable<Awaited<ReturnType<typeof printPayslips>>>
+export type PrintPayslipsQueryError = void
+
+
+export function usePrintPayslips<TData = Awaited<ReturnType<typeof printPayslips>>, TError = void>(
+ id: string,
+    params: undefined |  PrintPayslipsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printPayslips>>,
+          TError,
+          Awaited<ReturnType<typeof printPayslips>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintPayslips<TData = Awaited<ReturnType<typeof printPayslips>>, TError = void>(
+ id: string,
+    params?: PrintPayslipsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printPayslips>>,
+          TError,
+          Awaited<ReturnType<typeof printPayslips>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintPayslips<TData = Awaited<ReturnType<typeof printPayslips>>, TError = void>(
+ id: string,
+    params?: PrintPayslipsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePrintPayslips<TData = Awaited<ReturnType<typeof printPayslips>>, TError = void>(
+ id: string,
+    params?: PrintPayslipsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslips>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPrintPayslipsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type printPayslipResponse200 = {
+  data: void
+  status: 200
+}
+
+export type printPayslipResponse501 = {
+  data: void
+  status: 501
+}
+
+export type printPayslipResponseSuccess = (printPayslipResponse200) & {
+  headers: Headers;
+};
+export type printPayslipResponseError = (printPayslipResponse501) & {
+  headers: Headers;
+};
+
+export type printPayslipResponse = (printPayslipResponseSuccess | printPayslipResponseError)
+
+export const getPrintPayslipUrl = (id: string,
+    payslipId: string,
+    params?: PrintPayslipParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/payroll/runs/${id}/payslips/${payslipId}/pdf?${stringifiedParams}` : `/api/payroll/runs/${id}/payslips/${payslipId}/pdf`
+}
+
+export const printPayslip = async (id: string,
+    payslipId: string,
+    params?: PrintPayslipParams, options?: Parameters<typeof http>[1]): Promise<printPayslipResponse> => {
+
+  return http<printPayslipResponse>(getPrintPayslipUrl(id,payslipId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrintPayslipQueryKey = (id: string,
+    payslipId: string,
+    params?: PrintPayslipParams,) => {
+    return [
+    `/api/payroll/runs/${id}/payslips/${payslipId}/pdf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPrintPayslipQueryOptions = <TData = Awaited<ReturnType<typeof printPayslip>>, TError = void>(id: string,
+    payslipId: string,
+    params?: PrintPayslipParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPrintPayslipQueryKey(id,payslipId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof printPayslip>>> = ({ signal }) => printPayslip(id,payslipId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && payslipId !== null && payslipId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PrintPayslipQueryResult = NonNullable<Awaited<ReturnType<typeof printPayslip>>>
+export type PrintPayslipQueryError = void
+
+
+export function usePrintPayslip<TData = Awaited<ReturnType<typeof printPayslip>>, TError = void>(
+ id: string,
+    payslipId: string,
+    params: undefined |  PrintPayslipParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printPayslip>>,
+          TError,
+          Awaited<ReturnType<typeof printPayslip>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintPayslip<TData = Awaited<ReturnType<typeof printPayslip>>, TError = void>(
+ id: string,
+    payslipId: string,
+    params?: PrintPayslipParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof printPayslip>>,
+          TError,
+          Awaited<ReturnType<typeof printPayslip>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePrintPayslip<TData = Awaited<ReturnType<typeof printPayslip>>, TError = void>(
+ id: string,
+    payslipId: string,
+    params?: PrintPayslipParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePrintPayslip<TData = Awaited<ReturnType<typeof printPayslip>>, TError = void>(
+ id: string,
+    payslipId: string,
+    params?: PrintPayslipParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof printPayslip>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPrintPayslipQueryOptions(id,payslipId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getEndOfServicePositionResponse200 = {
+  data: EndOfServicePosition
+  status: 200
+}
+
+export type getEndOfServicePositionResponseSuccess = (getEndOfServicePositionResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getEndOfServicePositionResponse = (getEndOfServicePositionResponseSuccess)
+
+export const getGetEndOfServicePositionUrl = (params: GetEndOfServicePositionParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/payroll/end-of-service?${stringifiedParams}` : `/api/payroll/end-of-service`
+}
+
+export const getEndOfServicePosition = async (params: GetEndOfServicePositionParams, options?: Parameters<typeof http>[1]): Promise<getEndOfServicePositionResponse> => {
+
+  return http<getEndOfServicePositionResponse>(getGetEndOfServicePositionUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEndOfServicePositionQueryKey = (params?: GetEndOfServicePositionParams,) => {
+    return [
+    `/api/payroll/end-of-service`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetEndOfServicePositionQueryOptions = <TData = Awaited<ReturnType<typeof getEndOfServicePosition>>, TError = unknown>(params: GetEndOfServicePositionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEndOfServicePositionQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEndOfServicePosition>>> = ({ signal }) => getEndOfServicePosition(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetEndOfServicePositionQueryResult = NonNullable<Awaited<ReturnType<typeof getEndOfServicePosition>>>
+export type GetEndOfServicePositionQueryError = unknown
+
+
+export function useGetEndOfServicePosition<TData = Awaited<ReturnType<typeof getEndOfServicePosition>>, TError = unknown>(
+ params: GetEndOfServicePositionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEndOfServicePosition>>,
+          TError,
+          Awaited<ReturnType<typeof getEndOfServicePosition>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEndOfServicePosition<TData = Awaited<ReturnType<typeof getEndOfServicePosition>>, TError = unknown>(
+ params: GetEndOfServicePositionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEndOfServicePosition>>,
+          TError,
+          Awaited<ReturnType<typeof getEndOfServicePosition>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEndOfServicePosition<TData = Awaited<ReturnType<typeof getEndOfServicePosition>>, TError = unknown>(
+ params: GetEndOfServicePositionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetEndOfServicePosition<TData = Awaited<ReturnType<typeof getEndOfServicePosition>>, TError = unknown>(
+ params: GetEndOfServicePositionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEndOfServicePosition>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEndOfServicePositionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type accrueEndOfServiceResponse200 = {
+  data: EndOfServiceResult
+  status: 200
+}
+
+export type accrueEndOfServiceResponseSuccess = (accrueEndOfServiceResponse200) & {
+  headers: Headers;
+};
+;
+
+export type accrueEndOfServiceResponse = (accrueEndOfServiceResponseSuccess)
+
+export const getAccrueEndOfServiceUrl = () => {
+
+
+
+
+  return `/api/payroll/end-of-service/accrue`
+}
+
+export const accrueEndOfService = async (accrueEndOfServiceRequest: AccrueEndOfServiceRequest, options?: Parameters<typeof http>[1]): Promise<accrueEndOfServiceResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<accrueEndOfServiceResponse>(getAccrueEndOfServiceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accrueEndOfServiceRequest)
+  }
+);}
+
+
+
+
+
+export const getAccrueEndOfServiceMutationKey = () => ['accrueEndOfService'] as const;
+
+export const getAccrueEndOfServiceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accrueEndOfService>>, TError,AccrueEndOfServiceMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof accrueEndOfService>>, TError,AccrueEndOfServiceMutationVariables, TContext> => {
+
+const mutationKey = getAccrueEndOfServiceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accrueEndOfService>>, AccrueEndOfServiceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  accrueEndOfService(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccrueEndOfServiceMutationResult = NonNullable<Awaited<ReturnType<typeof accrueEndOfService>>>
+    export type AccrueEndOfServiceMutationBody = AccrueEndOfServiceRequest
+    export type AccrueEndOfServiceMutationError = unknown
+    export type AccrueEndOfServiceMutationVariables = {data: AccrueEndOfServiceRequest}
+
+    export const useAccrueEndOfService = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accrueEndOfService>>, TError,AccrueEndOfServiceMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accrueEndOfService>>,
+        TError,
+        AccrueEndOfServiceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccrueEndOfServiceMutationOptions(options), queryClient);
+    }
+
+export type runDueEndOfServiceResponse200 = {
+  data: EndOfServiceResult
+  status: 200
+}
+
+export type runDueEndOfServiceResponseSuccess = (runDueEndOfServiceResponse200) & {
+  headers: Headers;
+};
+;
+
+export type runDueEndOfServiceResponse = (runDueEndOfServiceResponseSuccess)
+
+export const getRunDueEndOfServiceUrl = () => {
+
+
+
+
+  return `/api/payroll/end-of-service/run-due`
+}
+
+export const runDueEndOfService = async ( options?: Parameters<typeof http>[1]): Promise<runDueEndOfServiceResponse> => {
+
+  return http<runDueEndOfServiceResponse>(getRunDueEndOfServiceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRunDueEndOfServiceMutationKey = () => ['runDueEndOfService'] as const;
+
+export const getRunDueEndOfServiceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueEndOfService>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDueEndOfService>>, TError,void, TContext> => {
+
+const mutationKey = getRunDueEndOfServiceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDueEndOfService>>, void> = () => {
+
+
+          return  runDueEndOfService(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDueEndOfServiceMutationResult = NonNullable<Awaited<ReturnType<typeof runDueEndOfService>>>
+
+    export type RunDueEndOfServiceMutationError = unknown
+
+
+    export const useRunDueEndOfService = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDueEndOfService>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runDueEndOfService>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunDueEndOfServiceMutationOptions(options), queryClient);
+    }
+
+export type undoEndOfServiceResponse200 = {
+  data: void
+  status: 200
+}
+
+export type undoEndOfServiceResponseSuccess = (undoEndOfServiceResponse200) & {
+  headers: Headers;
+};
+;
+
+export type undoEndOfServiceResponse = (undoEndOfServiceResponseSuccess)
+
+export const getUndoEndOfServiceUrl = () => {
+
+
+
+
+  return `/api/payroll/end-of-service/undo`
+}
+
+export const undoEndOfService = async ( options?: Parameters<typeof http>[1]): Promise<undoEndOfServiceResponse> => {
+
+  return http<undoEndOfServiceResponse>(getUndoEndOfServiceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUndoEndOfServiceMutationKey = () => ['undoEndOfService'] as const;
+
+export const getUndoEndOfServiceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoEndOfService>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoEndOfService>>, TError,void, TContext> => {
+
+const mutationKey = getUndoEndOfServiceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoEndOfService>>, void> = () => {
+
+
+          return  undoEndOfService(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoEndOfServiceMutationResult = NonNullable<Awaited<ReturnType<typeof undoEndOfService>>>
+
+    export type UndoEndOfServiceMutationError = unknown
+
+
+    export const useUndoEndOfService = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoEndOfService>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof undoEndOfService>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getUndoEndOfServiceMutationOptions(options), queryClient);
+    }
+
 export type listExchangeRatesResponse200 = {
   data: CurrencyRateDto[]
   status: 200
@@ -11089,6 +14447,86 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getImportAssetsMutationOptions(options), queryClient);
+    }
+
+export type importEmployeesResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importEmployeesResponseSuccess = (importEmployeesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importEmployeesResponse = (importEmployeesResponseSuccess)
+
+export const getImportEmployeesUrl = () => {
+
+
+
+
+  return `/api/import/employees`
+}
+
+export const importEmployees = async ( options?: Parameters<typeof http>[1]): Promise<importEmployeesResponse> => {
+
+  return http<importEmployeesResponse>(getImportEmployeesUrl(),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportEmployeesMutationKey = () => ['importEmployees'] as const;
+
+export const getImportEmployeesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importEmployees>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importEmployees>>, TError,void, TContext> => {
+
+const mutationKey = getImportEmployeesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importEmployees>>, void> = () => {
+
+
+          return  importEmployees(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportEmployeesMutationResult = NonNullable<Awaited<ReturnType<typeof importEmployees>>>
+
+    export type ImportEmployeesMutationError = unknown
+
+
+    export const useImportEmployees = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importEmployees>>, TError,void, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importEmployees>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportEmployeesMutationOptions(options), queryClient);
     }
 
 export type importExchangeRatesResponse200 = {

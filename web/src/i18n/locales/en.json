@@ -30,7 +30,9 @@
     "taxCodes": "Tax codes",
     "stock": "Stock",
     "warehouses": "Warehouses",
-    "assets": "Fixed assets"
+    "assets": "Fixed assets",
+    "employees": "Employees",
+    "payroll": "Payroll"
   },
   "header": {
     "language": "Language",
@@ -97,7 +99,9 @@
     "taxCodes": "The tax codes you can put on invoice lines. The codes of your country come ready made with their rates; you choose which accounts they post to, which one new lines start with, and you can add your own. A line keeps the rate it was written with, so changing a code never changes an old invoice.",
     "stock": "What is in stock and what it is worth. Opening stock is what you already had when you started. A stock count compares what you counted with what is recorded and books only the difference. A transfer moves stock between warehouses without changing its value. Sales and purchase invoices move stock by themselves.",
     "warehouses": "Warehouses are the places where you keep stock. Every movement of stock names one. One warehouse is the default, and new documents use it unless you choose another.",
-    "assets": "Your fixed assets (and intangible ones such as software) with their cost, depreciation and book value. Baba posts each month's depreciation by itself for the months that have ended, and you can run it up to any date. When you sell or scrap an asset, Baba takes it off the books and records the gain or loss."
+    "assets": "Your fixed assets (and intangible ones such as software) with their cost, depreciation and book value. Baba posts each month's depreciation by itself for the months that have ended, and you can run it up to any date. When you sell or scrap an asset, Baba takes it off the books and records the gain or loss.",
+    "employees": "Your employees with their pay, the allowances and deductions they get, and their leave. Choose \"National\" for citizens of your country: the social insurance of your country applies to them as set in the payroll settings.",
+    "payroll": "Each month has a payroll run: a payslip for every employee, worked out from their pay. Posting it records salaries, social insurance and deductions in your books; paying it takes the net salaries out of the bank. Once you have made the first month, later months are made (and posted) for you when you open the company. Change a payslip for overtime or a deduction, and the books follow."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -403,7 +407,16 @@
       "TaxReceivable": "Tax receivable (paid on purchases)",
       "Inventory": "Stock (inventory)",
       "CostOfSales": "Cost of sales",
-      "InventoryAdjustment": "Stock gains and losses"
+      "InventoryAdjustment": "Stock gains and losses",
+      "AccumulatedDepreciation": "Accumulated depreciation",
+      "DepreciationExpense": "Depreciation expense",
+      "AssetDisposal": "Gain or loss on disposal of assets",
+      "SalaryExpense": "Salaries expense",
+      "SalariesPayable": "Salaries payable",
+      "SocialInsuranceExpense": "Employer social insurance",
+      "SocialInsurancePayable": "Social insurance payable",
+      "EndOfServiceExpense": "End-of-service expense",
+      "EndOfServiceProvision": "End-of-service provision"
     },
     "issues": {
       "account": {
@@ -445,7 +458,10 @@
       "StockCost": "Cost of stock sold",
       "StockAdjustment": "Stock entry",
       "Depreciation": "Depreciation",
-      "AssetDisposal": "Asset disposal"
+      "AssetDisposal": "Asset disposal",
+      "Payroll": "Payroll",
+      "SalaryPayment": "Salary payment",
+      "EndOfServiceAccrual": "End-of-service provision"
     },
     "plural": {
       "Payment": "Payments",
@@ -458,7 +474,10 @@
       "StockCost": "Cost of stock sold",
       "StockAdjustment": "Stock entries",
       "Depreciation": "Depreciation",
-      "AssetDisposal": "Asset disposals"
+      "AssetDisposal": "Asset disposals",
+      "Payroll": "Payroll",
+      "SalaryPayment": "Salary payments",
+      "EndOfServiceAccrual": "End-of-service provision"
     },
     "new": {
       "Payment": "New payment",
@@ -471,7 +490,10 @@
       "StockCost": "Cost of stock sold",
       "StockAdjustment": "Stock entry",
       "Depreciation": "Depreciation",
-      "AssetDisposal": "Asset disposal"
+      "AssetDisposal": "Asset disposal",
+      "Payroll": "Payroll",
+      "SalaryPayment": "Salary payment",
+      "EndOfServiceAccrual": "End-of-service provision"
     },
     "emptyTitle": {
       "Payment": "No payments yet",
@@ -610,7 +632,10 @@
       "stock-valuation": "Stock valuation",
       "stock-movements": "Stock movements",
       "stock-reorder": "Products to reorder",
-      "asset-register": "Fixed asset register"
+      "asset-register": "Fixed asset register",
+      "payroll-summary": "Payroll summary",
+      "leave-balances": "Leave balances",
+      "end-of-service": "End-of-service provision"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -627,7 +652,10 @@
       "stock-valuation": "What is in stock on a day and what it is worth. Checked against the stock accounts of the ledger.",
       "stock-movements": "Every movement of stock in a period: what came in, what went out, and at what value.",
       "stock-reorder": "Products whose stock has fallen to their reorder level.",
-      "asset-register": "Cost, depreciation so far and book value of every asset on a day, checked against the ledger."
+      "asset-register": "Cost, depreciation so far and book value of every asset on a day, checked against the ledger.",
+      "payroll-summary": "Every payslip of the months in a period, with the bank details: also the list to give your bank.",
+      "leave-balances": "Annual leave each employee has earned, taken and has left.",
+      "end-of-service": "What each employee would be owed at the end of service, and whether your books hold that much."
     },
     "presets": {
       "thisMonth": "This month",
@@ -1011,6 +1039,9 @@
       },
       "asset": {
         "account-unknown": "No account has this code."
+      },
+      "employees": {
+        "salary-column-missing": "The file needs a Basic salary column."
       }
     },
     "productsButton": "Import…",
@@ -1545,6 +1576,229 @@
         "proceeds-invalid": "The amount received cannot be negative.",
         "disposal-account-missing": "Choose the account for the gain or loss.",
         "not-disposed": "This asset has not been disposed of."
+      }
+    }
+  },
+  "employees": {
+    "title": "Employees",
+    "tabs": {
+      "label": "Employee views",
+      "employees": "Employees",
+      "leave": "Leave",
+      "components": "Allowances and deductions"
+    },
+    "new": {
+      "employees": "New employee",
+      "leave": "Record leave",
+      "components": "New allowance or deduction"
+    },
+    "import": "Import employees",
+    "importTitle": "Import employees",
+    "importIntro": "Upload an Excel or CSV file with one row per employee. The whole file is rejected if any row has a problem. Allowances and deductions are given to each employee afterwards.",
+    "search": "Search employees",
+    "deleted": "Employee deleted.",
+    "deleteTitle": "Delete {{name}}?",
+    "emptyTitle": "No employees yet",
+    "emptyBody": "Add your employees with their basic salary, and Baba will work out their payslips every month.",
+    "jobTitle": "Job title",
+    "joined": "Joined",
+    "basicSalary": "Basic salary",
+    "left": "Left",
+    "edit": "Edit employee",
+    "nationalId": "ID number",
+    "isNational": "National",
+    "isNationalHelp": "A citizen of the company's country: the insurance scheme for nationals applies.",
+    "leaveDate": "Last day of work",
+    "leaveDateHelp": "Fill in when the employee leaves. Pay stops after this day.",
+    "bankName": "Bank",
+    "bankAccount": "Account number or IBAN",
+    "allowancesAndDeductions": "Allowances and deductions",
+    "component": "Allowance or deduction",
+    "componentValue": "Amount or %",
+    "addComponent": "Add an allowance or deduction",
+    "componentValueHelp": "A fixed amount a month, or a percentage of the basic salary, as the allowance or deduction is set up.",
+    "annualLeaveDays": "Annual leave (days a year)",
+    "leaveBroughtForward": "Leave balance brought forward",
+    "leaveBroughtForwardHelp": "Days of leave left on the date below. More is earned each month after it.",
+    "leaveBalanceDate": "Balance as of",
+    "employee": "Employee",
+    "leaveEarned": "Earned (days)",
+    "leaveTaken": "Leave taken",
+    "leaveBalance": "Balance (days)",
+    "leaveBalances": "Annual leave balances today",
+    "leaveKind": "Kind of leave",
+    "leaveKinds": {
+      "Annual": "Annual",
+      "Sick": "Sick",
+      "Unpaid": "Unpaid",
+      "Other": "Other"
+    },
+    "leaveDays": "Days",
+    "leaveDaysHelp": "Leave empty to count every day from the first to the last.",
+    "deleteLeaveTitle": "Delete this leave?",
+    "emptyLeaveTitle": "No leave recorded yet",
+    "emptyLeaveBody": "Record the leave employees take, and their balance follows.",
+    "editLeave": "Edit leave",
+    "componentsIntro": "The kinds of allowance (housing, transport) and deduction (loan repayment) you give employees. Choose them on each employee with their own amount.",
+    "emptyComponentsTitle": "No allowances or deductions yet",
+    "emptyComponentsBody": "Add the kinds you use, such as a housing allowance.",
+    "editComponent": "Edit allowance or deduction",
+    "componentKinds": {
+      "Earning": "Allowance",
+      "Deduction": "Deduction"
+    },
+    "calculation": "How it is worked out",
+    "calculations": {
+      "Fixed": "Fixed amount",
+      "PercentOfBasic": "% of basic"
+    },
+    "defaultValue": "Usual amount or %",
+    "defaultValueHelp": "Each employee can have their own.",
+    "deductionAccount": "Account the deduction goes to",
+    "deductionAccountHelp": "Required: for example the loans account for a loan repayment.",
+    "earningAccount": "Expense account",
+    "earningAccountHelp": "Leave empty to charge it to salaries.",
+    "componentAccount": "Account",
+    "insurable": "Counts for social insurance",
+    "insurableHelp": "Switch on if the insurance is worked out on this too (housing usually).",
+    "inEndOfService": "Counts for end-of-service",
+    "inEndOfServiceHelp": "Switch on if the end-of-service gratuity is worked out on this too.",
+    "deleteComponentTitle": "Delete {{name}}?",
+    "issues": {
+      "employee": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another employee already uses this code.",
+        "name-required": "Enter a name.",
+        "join-required": "Enter the date the employee joined.",
+        "leave-before-join": "The last day of work cannot be before the joining date.",
+        "basic-invalid": "The basic salary cannot be negative.",
+        "leave-days-invalid": "Annual leave must be between 0 and 366 days.",
+        "cost-center-unknown": "That cost center no longer exists.",
+        "component-unknown": "Choose an allowance or deduction that exists and is on.",
+        "component-twice": "This allowance or deduction is given twice.",
+        "component-value-invalid": "The amount cannot be negative.",
+        "in-use": "This employee has payslips or leave, so they cannot be deleted. Switch them off instead."
+      },
+      "component": {
+        "code-required": "Enter a code.",
+        "code-duplicate": "Another one already uses this code.",
+        "name-required": "Enter a name.",
+        "value-invalid": "The amount cannot be negative, and a percentage cannot be over 1,000.",
+        "account-required": "Choose the account the deduction goes to.",
+        "account-invalid": "Choose an active account that takes entries.",
+        "in-use": "This is given to employees or on payslips, so it cannot be deleted. Switch it off instead."
+      },
+      "leave": {
+        "employee-unknown": "Choose an employee.",
+        "dates-invalid": "The last day cannot be before the first.",
+        "days-invalid": "The days must be more than zero."
+      }
+    }
+  },
+  "payroll": {
+    "title": "Payroll",
+    "newMonth": "New payroll month",
+    "settings": "Payroll settings",
+    "tabs": {
+      "label": "Payroll views",
+      "runs": "Months",
+      "endOfService": "End-of-service"
+    },
+    "month": "Month",
+    "status": {
+      "Draft": "Draft",
+      "Posted": "Posted",
+      "Paid": "Paid"
+    },
+    "employees": "Employees",
+    "earnings": "Earnings",
+    "deductions": "Deductions",
+    "net": "Net pay",
+    "deleteTitle": "Delete payroll for {{month}}?",
+    "startHint": "Start with the first month you want Baba to run. From then on, every month that ends is made for you when you open the company.",
+    "emptyTitle": "No payroll yet",
+    "emptyBody": "Add your employees first, then make the first month. Baba works out each payslip and the social insurance.",
+    "make": "Make payslips",
+    "newMonthIntro": "A payslip is made for every employee who worked that month, from their current pay. You can change them before posting.",
+    "anyDayOfMonth": "Any day of the month",
+    "years": "Years of service",
+    "wage": "Monthly wage",
+    "owed": "Owed",
+    "provisionPosted": "The provision was posted.",
+    "provisionAlreadyRight": "The provision already matches what is owed.",
+    "noEndOfService": "This country has no end-of-service gratuity, so there is nothing to set aside.",
+    "endOfServiceIntro": "What each employee would be owed if their service ended at the end of last month. The provision in your books is brought to this amount once a month.",
+    "totalOwed": "Total owed",
+    "setAside": "Set aside in your books",
+    "provisionFor": "Post the provision for the month of",
+    "postProvision": "Post provision",
+    "undoProvision": "Undo last provision",
+    "payslip": "Payslip",
+    "leaveOut": "Leave out",
+    "printAll": "Print all payslips",
+    "refresh": "Make payslips again",
+    "post": "Post to the books",
+    "paySalaries": "Pay salaries",
+    "unpost": "Take back to draft",
+    "unpay": "Take the payment back",
+    "postedNote": "This month is in your books. If you change a payslip, the books follow.",
+    "employeeInsurance": "Employee insurance",
+    "employerInsurance": "Employer insurance",
+    "editPayslip": "Payslip of {{name}}",
+    "editPayslipHelp": "Change an amount, or add a line such as overtime or a penalty. The social insurance is worked out again on the lines that count for it.",
+    "itemLabel": "Description",
+    "amount": "Amount",
+    "insurableShort": "Insurable",
+    "account": "Account",
+    "addItem": "Add a line",
+    "payIntro": "The net salaries of this month are paid out of the account below, and what was owed to the employees is cleared.",
+    "pay": "Pay",
+    "paidFrom": "Paid from",
+    "ranOnOpen": "Payroll was made for {{count}} months that had ended.",
+    "autoPost": "Post new months by themselves",
+    "autoPostHelp": "When on, a month that ends is made and posted when you open the company. You can still correct it afterwards. When off, it is made as a draft for you to check.",
+    "insurance": "Social insurance",
+    "insuranceIntro": "Started from {{name}}. Rates and limits change, so check them with the authority and correct them here.",
+    "insuranceNone": "No social insurance is set up for this country. Enter rates below if your employees are insured.",
+    "nationalEmployee": "Nationals: paid by the employee",
+    "nationalEmployer": "Nationals: paid by the employer",
+    "foreignEmployee": "Others: paid by the employee",
+    "foreignEmployer": "Others: paid by the employer",
+    "insuranceFloor": "Lowest insurable wage",
+    "insuranceFloorHelp": "A lower wage is charged as if it were this.",
+    "insuranceCeiling": "Highest insurable wage",
+    "insuranceCeilingHelp": "Pay above this is not charged.",
+    "accounts": "Accounts payroll posts to",
+    "salaryExpenseAccount": "Salaries expense",
+    "salariesPayableAccount": "Salaries payable (owed to employees)",
+    "insuranceExpenseAccount": "Employer social insurance expense",
+    "insurancePayableAccount": "Social insurance payable",
+    "eosExpenseAccount": "End-of-service expense",
+    "eosProvisionAccount": "End-of-service provision",
+    "issues": {
+      "payroll": {
+        "run-exists": "This month already has a payroll.",
+        "no-employees": "There is no employee to pay in that month.",
+        "not-draft": "Only a draft can be made again.",
+        "paid": "This month has been paid. Take the payment back first.",
+        "not-posted": "Post the month to the books before paying it.",
+        "not-paid": "This month has not been paid.",
+        "cash-account-invalid": "Choose a bank or cash account to pay from.",
+        "accounts-missing": "Payroll accounts are missing. Choose them in the payroll settings.",
+        "nothing-to-pay": "There is no net pay to pay out.",
+        "net-negative": "A payslip has deductions larger than the pay. Change it first.",
+        "eos-done": "The provision for that month was already posted.",
+        "eos-not-applicable": "This country has no end-of-service gratuity.",
+        "eos-nothing-to-undo": "There is no provision to take back.",
+        "percent-invalid": "A percentage must be between 0 and 100.",
+        "limits-invalid": "The lowest wage cannot be above the highest.",
+        "account-invalid": "Choose an active account of the right kind that takes entries."
+      },
+      "payslip": {
+        "label-required": "Enter a description for the line.",
+        "amount-invalid": "The amount cannot be negative.",
+        "account-invalid": "Choose an active account that takes entries.",
+        "account-required": "A deduction needs the account it goes to."
       }
     }
   }

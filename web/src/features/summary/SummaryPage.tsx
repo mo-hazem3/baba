@@ -2,7 +2,7 @@ import { Alert, App, Button, Card, Descriptions, Statistic } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { runDueDepreciation, runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
+import { runDueDepreciation, runDueEndOfService, runDuePayroll, runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
 import { refreshBooks, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
 import { Link } from 'react-router'
@@ -40,6 +40,20 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   useEffect(() => {
     if (recurringCheckedFor === company.id) return
     recurringCheckedFor = company.id
+    if (company.enabledModules.includes('payroll')) {
+      // The months of payroll that have ended are made (and posted when the company chose that), then the end-of-service provision.
+      void runDuePayroll().then(async (response) => {
+        const made = response.data.items.filter((i) => !i.problemCode).length
+        if (made > 0) {
+          await refreshBooks(queryClient)
+          void message.info(t('payroll.ranOnOpen', { count: made }), 6)
+        }
+
+        await runDueEndOfService()
+        await refreshBooks(queryClient)
+      })
+    }
+
     if (company.enabledModules.includes('fixed-assets')) {
       // Depreciation of the months that have ended is posted by itself (brief section 13: "posts automatically").
       void runDueDepreciation().then(async (response) => {

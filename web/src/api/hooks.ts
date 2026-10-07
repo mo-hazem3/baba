@@ -8,7 +8,15 @@ import {
   useGetDashboard,
   useGetHostInfo,
   useGetPrintSettings,
+  useGetEndOfServicePosition,
+  useGetLeaveBalances,
+  useGetPayrollRun,
+  useGetPayrollSettings,
   useGetStockLevels,
+  useListEmployees,
+  useListLeave,
+  useListPayrollRuns,
+  useListSalaryComponents,
   useListAssets,
   useListAccounts,
   useListBankAccounts,
@@ -85,6 +93,22 @@ export const useExchangeRates = () => useListExchangeRates(undefined, { query: {
 export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
 
 export const useFiscalYears = () => useListFiscalYears({ query: { select: (r) => r.data } })
+
+export const useEmployees = () => useListEmployees({ query: { select: (r) => r.data } })
+
+export const useSalaryComponents = () => useListSalaryComponents({ query: { select: (r) => r.data } })
+
+export const useLeave = () => useListLeave({ query: { select: (r) => r.data } })
+
+export const useLeaveBalances = (asOf: string) => useGetLeaveBalances({ asOf }, { query: { select: (r) => r.data } })
+
+export const usePayrollSettings = () => useGetPayrollSettings({ query: { select: (r) => r.data } })
+
+export const usePayrollRuns = () => useListPayrollRuns({ query: { select: (r) => r.data } })
+
+export const usePayrollRun = (id: string | undefined) => useGetPayrollRun(id ?? '', { query: { enabled: id !== undefined, select: (r) => (r.status === 200 ? r.data : null) } })
+
+export const useEndOfService = (asOf: string) => useGetEndOfServicePosition({ asOf }, { query: { select: (r) => r.data } })
 
 export const useAssets = () => useListAssets({ query: { select: (r) => r.data } })
 

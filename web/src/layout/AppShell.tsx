@@ -45,6 +45,12 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
           { key: '/warehouses', label: t('nav.warehouses') },
         ]
       : []),
+    ...(modules.has('payroll')
+      ? [
+          { key: '/employees', label: t('nav.employees') },
+          { key: '/payroll', label: t('nav.payroll') },
+        ]
+      : []),
     ...(modules.has('fixed-assets') ? [{ key: '/assets', label: t('nav.assets') }] : []),
     ...(modules.has('cost-centers') ? [{ key: '/cost-centers', label: t('nav.costCenters') }] : []),
     ...(capabilities?.hasTaxCodes && (modules.has('sales') || modules.has('purchases')) ? [{ key: '/tax-codes', label: t('nav.taxCodes') }] : []),

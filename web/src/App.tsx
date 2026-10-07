@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router'
 import { useCurrentCompany } from './api/hooks'
 import { ChartOfAccountsPage } from './features/accounts/ChartOfAccountsPage'
+import { EmployeesPage } from './features/payroll/EmployeesPage'
+import { PayrollPage } from './features/payroll/PayrollPage'
+import { PayrollRunPage } from './features/payroll/PayrollRunPage'
 import { AssetsPage } from './features/assets/AssetsPage'
 import { StockPage } from './features/inventory/StockPage'
 import { WarehousesPage } from './features/inventory/WarehousesPage'
@@ -71,6 +74,9 @@ export function App() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/tax-codes" element={<TaxCodesPage />} />
         <Route path="/assets" element={<AssetsPage />} />
+        <Route path="/employees" element={<EmployeesPage />} />
+        <Route path="/payroll" element={<PayrollPage />} />
+        <Route path="/payroll/:id" element={<PayrollRunPage />} />
         <Route path="/stock" element={<StockPage />} />
         <Route path="/warehouses" element={<WarehousesPage />} />
         <Route path="/recurring" element={<RecurringPage />} />

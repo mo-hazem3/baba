@@ -23,4 +23,10 @@ export const AccountRole = {
   AccumulatedDepreciation: 'AccumulatedDepreciation',
   DepreciationExpense: 'DepreciationExpense',
   AssetDisposal: 'AssetDisposal',
+  SalaryExpense: 'SalaryExpense',
+  SalariesPayable: 'SalariesPayable',
+  SocialInsuranceExpense: 'SocialInsuranceExpense',
+  SocialInsurancePayable: 'SocialInsurancePayable',
+  EndOfServiceExpense: 'EndOfServiceExpense',
+  EndOfServiceProvision: 'EndOfServiceProvision',
 } as const;
