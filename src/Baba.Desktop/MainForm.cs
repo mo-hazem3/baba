@@ -42,6 +42,16 @@ internal sealed class MainForm : Form
         _smokeTestOutput = smokeTestOutput;
 
         Text = "Baba";
+        // The icon of the exe (branding\baba.ico when there is one) is also the icon of the window and the taskbar button.
+        try
+        {
+            Icon = Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath) ?? Icon;
+        }
+        catch (Exception e) when (e is ArgumentException or IOException)
+        {
+            // keep the default icon
+        }
+
         StartPosition = FormStartPosition.CenterScreen;
         ClientSize = new Size(1280, 780);
         MinimumSize = new Size(1000, 640);

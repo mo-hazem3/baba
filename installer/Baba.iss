@@ -25,12 +25,15 @@ PrivilegesRequiredOverridesAllowed=dialog
 ; Tells Windows the .baba file type changed, so Explorer shows the association straight away.
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
+#if FileExists("..\branding\baba.ico")
+SetupIconFile=..\branding\baba.ico
+#endif
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"
 
 [Files]
 ; The published app (self-contained: no .NET needed). Created by build-installer.ps1.

@@ -22,4 +22,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- The app icon: put a multi-size branding\baba.ico in the repository and it becomes the exe's icon (see docs/app-icon.md). -->
+  <PropertyGroup Condition="Exists('..\..\branding\baba.ico')">
+    <ApplicationIcon>..\..\branding\baba.ico</ApplicationIcon>
+  </PropertyGroup>
+
 </Project>
