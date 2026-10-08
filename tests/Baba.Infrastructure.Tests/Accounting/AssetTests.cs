@@ -54,6 +54,20 @@ public class AssetTests : AccountingFixture
     }
 
     [Fact]
+    public async Task Two_runs_at_the_same_moment_post_each_month_once()
+    {
+        var e = await NewEnvAsync();
+        await e.FixedAssets.CreateAsync(Laptop(e));
+
+        // The run when a company opens and the button on the screen, together.
+        var results = await Task.WhenAll(e.FixedAssets.RunDepreciationAsync(EndOf(3)), e.FixedAssets.RunDepreciationAsync(EndOf(3)));
+
+        Assert.Equal(3, results.Sum(r => r.Items.Count)); // each month by exactly one of them
+        Assert.All(results.SelectMany(r => r.Items), i => Assert.Null(i.ProblemCode));
+        Assert.Equal(300m, await BalanceAsync(e, "426"));
+    }
+
+    [Fact]
     public async Task Depreciation_stops_when_the_life_is_over_and_the_total_is_the_cost()
     {
         var e = await NewEnvAsync();

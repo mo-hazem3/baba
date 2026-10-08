@@ -90,6 +90,22 @@ public sealed class AssetService(
     ICompanyFiles files,
     TimeProvider clock)
 {
+    // The run when a company opens and the buttons on the screen can happen together; one at a time, so a month is never posted twice.
+    private readonly SemaphoreSlim _gate = new(1, 1);
+
+    private async Task<T> InGateAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            return await work();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     // ---------------------------------------------------------------- Register
 
     public async Task<IReadOnlyList<AssetDto>> ListAsync(CancellationToken cancellationToken = default)
@@ -232,10 +248,11 @@ public sealed class AssetService(
 
     /// <summary>Posts depreciation for every month up to and including the month of <paramref name="through"/> that is not yet done.</summary>
     public Task<DepreciationRunResult> RunDepreciationAsync(DateOnly through, CancellationToken cancellationToken = default) =>
-        RunAsync(through, null, cancellationToken);
+        InGateAsync(() => RunAsync(through, null, cancellationToken), cancellationToken);
 
     /// <summary>The run that happens when a company is opened: the months that have ended.</summary>
-    public Task<DepreciationRunResult> RunDueAsync(CancellationToken cancellationToken = default) => RunAsync(LastCompletedMonthEnd(), null, cancellationToken);
+    public Task<DepreciationRunResult> RunDueAsync(CancellationToken cancellationToken = default) =>
+        InGateAsync(() => RunAsync(LastCompletedMonthEnd(), null, cancellationToken), cancellationToken);
 
     private async Task<DepreciationRunResult> RunAsync(DateOnly through, Guid? onlyAsset, CancellationToken cancellationToken)
     {
@@ -302,7 +319,14 @@ public sealed class AssetService(
     }
 
     /// <summary>Takes back the latest month of depreciation (all its assets), for a month that has not been locked.</summary>
-    public async Task UndoLastDepreciationAsync(CancellationToken cancellationToken = default)
+    public Task UndoLastDepreciationAsync(CancellationToken cancellationToken = default) =>
+        InGateAsync(async () =>
+        {
+            await UndoLastCoreAsync(cancellationToken);
+            return true;
+        }, cancellationToken);
+
+    private async Task UndoLastCoreAsync(CancellationToken cancellationToken)
     {
         var rows = await store.ListDepreciationsAsync(cancellationToken);
         if (rows.Count == 0)
@@ -325,7 +349,10 @@ public sealed class AssetService(
     /// Sells or scraps an asset: depreciation is brought up to the month of the disposal, then one voucher takes off its cost and its
     /// depreciation, brings in the proceeds, and books the difference as a gain or loss.
     /// </summary>
-    public async Task<AssetDto> DisposeAsync(Guid id, DisposeInput input, CancellationToken cancellationToken = default)
+    public Task<AssetDto> DisposeAsync(Guid id, DisposeInput input, CancellationToken cancellationToken = default) =>
+        InGateAsync(() => DisposeCoreAsync(id, input, cancellationToken), cancellationToken);
+
+    private async Task<AssetDto> DisposeCoreAsync(Guid id, DisposeInput input, CancellationToken cancellationToken)
     {
         var asset = await store.FindAsync(id, cancellationToken) ?? throw new NotFoundException("asset");
         var chart = (await accounts.ListAsync(cancellationToken)).ToList();

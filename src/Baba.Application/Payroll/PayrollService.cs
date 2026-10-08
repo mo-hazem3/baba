@@ -113,6 +113,22 @@ public sealed class PayrollService(
     ICompanyFiles files,
     TimeProvider clock)
 {
+    // The runs when a company opens and the buttons on the screen can happen together; one at a time, so a month is never made twice.
+    private readonly SemaphoreSlim _gate = new(1, 1);
+
+    private async Task<T> InGateAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            return await work();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     // ---------------------------------------------------------------- Settings
 
     private CompanyInfo CompanyOrThrow() => files.Current ?? throw new CompanyFileException(CompanyFileProblem.NoCompanyOpen, "No company is open.");
@@ -233,7 +249,10 @@ public sealed class PayrollService(
         await store.FindRunAsync(id, cancellationToken) is { } run ? ToDto(run) : null;
 
     /// <summary>Starts a month: a payslip for every employee who worked in it, from what the employees say today. A draft until posted.</summary>
-    public async Task<PayrollRunDto> CreateRunAsync(DateOnly month, CancellationToken cancellationToken = default)
+    public Task<PayrollRunDto> CreateRunAsync(DateOnly month, CancellationToken cancellationToken = default) =>
+        InGateAsync(() => CreateRunCoreAsync(month, cancellationToken), cancellationToken);
+
+    private async Task<PayrollRunDto> CreateRunCoreAsync(DateOnly month, CancellationToken cancellationToken)
     {
         var company = CompanyOrThrow();
         month = new DateOnly(month.Year, month.Month, 1);
@@ -340,7 +359,10 @@ public sealed class PayrollService(
         await store.UpdateRunAsync(run, cancellationToken);
     }
 
-    public async Task<PayrollRunDto> PostRunAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<PayrollRunDto> PostRunAsync(Guid id, CancellationToken cancellationToken = default) =>
+        InGateAsync(() => PostRunCoreAsync(id, cancellationToken), cancellationToken);
+
+    private async Task<PayrollRunDto> PostRunCoreAsync(Guid id, CancellationToken cancellationToken)
     {
         var run = await store.FindRunAsync(id, cancellationToken) ?? throw new NotFoundException("payroll-run");
         if (run.PaymentVoucherId is not null)
@@ -432,7 +454,10 @@ public sealed class PayrollService(
     /// The run that happens when a company is opened: once payroll has been started, every later month that has ended is made, and posted
     /// when the company chose that. It stops at the first month that cannot be made (a locked month, a missing account).
     /// </summary>
-    public async Task<PayrollAutoResult> RunDueAsync(CancellationToken cancellationToken = default)
+    public Task<PayrollAutoResult> RunDueAsync(CancellationToken cancellationToken = default) =>
+        InGateAsync(() => RunDueCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task<PayrollAutoResult> RunDueCoreAsync(CancellationToken cancellationToken)
     {
         var items = new List<PayrollRunItem>();
         var settings = await SettingsAsync(cancellationToken);
@@ -448,11 +473,11 @@ public sealed class PayrollService(
 
             try
             {
-                var run = await CreateRunAsync(month, cancellationToken);
+                var run = await CreateRunCoreAsync(month, cancellationToken);
                 var posted = false;
                 if (settings.AutoPost)
                 {
-                    await PostRunAsync(run.Summary.Id, cancellationToken);
+                    await PostRunCoreAsync(run.Summary.Id, cancellationToken);
                     posted = true;
                 }
 
@@ -634,7 +659,10 @@ public sealed class PayrollService(
     }
 
     /// <summary>Posts what is needed to bring the provision to what is owed on the last day of a month (a release when it is too high).</summary>
-    public async Task<EndOfServiceResult> AccrueEndOfServiceAsync(DateOnly month, CancellationToken cancellationToken = default)
+    public Task<EndOfServiceResult> AccrueEndOfServiceAsync(DateOnly month, CancellationToken cancellationToken = default) =>
+        InGateAsync(() => AccrueCoreAsync(month, cancellationToken), cancellationToken);
+
+    private async Task<EndOfServiceResult> AccrueCoreAsync(DateOnly month, CancellationToken cancellationToken)
     {
         var company = CompanyOrThrow();
         month = new DateOnly(month.Year, month.Month, 1);
@@ -676,7 +704,10 @@ public sealed class PayrollService(
     }
 
     /// <summary>The provision entry of the last month that ended, made when a company is opened (once payroll has been started).</summary>
-    public async Task<EndOfServiceResult?> RunDueEndOfServiceAsync(CancellationToken cancellationToken = default)
+    public Task<EndOfServiceResult?> RunDueEndOfServiceAsync(CancellationToken cancellationToken = default) =>
+        InGateAsync(() => RunDueEndOfServiceCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task<EndOfServiceResult?> RunDueEndOfServiceCoreAsync(CancellationToken cancellationToken)
     {
         var settings = await SettingsAsync(cancellationToken);
         var month = LastCompletedMonthStart();
@@ -687,7 +718,7 @@ public sealed class PayrollService(
 
         try
         {
-            return await AccrueEndOfServiceAsync(month, cancellationToken);
+            return await AccrueCoreAsync(month, cancellationToken);
         }
         catch (ValidationException)
         {
