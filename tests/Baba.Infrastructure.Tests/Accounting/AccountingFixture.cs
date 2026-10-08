@@ -60,7 +60,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Payroll.EmployeeService Employees,
         Baba.Application.Payroll.PayrollService Payroll,
         Baba.Application.Claims.ClaimService Claims,
-        Baba.Application.Budgets.BudgetService Budgets)
+        Baba.Application.Budgets.BudgetService Budgets,
+        Baba.Application.Security.UserService Users)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -132,6 +133,7 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var payrollService = new Baba.Application.Payroll.PayrollService(payrollStore, accounts, ledger, vouchers, Baba.Localization.CountryPackRegistry.Discover(), files, Clock);
         var claimService = new Baba.Application.Claims.ClaimService(new Claims.ClaimStore(files), payrollStore, accounts, costCenterStore, vouchers, files, Clock);
         var budgetService = new Baba.Application.Budgets.BudgetService(new Budgets.BudgetStore(files), accounts, costCenterStore, files);
+        var userService = new Baba.Application.Security.UserService(new Security.SecurityStore(files), files, new FakeUser(user), Clock);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
         var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
 
@@ -164,7 +166,8 @@ public abstract class AccountingFixture : CompanyFilesFixture
             employeeService,
             payrollService,
             claimService,
-            budgetService);
+            budgetService,
+            userService);
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

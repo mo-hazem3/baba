@@ -6,6 +6,7 @@ using Baba.Domain.Assets;
 using Baba.Domain.Budgets;
 using Baba.Domain.Claims;
 using Baba.Domain.Inventory;
+using Baba.Domain.Security;
 using Baba.Domain.Payroll;
 using Baba.Domain.Trade;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,8 @@ public sealed class CompanyDbContext(
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
     public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
+    public DbSet<Role> Roles => Set<Role>();
     public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
     public DbSet<ExpenseClaimLine> ExpenseClaimLines => Set<ExpenseClaimLine>();
     public DbSet<BudgetEntry> BudgetEntries => Set<BudgetEntry>();
@@ -273,6 +276,22 @@ public sealed class CompanyDbContext(
         model.Entity<Product>().HasOne<Account>().WithMany().HasForeignKey(p => p.CostOfSalesAccountId).OnDelete(DeleteBehavior.Restrict);
         model.Entity<Product>().HasIndex(p => p.Barcode);
         model.Entity<Document>().HasOne<Warehouse>().WithMany().HasForeignKey(d => d.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+
+        model.Entity<Role>(role =>
+        {
+            role.Ignore(r => r.Permissions);
+            role.HasIndex(r => new { r.CompanyId, r.NameEn }).IsUnique();
+            role.HasIndex(r => new { r.CompanyId, r.BuiltInKey });
+            role.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<AppUser>(user =>
+        {
+            user.Property(u => u.UserName).UseCollation("NOCASE");
+            user.HasOne<Role>().WithMany().HasForeignKey(u => u.RoleId).OnDelete(DeleteBehavior.Restrict);
+            user.HasIndex(u => new { u.CompanyId, u.UserName }).IsUnique();
+            user.HasQueryFilter(u => u.CompanyId == CurrentCompanyId);
+        });
 
         model.Entity<ExpenseClaim>(claim =>
         {
@@ -543,14 +562,14 @@ public sealed class CompanyDbContext(
             }
 
             // Derived data (ledger entries, number counters) is not logged row by row: the voucher itself is.
-            if (entry.Entity is not INotAudited)
-                auditRows.Add(CreateAuditRow(entry, now, user));
+            if (entry.Entity is not INotAudited && CreateAuditRow(entry, now, user) is { } row)
+                auditRows.Add(row);
         }
 
         AuditLog.AddRange(auditRows);
     }
 
-    private AuditLogEntry CreateAuditRow(EntityEntry entry, DateTime now, string user)
+    private AuditLogEntry? CreateAuditRow(EntityEntry entry, DateTime now, string user)
     {
         var id = (Guid)entry.Property(nameof(Entity.Id)).CurrentValue!;
         var companyId = entry.Entity is Company ? id : CurrentCompanyId;
@@ -560,7 +579,11 @@ public sealed class CompanyDbContext(
             name is nameof(IAuditable.CreatedAt) or nameof(IAuditable.CreatedBy)
                 or nameof(IAuditable.UpdatedAt) or nameof(IAuditable.UpdatedBy);
 
-        var properties = entry.Properties.Where(p => !IsAuditColumn(p.Metadata.Name)).ToList();
+        // Secrets never go in the log (a changed password is logged as "changed"), and a sign-in time is not a change worth logging.
+        static bool IsHiddenColumn(string name) => name is "PasswordHash" or "PasswordSalt" or "PasswordIterations" or "LastSignInAt";
+
+        var properties = entry.Properties.Where(p => !IsAuditColumn(p.Metadata.Name) && !IsHiddenColumn(p.Metadata.Name)).ToList();
+        var passwordChanged = entry.State == EntityState.Modified && entry.Properties.Any(p => p.Metadata.Name == "PasswordHash" && p.IsModified);
 
         object? Describe(object? value) => value is byte[] bytes ? $"[{bytes.Length} bytes]" : value;
 
@@ -581,8 +604,18 @@ public sealed class CompanyDbContext(
             default:
                 action = AuditAction.Updated;
                 var modified = properties.Where(p => p.IsModified).ToList();
-                before = JsonSerializer.Serialize(Snapshot(modified, original: true));
-                after = JsonSerializer.Serialize(Snapshot(modified, original: false));
+                if (modified.Count == 0 && !passwordChanged)
+                    return null; // only hidden columns changed: nothing to show
+                var beforeValues = Snapshot(modified, original: true);
+                var afterValues = Snapshot(modified, original: false);
+                if (passwordChanged)
+                {
+                    beforeValues["Password"] = "••••••";
+                    afterValues["Password"] = "changed";
+                }
+
+                before = JsonSerializer.Serialize(beforeValues);
+                after = JsonSerializer.Serialize(afterValues);
                 break;
         }
 

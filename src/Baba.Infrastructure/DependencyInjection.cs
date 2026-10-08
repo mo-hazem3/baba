@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddSingleton<Baba.Application.Assets.IAssetStore, Baba.Infrastructure.Assets.AssetStore>();
         services.AddSingleton<Baba.Application.Payroll.IPayrollStore, Baba.Infrastructure.Payroll.PayrollStore>();
         services.AddSingleton<Baba.Application.Claims.IClaimStore, Baba.Infrastructure.Claims.ClaimStore>();
+        services.AddSingleton<Baba.Application.Security.ISecurityStore, Baba.Infrastructure.Security.SecurityStore>();
         services.AddSingleton<Baba.Application.Budgets.IBudgetStore, Baba.Infrastructure.Budgets.BudgetStore>();
         services.AddSingleton<Baba.Application.Trade.IAllocationStore, Baba.Infrastructure.Trade.AllocationStore>();
         services.AddSingleton<Baba.Application.Trade.ITaxCodeStore, Baba.Infrastructure.Trade.TaxCodeStore>();

@@ -62,6 +62,7 @@ public static class BabaApi
         services.AddSingleton<Baba.Application.Payroll.EmployeeService>();
         services.AddSingleton<Baba.Application.Payroll.PayrollService>();
         services.AddSingleton<Baba.Application.Claims.ClaimService>();
+        services.AddSingleton<Baba.Application.Security.UserService>();
         services.AddSingleton<Baba.Application.Budgets.BudgetService>();
         services.AddSingleton<Baba.Application.Inventory.StockDocumentService>();
         services.AddSingleton<ExchangeRateService>();
