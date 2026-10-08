@@ -31,11 +31,15 @@ import type {
   AssetInput,
   BackupRequest,
   BankAccountDto,
+  BudgetDto,
+  BudgetInput,
+  ClaimDto,
   ClearedStatement,
   CloseYearResult,
   CompanyInfo,
   CompleteReconciliationInput,
   ConvertDocumentRequest,
+  CopyBudgetInput,
   CostCenterDto,
   CostCenterInput,
   CountryDto,
@@ -56,6 +60,7 @@ import type {
   EndOfServiceResult,
   ExportReportParams,
   FiscalYearDto,
+  GetBudgetParams,
   GetEndOfServicePositionParams,
   GetExchangeRateOnParams,
   GetLeaveBalancesParams,
@@ -64,6 +69,7 @@ import type {
   GetReportParams,
   GetStockLevelsParams,
   HostInfo,
+  ImportBudgetParams,
   ImportResult,
   LeaveBalanceDto,
   LeaveDto,
@@ -86,6 +92,7 @@ import type {
   PartyInput,
   PartyKind,
   PathChoice,
+  PayClaimInput,
   PayInput,
   PayrollAutoResult,
   PayrollRunDto,
@@ -111,6 +118,7 @@ import type {
   RecurringDto,
   RecurringInput,
   RecurringRunResult,
+  RejectClaimRequest,
   RemoveRecentFileRequest,
   ReportResult,
   RestoreRequest,
@@ -118,6 +126,7 @@ import type {
   RunDepreciationRequest,
   SalaryComponentDto,
   SalaryComponentInput,
+  SaveClaimRequest,
   SaveDialogRequest,
   SaveDocumentRequest,
   SavePayslipRequest,
@@ -13533,6 +13542,1320 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getUndoEndOfServiceMutationOptions(options), queryClient);
     }
 
+export type listClaimsResponse200 = {
+  data: ClaimDto[]
+  status: 200
+}
+
+export type listClaimsResponseSuccess = (listClaimsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listClaimsResponse = (listClaimsResponseSuccess)
+
+export const getListClaimsUrl = () => {
+
+
+
+
+  return `/api/claims`
+}
+
+export const listClaims = async ( options?: Parameters<typeof http>[1]): Promise<listClaimsResponse> => {
+
+  return http<listClaimsResponse>(getListClaimsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClaimsQueryKey = () => {
+    return [
+    `/api/claims`
+    ] as const;
+    }
+
+
+export const getListClaimsQueryOptions = <TData = Awaited<ReturnType<typeof listClaims>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClaimsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClaims>>> = ({ signal }) => listClaims({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListClaimsQueryResult = NonNullable<Awaited<ReturnType<typeof listClaims>>>
+export type ListClaimsQueryError = unknown
+
+
+export function useListClaims<TData = Awaited<ReturnType<typeof listClaims>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listClaims>>,
+          TError,
+          Awaited<ReturnType<typeof listClaims>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListClaims<TData = Awaited<ReturnType<typeof listClaims>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listClaims>>,
+          TError,
+          Awaited<ReturnType<typeof listClaims>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListClaims<TData = Awaited<ReturnType<typeof listClaims>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListClaims<TData = Awaited<ReturnType<typeof listClaims>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listClaims>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListClaimsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type saveClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type saveClaimResponseSuccess = (saveClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type saveClaimResponse = (saveClaimResponseSuccess)
+
+export const getSaveClaimUrl = () => {
+
+
+
+
+  return `/api/claims`
+}
+
+export const saveClaim = async (saveClaimRequest: SaveClaimRequest, options?: Parameters<typeof http>[1]): Promise<saveClaimResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<saveClaimResponse>(getSaveClaimUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveClaimRequest)
+  }
+);}
+
+
+
+
+
+export const getSaveClaimMutationKey = () => ['saveClaim'] as const;
+
+export const getSaveClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveClaim>>, TError,SaveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveClaim>>, TError,SaveClaimMutationVariables, TContext> => {
+
+const mutationKey = getSaveClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveClaim>>, SaveClaimMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveClaim(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveClaimMutationResult = NonNullable<Awaited<ReturnType<typeof saveClaim>>>
+    export type SaveClaimMutationBody = SaveClaimRequest
+    export type SaveClaimMutationError = unknown
+    export type SaveClaimMutationVariables = {data: SaveClaimRequest}
+
+    export const useSaveClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveClaim>>, TError,SaveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveClaim>>,
+        TError,
+        SaveClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveClaimMutationOptions(options), queryClient);
+    }
+
+export type getClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type getClaimResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getClaimResponseSuccess = (getClaimResponse200) & {
+  headers: Headers;
+};
+export type getClaimResponseError = (getClaimResponse404) & {
+  headers: Headers;
+};
+
+export type getClaimResponse = (getClaimResponseSuccess | getClaimResponseError)
+
+export const getGetClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}`
+}
+
+export const getClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<getClaimResponse> => {
+
+  return http<getClaimResponse>(getGetClaimUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClaimQueryKey = (id: string,) => {
+    return [
+    `/api/claims/${id}`
+    ] as const;
+    }
+
+
+export const getGetClaimQueryOptions = <TData = Awaited<ReturnType<typeof getClaim>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClaimQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClaim>>> = ({ signal }) => getClaim(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetClaimQueryResult = NonNullable<Awaited<ReturnType<typeof getClaim>>>
+export type GetClaimQueryError = void
+
+
+export function useGetClaim<TData = Awaited<ReturnType<typeof getClaim>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClaim>>,
+          TError,
+          Awaited<ReturnType<typeof getClaim>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClaim<TData = Awaited<ReturnType<typeof getClaim>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClaim>>,
+          TError,
+          Awaited<ReturnType<typeof getClaim>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClaim<TData = Awaited<ReturnType<typeof getClaim>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetClaim<TData = Awaited<ReturnType<typeof getClaim>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClaim>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetClaimQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type deleteClaimResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteClaimResponseSuccess = (deleteClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteClaimResponse = (deleteClaimResponseSuccess)
+
+export const getDeleteClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}`
+}
+
+export const deleteClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<deleteClaimResponse> => {
+
+  return http<deleteClaimResponse>(getDeleteClaimUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteClaimMutationKey = () => ['deleteClaim'] as const;
+
+export const getDeleteClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClaim>>, TError,DeleteClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClaim>>, TError,DeleteClaimMutationVariables, TContext> => {
+
+const mutationKey = getDeleteClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClaim>>, DeleteClaimMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClaimMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClaim>>>
+
+    export type DeleteClaimMutationError = unknown
+    export type DeleteClaimMutationVariables = {id: string}
+
+    export const useDeleteClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClaim>>, TError,DeleteClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClaim>>,
+        TError,
+        DeleteClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteClaimMutationOptions(options), queryClient);
+    }
+
+export type submitClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type submitClaimResponseSuccess = (submitClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type submitClaimResponse = (submitClaimResponseSuccess)
+
+export const getSubmitClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/submit`
+}
+
+export const submitClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<submitClaimResponse> => {
+
+  return http<submitClaimResponse>(getSubmitClaimUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSubmitClaimMutationKey = () => ['submitClaim'] as const;
+
+export const getSubmitClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitClaim>>, TError,SubmitClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitClaim>>, TError,SubmitClaimMutationVariables, TContext> => {
+
+const mutationKey = getSubmitClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitClaim>>, SubmitClaimMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  submitClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitClaimMutationResult = NonNullable<Awaited<ReturnType<typeof submitClaim>>>
+
+    export type SubmitClaimMutationError = unknown
+    export type SubmitClaimMutationVariables = {id: string}
+
+    export const useSubmitClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitClaim>>, TError,SubmitClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof submitClaim>>,
+        TError,
+        SubmitClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSubmitClaimMutationOptions(options), queryClient);
+    }
+
+export type approveClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type approveClaimResponseSuccess = (approveClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type approveClaimResponse = (approveClaimResponseSuccess)
+
+export const getApproveClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/approve`
+}
+
+export const approveClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<approveClaimResponse> => {
+
+  return http<approveClaimResponse>(getApproveClaimUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveClaimMutationKey = () => ['approveClaim'] as const;
+
+export const getApproveClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveClaim>>, TError,ApproveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveClaim>>, TError,ApproveClaimMutationVariables, TContext> => {
+
+const mutationKey = getApproveClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveClaim>>, ApproveClaimMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  approveClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveClaimMutationResult = NonNullable<Awaited<ReturnType<typeof approveClaim>>>
+
+    export type ApproveClaimMutationError = unknown
+    export type ApproveClaimMutationVariables = {id: string}
+
+    export const useApproveClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveClaim>>, TError,ApproveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveClaim>>,
+        TError,
+        ApproveClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveClaimMutationOptions(options), queryClient);
+    }
+
+export type rejectClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type rejectClaimResponseSuccess = (rejectClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type rejectClaimResponse = (rejectClaimResponseSuccess)
+
+export const getRejectClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/reject`
+}
+
+export const rejectClaim = async (id: string,
+    rejectClaimRequest: RejectClaimRequest, options?: Parameters<typeof http>[1]): Promise<rejectClaimResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<rejectClaimResponse>(getRejectClaimUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rejectClaimRequest)
+  }
+);}
+
+
+
+
+
+export const getRejectClaimMutationKey = () => ['rejectClaim'] as const;
+
+export const getRejectClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectClaim>>, TError,RejectClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectClaim>>, TError,RejectClaimMutationVariables, TContext> => {
+
+const mutationKey = getRejectClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectClaim>>, RejectClaimMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rejectClaim(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectClaimMutationResult = NonNullable<Awaited<ReturnType<typeof rejectClaim>>>
+    export type RejectClaimMutationBody = RejectClaimRequest
+    export type RejectClaimMutationError = unknown
+    export type RejectClaimMutationVariables = {id: string;data: RejectClaimRequest}
+
+    export const useRejectClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectClaim>>, TError,RejectClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rejectClaim>>,
+        TError,
+        RejectClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejectClaimMutationOptions(options), queryClient);
+    }
+
+export type unapproveClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type unapproveClaimResponseSuccess = (unapproveClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type unapproveClaimResponse = (unapproveClaimResponseSuccess)
+
+export const getUnapproveClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/unapprove`
+}
+
+export const unapproveClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<unapproveClaimResponse> => {
+
+  return http<unapproveClaimResponse>(getUnapproveClaimUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnapproveClaimMutationKey = () => ['unapproveClaim'] as const;
+
+export const getUnapproveClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unapproveClaim>>, TError,UnapproveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof unapproveClaim>>, TError,UnapproveClaimMutationVariables, TContext> => {
+
+const mutationKey = getUnapproveClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unapproveClaim>>, UnapproveClaimMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  unapproveClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnapproveClaimMutationResult = NonNullable<Awaited<ReturnType<typeof unapproveClaim>>>
+
+    export type UnapproveClaimMutationError = unknown
+    export type UnapproveClaimMutationVariables = {id: string}
+
+    export const useUnapproveClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unapproveClaim>>, TError,UnapproveClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unapproveClaim>>,
+        TError,
+        UnapproveClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnapproveClaimMutationOptions(options), queryClient);
+    }
+
+export type payClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type payClaimResponseSuccess = (payClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type payClaimResponse = (payClaimResponseSuccess)
+
+export const getPayClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/pay`
+}
+
+export const payClaim = async (id: string,
+    payClaimInput: PayClaimInput, options?: Parameters<typeof http>[1]): Promise<payClaimResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<payClaimResponse>(getPayClaimUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(payClaimInput)
+  }
+);}
+
+
+
+
+
+export const getPayClaimMutationKey = () => ['payClaim'] as const;
+
+export const getPayClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payClaim>>, TError,PayClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof payClaim>>, TError,PayClaimMutationVariables, TContext> => {
+
+const mutationKey = getPayClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof payClaim>>, PayClaimMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  payClaim(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PayClaimMutationResult = NonNullable<Awaited<ReturnType<typeof payClaim>>>
+    export type PayClaimMutationBody = PayClaimInput
+    export type PayClaimMutationError = unknown
+    export type PayClaimMutationVariables = {id: string;data: PayClaimInput}
+
+    export const usePayClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payClaim>>, TError,PayClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof payClaim>>,
+        TError,
+        PayClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPayClaimMutationOptions(options), queryClient);
+    }
+
+export type unpayClaimResponse200 = {
+  data: ClaimDto
+  status: 200
+}
+
+export type unpayClaimResponseSuccess = (unpayClaimResponse200) & {
+  headers: Headers;
+};
+;
+
+export type unpayClaimResponse = (unpayClaimResponseSuccess)
+
+export const getUnpayClaimUrl = (id: string,) => {
+
+
+
+
+  return `/api/claims/${id}/unpay`
+}
+
+export const unpayClaim = async (id: string, options?: Parameters<typeof http>[1]): Promise<unpayClaimResponse> => {
+
+  return http<unpayClaimResponse>(getUnpayClaimUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnpayClaimMutationKey = () => ['unpayClaim'] as const;
+
+export const getUnpayClaimMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpayClaim>>, TError,UnpayClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof unpayClaim>>, TError,UnpayClaimMutationVariables, TContext> => {
+
+const mutationKey = getUnpayClaimMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unpayClaim>>, UnpayClaimMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  unpayClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnpayClaimMutationResult = NonNullable<Awaited<ReturnType<typeof unpayClaim>>>
+
+    export type UnpayClaimMutationError = unknown
+    export type UnpayClaimMutationVariables = {id: string}
+
+    export const useUnpayClaim = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpayClaim>>, TError,UnpayClaimMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unpayClaim>>,
+        TError,
+        UnpayClaimMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnpayClaimMutationOptions(options), queryClient);
+    }
+
+export type getBudgetResponse200 = {
+  data: BudgetDto
+  status: 200
+}
+
+export type getBudgetResponseSuccess = (getBudgetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getBudgetResponse = (getBudgetResponseSuccess)
+
+export const getGetBudgetUrl = (params: GetBudgetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/budgets?${stringifiedParams}` : `/api/budgets`
+}
+
+export const getBudget = async (params: GetBudgetParams, options?: Parameters<typeof http>[1]): Promise<getBudgetResponse> => {
+
+  return http<getBudgetResponse>(getGetBudgetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBudgetQueryKey = (params?: GetBudgetParams,) => {
+    return [
+    `/api/budgets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetBudgetQueryOptions = <TData = Awaited<ReturnType<typeof getBudget>>, TError = unknown>(params: GetBudgetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBudgetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBudget>>> = ({ signal }) => getBudget(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetBudgetQueryResult = NonNullable<Awaited<ReturnType<typeof getBudget>>>
+export type GetBudgetQueryError = unknown
+
+
+export function useGetBudget<TData = Awaited<ReturnType<typeof getBudget>>, TError = unknown>(
+ params: GetBudgetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBudget>>,
+          TError,
+          Awaited<ReturnType<typeof getBudget>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBudget<TData = Awaited<ReturnType<typeof getBudget>>, TError = unknown>(
+ params: GetBudgetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBudget>>,
+          TError,
+          Awaited<ReturnType<typeof getBudget>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBudget<TData = Awaited<ReturnType<typeof getBudget>>, TError = unknown>(
+ params: GetBudgetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetBudget<TData = Awaited<ReturnType<typeof getBudget>>, TError = unknown>(
+ params: GetBudgetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudget>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBudgetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type saveBudgetResponse200 = {
+  data: BudgetDto
+  status: 200
+}
+
+export type saveBudgetResponseSuccess = (saveBudgetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type saveBudgetResponse = (saveBudgetResponseSuccess)
+
+export const getSaveBudgetUrl = () => {
+
+
+
+
+  return `/api/budgets`
+}
+
+export const saveBudget = async (budgetInput: BudgetInput, options?: Parameters<typeof http>[1]): Promise<saveBudgetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<saveBudgetResponse>(getSaveBudgetUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(budgetInput)
+  }
+);}
+
+
+
+
+
+export const getSaveBudgetMutationKey = () => ['saveBudget'] as const;
+
+export const getSaveBudgetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBudget>>, TError,SaveBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveBudget>>, TError,SaveBudgetMutationVariables, TContext> => {
+
+const mutationKey = getSaveBudgetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveBudget>>, SaveBudgetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveBudget(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof saveBudget>>>
+    export type SaveBudgetMutationBody = BudgetInput
+    export type SaveBudgetMutationError = unknown
+    export type SaveBudgetMutationVariables = {data: BudgetInput}
+
+    export const useSaveBudget = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBudget>>, TError,SaveBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveBudget>>,
+        TError,
+        SaveBudgetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveBudgetMutationOptions(options), queryClient);
+    }
+
+export type listBudgetYearsResponse200 = {
+  data: number[]
+  status: 200
+}
+
+export type listBudgetYearsResponseSuccess = (listBudgetYearsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listBudgetYearsResponse = (listBudgetYearsResponseSuccess)
+
+export const getListBudgetYearsUrl = () => {
+
+
+
+
+  return `/api/budgets/years`
+}
+
+export const listBudgetYears = async ( options?: Parameters<typeof http>[1]): Promise<listBudgetYearsResponse> => {
+
+  return http<listBudgetYearsResponse>(getListBudgetYearsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBudgetYearsQueryKey = () => {
+    return [
+    `/api/budgets/years`
+    ] as const;
+    }
+
+
+export const getListBudgetYearsQueryOptions = <TData = Awaited<ReturnType<typeof listBudgetYears>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData>>, request?: SecondParameter<typeof http>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBudgetYearsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBudgetYears>>> = ({ signal }) => listBudgetYears({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListBudgetYearsQueryResult = NonNullable<Awaited<ReturnType<typeof listBudgetYears>>>
+export type ListBudgetYearsQueryError = unknown
+
+
+export function useListBudgetYears<TData = Awaited<ReturnType<typeof listBudgetYears>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBudgetYears>>,
+          TError,
+          Awaited<ReturnType<typeof listBudgetYears>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBudgetYears<TData = Awaited<ReturnType<typeof listBudgetYears>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBudgetYears>>,
+          TError,
+          Awaited<ReturnType<typeof listBudgetYears>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBudgetYears<TData = Awaited<ReturnType<typeof listBudgetYears>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListBudgetYears<TData = Awaited<ReturnType<typeof listBudgetYears>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBudgetYears>>, TError, TData>>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListBudgetYearsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type copyBudgetResponse200 = {
+  data: BudgetDto
+  status: 200
+}
+
+export type copyBudgetResponseSuccess = (copyBudgetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type copyBudgetResponse = (copyBudgetResponseSuccess)
+
+export const getCopyBudgetUrl = () => {
+
+
+
+
+  return `/api/budgets/copy`
+}
+
+export const copyBudget = async (copyBudgetInput: CopyBudgetInput, options?: Parameters<typeof http>[1]): Promise<copyBudgetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return http<copyBudgetResponse>(getCopyBudgetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(copyBudgetInput)
+  }
+);}
+
+
+
+
+
+export const getCopyBudgetMutationKey = () => ['copyBudget'] as const;
+
+export const getCopyBudgetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyBudget>>, TError,CopyBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof copyBudget>>, TError,CopyBudgetMutationVariables, TContext> => {
+
+const mutationKey = getCopyBudgetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof copyBudget>>, CopyBudgetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  copyBudget(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CopyBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof copyBudget>>>
+    export type CopyBudgetMutationBody = CopyBudgetInput
+    export type CopyBudgetMutationError = unknown
+    export type CopyBudgetMutationVariables = {data: CopyBudgetInput}
+
+    export const useCopyBudget = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyBudget>>, TError,CopyBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof copyBudget>>,
+        TError,
+        CopyBudgetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCopyBudgetMutationOptions(options), queryClient);
+    }
+
 export type listExchangeRatesResponse200 = {
   data: CurrencyRateDto[]
   status: 200
@@ -14527,6 +15850,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getImportEmployeesMutationOptions(options), queryClient);
+    }
+
+export type importBudgetResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type importBudgetResponseSuccess = (importBudgetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importBudgetResponse = (importBudgetResponseSuccess)
+
+export const getImportBudgetUrl = (params: ImportBudgetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/import/budget?${stringifiedParams}` : `/api/import/budget`
+}
+
+export const importBudget = async (params: ImportBudgetParams, options?: Parameters<typeof http>[1]): Promise<importBudgetResponse> => {
+
+  return http<importBudgetResponse>(getImportBudgetUrl(params),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportBudgetMutationKey = () => ['importBudget'] as const;
+
+export const getImportBudgetMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importBudget>>, TError,ImportBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+): UseMutationOptions<Awaited<ReturnType<typeof importBudget>>, TError,ImportBudgetMutationVariables, TContext> => {
+
+const mutationKey = getImportBudgetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importBudget>>, ImportBudgetMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  importBudget(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof importBudget>>>
+
+    export type ImportBudgetMutationError = unknown
+    export type ImportBudgetMutationVariables = {params: ImportBudgetParams}
+
+    export const useImportBudget = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importBudget>>, TError,ImportBudgetMutationVariables, TContext>, request?: SecondParameter<typeof http>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importBudget>>,
+        TError,
+        ImportBudgetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImportBudgetMutationOptions(options), queryClient);
     }
 
 export type importExchangeRatesResponse200 = {

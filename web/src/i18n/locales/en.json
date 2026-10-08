@@ -32,7 +32,9 @@
     "warehouses": "Warehouses",
     "assets": "Fixed assets",
     "employees": "Employees",
-    "payroll": "Payroll"
+    "payroll": "Payroll",
+    "claims": "Expense claims",
+    "budgets": "Budgets"
   },
   "header": {
     "language": "Language",
@@ -101,7 +103,9 @@
     "warehouses": "Warehouses are the places where you keep stock. Every movement of stock names one. One warehouse is the default, and new documents use it unless you choose another.",
     "assets": "Your fixed assets (and intangible ones such as software) with their cost, depreciation and book value. Baba posts each month's depreciation by itself for the months that have ended, and you can run it up to any date. When you sell or scrap an asset, Baba takes it off the books and records the gain or loss.",
     "employees": "Your employees with their pay, the allowances and deductions they get, and their leave. Choose \"National\" for citizens of your country: the social insurance of your country applies to them as set in the payroll settings.",
-    "payroll": "Each month has a payroll run: a payslip for every employee, worked out from their pay. Posting it records salaries, social insurance and deductions in your books; paying it takes the net salaries out of the bank. Once you have made the first month, later months are made (and posted) for you when you open the company. Change a payslip for overtime or a deduction, and the books follow."
+    "payroll": "Each month has a payroll run: a payslip for every employee, worked out from their pay. Posting it records salaries, social insurance and deductions in your books; paying it takes the net salaries out of the bank. Once you have made the first month, later months are made (and posted) for you when you open the company. Change a payslip for overtime or a deduction, and the books follow.",
+    "claims": "Expenses your employees paid for and want back. A claim is written, sent for approval, then approved or rejected. Approving it puts the expenses in your books and records that you owe the employee; paying it clears that. Choose the employee, then add a line for each receipt.",
+    "budgets": "Plan what you expect to earn and spend: an amount for each revenue and expense account, month by month. Then open \"Budget versus actual\" to see how the year is going. Type a yearly total to spread it over twelve months, or change single months."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -416,7 +420,8 @@
       "SocialInsuranceExpense": "Employer social insurance",
       "SocialInsurancePayable": "Social insurance payable",
       "EndOfServiceExpense": "End-of-service expense",
-      "EndOfServiceProvision": "End-of-service provision"
+      "EndOfServiceProvision": "End-of-service provision",
+      "ExpenseClaimsPayable": "Expense claims payable"
     },
     "issues": {
       "account": {
@@ -461,7 +466,9 @@
       "AssetDisposal": "Asset disposal",
       "Payroll": "Payroll",
       "SalaryPayment": "Salary payment",
-      "EndOfServiceAccrual": "End-of-service provision"
+      "EndOfServiceAccrual": "End-of-service provision",
+      "ExpenseClaim": "Expense claim",
+      "ClaimPayment": "Expense claim payment"
     },
     "plural": {
       "Payment": "Payments",
@@ -477,7 +484,9 @@
       "AssetDisposal": "Asset disposals",
       "Payroll": "Payroll",
       "SalaryPayment": "Salary payments",
-      "EndOfServiceAccrual": "End-of-service provision"
+      "EndOfServiceAccrual": "End-of-service provision",
+      "ExpenseClaim": "Expense claims",
+      "ClaimPayment": "Expense claim payments"
     },
     "new": {
       "Payment": "New payment",
@@ -493,7 +502,9 @@
       "AssetDisposal": "Asset disposal",
       "Payroll": "Payroll",
       "SalaryPayment": "Salary payment",
-      "EndOfServiceAccrual": "End-of-service provision"
+      "EndOfServiceAccrual": "End-of-service provision",
+      "ExpenseClaim": "Expense claim",
+      "ClaimPayment": "Expense claim payment"
     },
     "emptyTitle": {
       "Payment": "No payments yet",
@@ -635,7 +646,8 @@
       "asset-register": "Fixed asset register",
       "payroll-summary": "Payroll summary",
       "leave-balances": "Leave balances",
-      "end-of-service": "End-of-service provision"
+      "end-of-service": "End-of-service provision",
+      "budget-vs-actual": "Budget versus actual"
     },
     "descriptions": {
       "trial-balance": "Every account with its debit and credit totals. The totals must be equal.",
@@ -655,7 +667,8 @@
       "asset-register": "Cost, depreciation so far and book value of every asset on a day, checked against the ledger.",
       "payroll-summary": "Every payslip of the months in a period, with the bank details: also the list to give your bank.",
       "leave-balances": "Annual leave each employee has earned, taken and has left.",
-      "end-of-service": "What each employee would be owed at the end of service, and whether your books hold that much."
+      "end-of-service": "What each employee would be owed at the end of service, and whether your books hold that much.",
+      "budget-vs-actual": "What you planned for each revenue and expense account in a period, what really happened, and the difference."
     },
     "presets": {
       "thisMonth": "This month",
@@ -1799,6 +1812,84 @@
         "amount-invalid": "The amount cannot be negative.",
         "account-invalid": "Choose an active account that takes entries.",
         "account-required": "A deduction needs the account it goes to."
+      }
+    }
+  },
+  "claims": {
+    "title": "Expense claims",
+    "new": "New claim",
+    "edit": "Edit claim",
+    "deleteTitle": "Delete claim {{number}}?",
+    "emptyTitle": "No claims yet",
+    "emptyBody": "When an employee pays for something for the business, write it here and send it for approval.",
+    "total": "Total",
+    "status": {
+      "Draft": "Draft",
+      "Submitted": "Waiting for approval",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Paid": "Paid"
+    },
+    "submit": "Send for approval",
+    "approve": "Approve",
+    "reject": "Reject",
+    "unapprove": "Take approval back",
+    "pay": "Pay",
+    "unpay": "Take payment back",
+    "rejectTitle": "Reject claim {{number}}",
+    "reason": "Reason (optional)",
+    "payTitle": "Pay claim {{number}}",
+    "intro": "Add a line for each receipt. Nothing reaches your books until the claim is approved.",
+    "description": "What it was for",
+    "expenseAccount": "Expense account",
+    "issues": {
+      "claim": {
+        "employee-unknown": "Choose an employee.",
+        "date-required": "Enter the date.",
+        "lines-required": "Add at least one line.",
+        "account-invalid": "Choose an active expense account that takes entries.",
+        "amount-invalid": "The amount must be more than zero.",
+        "cost-center-unknown": "That cost center no longer exists.",
+        "not-draft": "Only a draft or rejected claim can be changed or deleted.",
+        "not-submitted": "The claim has to be waiting for approval.",
+        "not-approved": "The claim has to be approved first.",
+        "paid": "This claim has been paid. Take the payment back first.",
+        "not-paid": "This claim has not been paid.",
+        "cash-account-invalid": "Choose a bank or cash account to pay from.",
+        "accounts-missing": "There is no account for expense claims payable. Give one account that special use in the chart of accounts."
+      }
+    }
+  },
+  "budgets": {
+    "title": "Budgets",
+    "import": "Import budget",
+    "importTitle": "Import a budget",
+    "importIntro": "Upload an Excel or CSV file with one row per account: the account code and the twelve months (headed 1 to 12), or a yearly total that is spread evenly. It replaces the budget shown.",
+    "copy": "Copy from another year",
+    "copyTitle": "Copy a budget into {{year}}",
+    "copyIntro": "Start from another year's budget, raised or lowered by a percentage. It replaces what is there now.",
+    "copyFrom": "Copy from",
+    "percentChange": "Change every amount by",
+    "versusActual": "Budget versus actual",
+    "fiscalYear": "Fiscal year",
+    "wholeCompany": "The whole company",
+    "intro": "Type an amount for any month, or a yearly total to spread it over the twelve months. Revenue and expense accounts only.",
+    "yearly": "Year",
+    "addAccount": "Add an account",
+    "saved": "The budget was saved.",
+    "issues": {
+      "budget": {
+        "cost-center-unknown": "That cost center no longer exists.",
+        "year-invalid": "Choose a fiscal year.",
+        "account-invalid": "Only revenue and expense accounts that take entries can be budgeted.",
+        "account-twice": "This account is in the budget twice.",
+        "months-invalid": "An account needs an amount for each of the twelve months.",
+        "amount-negative": "Amounts cannot be negative.",
+        "nothing-to-copy": "There is no budget in that year to copy.",
+        "account-column-missing": "The file needs an Account code column.",
+        "amounts-missing": "The file needs month columns (1 to 12) or a Yearly total column.",
+        "account-unknown": "No revenue or expense account has this code.",
+        "amount-invalid": "The amount must be a number, zero or more."
       }
     }
   }

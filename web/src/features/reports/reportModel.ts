@@ -94,6 +94,7 @@ export const reportKeys = [
   'payroll-summary',
   'leave-balances',
   'end-of-service',
+  'budget-vs-actual',
 ] as const
 export type ReportKey = (typeof reportKeys)[number]
 
@@ -120,6 +121,7 @@ export const reportInputs: Record<
   'payroll-summary': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: false },
   'leave-balances': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
   'end-of-service': { range: false, asOf: true, account: false, comparison: false, party: false, costCenter: false },
+  'budget-vs-actual': { range: true, asOf: false, account: false, comparison: false, party: false, costCenter: true },
 }
 
 /** The optional module a report belongs to. Reports of a module that is switched off are not offered on the Reports page. */
@@ -135,6 +137,7 @@ export const reportModule: Partial<Record<ReportKey, string>> = {
   'payroll-summary': 'payroll',
   'leave-balances': 'payroll',
   'end-of-service': 'payroll',
+  'budget-vs-actual': 'budgets',
 }
 
 /** Reports that exist only where the country's pack supports them (the capability, never the country). */

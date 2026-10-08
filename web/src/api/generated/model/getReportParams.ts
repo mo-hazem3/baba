@@ -25,6 +25,7 @@ CostCenterId?: string;
 DocumentKind?: DocumentKind;
 DocumentStatus?: DocumentStatus;
 PartyKind?: PartyKind;
+FiscalYear?: number;
 ProductId?: string;
 WarehouseId?: string;
 StockDocumentKind?: StockDocumentKind;

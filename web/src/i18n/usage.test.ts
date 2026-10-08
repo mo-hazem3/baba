@@ -95,6 +95,14 @@ describe('translation keys used in the code', () => {
       'payroll.accounts-missing', 'payroll.nothing-to-pay', 'payroll.net-negative', 'payroll.eos-done', 'payroll.eos-not-applicable', 'payroll.eos-nothing-to-undo',
       'payroll.percent-invalid', 'payroll.limits-invalid', 'payroll.account-invalid', 'payslip.label-required', 'payslip.amount-invalid', 'payslip.account-invalid', 'payslip.account-required',
     ]
+    const claimCodes = [
+      'claim.employee-unknown', 'claim.date-required', 'claim.lines-required', 'claim.account-invalid', 'claim.amount-invalid', 'claim.cost-center-unknown', 'claim.not-draft',
+      'claim.not-submitted', 'claim.not-approved', 'claim.paid', 'claim.not-paid', 'claim.cash-account-invalid', 'claim.accounts-missing',
+    ]
+    const budgetCodes = [
+      'budget.cost-center-unknown', 'budget.year-invalid', 'budget.account-invalid', 'budget.account-twice', 'budget.months-invalid', 'budget.amount-negative', 'budget.nothing-to-copy',
+      'budget.account-column-missing', 'budget.amounts-missing', 'budget.account-unknown', 'budget.amount-invalid',
+    ]
     const inventoryCodes = [
       'warehouse.code-required', 'warehouse.code-duplicate', 'warehouse.name-required', 'warehouse.in-use', 'warehouse.last-one', 'warehouse.inactive',
       'stockdoc.cost-negative', 'stockdoc.counter-account-invalid', 'stockdoc.kind-cannot-change', 'stockdoc.product-not-stock', 'stockdoc.quantity-positive',
@@ -113,6 +121,11 @@ describe('translation keys used in the code', () => {
       ...assetCodes.map((code) => `assets.issues.${code}`),
       ...employeeCodes.map((code) => `employees.issues.${code}`),
       ...payrollCodes.map((code) => `payroll.issues.${code}`),
+      ...claimCodes.map((code) => `claims.issues.${code}`),
+      ...budgetCodes.map((code) => `budgets.issues.${code}`),
+      ...['Draft', 'Submitted', 'Approved', 'Rejected', 'Paid'].map((s) => `claims.status.${s}`),
+      'accounts.roles.ExpenseClaimsPayable',
+      ...['ExpenseClaim', 'ClaimPayment'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`]),
       'import.issues.employees.salary-column-missing',
       ...['Draft', 'Posted', 'Paid'].map((s) => `payroll.status.${s}`),
       ...['employees', 'leave', 'components'].flatMap((k) => [`employees.new.${k}`, `employees.tabs.${k}`]),
@@ -146,11 +159,11 @@ describe('translation keys used in the code', () => {
 
   it('name every report, voucher kind, account type and special use', () => {
     const missing = [
-      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers', 'tax-return', 'stock-valuation', 'stock-movements', 'stock-reorder', 'asset-register', 'payroll-summary', 'leave-balances', 'end-of-service'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
+      ...['trial-balance', 'profit-and-loss', 'balance-sheet', 'statement-of-account', 'general-ledger', 'journal', 'party-statement', 'aging-receivable', 'aging-payable', 'cost-centers', 'tax-return', 'stock-valuation', 'stock-movements', 'stock-reorder', 'asset-register', 'payroll-summary', 'leave-balances', 'end-of-service', 'budget-vs-actual'].flatMap((r) => [`reports.names.${r}`, `reports.descriptions.${r}`]),
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets', 'employees', 'payroll'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets', 'employees', 'payroll', 'claims', 'budgets'].map((h) => `help.${h}`),
       ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])

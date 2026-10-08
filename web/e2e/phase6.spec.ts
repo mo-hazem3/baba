@@ -196,3 +196,92 @@ test('Arabic: the employees and payroll pages read right-to-left', async ({ page
   await expect(page.getByRole('dialog')).toContainText('التأمينات الاجتماعية')
   await page.screenshot({ path: 'test-results/ar-payroll-settings.png' })
 })
+
+async function choose(page: Page, label: string, search: string) {
+  await page.getByLabel(label, { exact: true }).click()
+  await page.getByLabel(label, { exact: true }).fill(search)
+  await page.locator('.ant-select-dropdown:visible .ant-select-item-option', { hasText: search }).first().click()
+}
+
+test('English: an expense claim is written, approved, posted and paid back', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await createKuwaitCompany(page, companyFile('p6-claims'), wizardEn)
+  await page.getByRole('button', { name: wizardEn.create }).click()
+  await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
+  await request.post('/api/company/modules', { data: { modules } })
+  await request.post('/api/employees', {
+    data: { code: 'E001', nameAr: '', nameEn: 'Sara Ahmed', jobTitle: null, nationalId: null, isNational: false, joinDate: '2025-01-01', leaveDate: null, basicSalary: 500, bankName: null, bankAccount: null, costCenterId: null, annualLeaveDays: 30, leaveBalanceDays: 0, leaveBalanceDate: null, notes: null, components: [] },
+  })
+  await page.reload()
+
+  await menu(page, 'Expense claims').click()
+  await expect(page.getByText('No claims yet')).toBeVisible()
+  await page.getByRole('button', { name: '+ New claim' }).click()
+  await choose(page, 'Employee', 'Sara')
+  await page.getByLabel('What it was for 1').fill('Taxi to the client')
+  await choose(page, 'Expense account 1', '423')
+  await page.getByLabel('Amount 1').fill('45')
+  await page.screenshot({ path: 'test-results/en-claim-form.png' })
+  await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByRole('row', { name: /EC-\d{4}-0001/ })).toContainText('Draft')
+
+  await page.getByRole('button', { name: /Send for approval EC-/ }).click()
+  await expect(page.getByRole('row', { name: /EC-/ })).toContainText('Waiting for approval')
+  await page.getByRole('button', { name: /^Approve EC-/ }).click()
+  await expect(page.getByRole('row', { name: /EC-/ })).toContainText('Approved')
+  await page.screenshot({ path: 'test-results/en-claims.png' })
+
+  await page.getByRole('button', { name: /^Pay EC-/ }).click()
+  await choose(page, 'Paid from', '111')
+  await page.getByRole('dialog').getByRole('button', { name: 'Pay', exact: true }).click()
+  await expect(page.getByRole('row', { name: /EC-/ })).toContainText('Paid')
+
+  await page.goto('/reports/trial-balance')
+  await expect(page.getByRole('row', { name: /^423/ })).toContainText('45.000')
+  await expect(page.locator('.check-ok').first()).toBeVisible()
+})
+
+test('English: a budget is planned and read against what happened', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'en')
+  await createKuwaitCompany(page, companyFile('p6-budget'), wizardEn)
+  await page.getByRole('button', { name: wizardEn.create }).click()
+  await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
+  await request.post('/api/company/modules', { data: { modules } })
+  await page.reload()
+
+  await menu(page, 'Budgets').click()
+  await choose(page, 'Add an account', '511')
+  await page.getByLabel('511 Year').fill('12000')
+  await expect(page.getByLabel('511 Jan')).toHaveValue('1000.000')
+  await page.screenshot({ path: 'test-results/en-budget.png' })
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('The budget was saved.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Budget versus actual' }).click()
+  await expect(page.getByRole('row', { name: /511/ })).toContainText('12,000.000')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/en-budget-vs-actual.png' })
+})
+
+test('Arabic: the claims and budget pages read right-to-left', async ({ page, request }) => {
+  await page.goto('/')
+  await setLanguage(page, 'ar')
+  await createKuwaitCompany(page, companyFile('p6-claims-ar'), wizardAr)
+  await page.getByRole('button', { name: wizardAr.create }).click()
+  await expect(page.getByRole('heading', { name: 'الملخص' })).toBeVisible()
+  await request.post('/api/company/modules', { data: { modules } })
+  await page.reload()
+
+  await menu(page, 'مطالبات المصروفات').click()
+  await expect(page.getByText('لا توجد مطالبات بعد')).toBeVisible()
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-claims.png' })
+
+  await menu(page, 'الموازنات').click()
+  await expect(page.getByRole('heading', { name: 'الموازنات' })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expectNoHorizontalScroll(page)
+  await page.screenshot({ path: 'test-results/ar-budget.png' })
+})

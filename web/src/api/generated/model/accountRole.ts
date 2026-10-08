@@ -29,4 +29,5 @@ export const AccountRole = {
   SocialInsurancePayable: 'SocialInsurancePayable',
   EndOfServiceExpense: 'EndOfServiceExpense',
   EndOfServiceProvision: 'EndOfServiceProvision',
+  ExpenseClaimsPayable: 'ExpenseClaimsPayable',
 } as const;

@@ -8,11 +8,14 @@ import {
   useGetDashboard,
   useGetHostInfo,
   useGetPrintSettings,
+  useGetBudget,
   useGetEndOfServicePosition,
   useGetLeaveBalances,
   useGetPayrollRun,
   useGetPayrollSettings,
   useGetStockLevels,
+  useListBudgetYears,
+  useListClaims,
   useListEmployees,
   useListLeave,
   useListPayrollRuns,
@@ -93,6 +96,13 @@ export const useExchangeRates = () => useListExchangeRates(undefined, { query: {
 export const useBankAccounts = () => useListBankAccounts({ query: { select: (r) => r.data } })
 
 export const useFiscalYears = () => useListFiscalYears({ query: { select: (r) => r.data } })
+
+export const useClaims = () => useListClaims({ query: { select: (r) => r.data } })
+
+export const useBudget = (fiscalYear: number, costCenterId: string | undefined) =>
+  useGetBudget({ fiscalYear, ...(costCenterId ? { costCenterId } : {}) }, { query: { select: (r) => r.data } })
+
+export const useBudgetYears = () => useListBudgetYears({ query: { select: (r) => r.data } })
 
 export const useEmployees = () => useListEmployees({ query: { select: (r) => r.data } })
 

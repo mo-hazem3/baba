@@ -6,7 +6,7 @@ import { refreshCompany, useCurrentCompany } from '../../api/hooks'
 import { errorMessage } from '../../layout/errors'
 
 /** The optional modules that exist so far. A module that is not built yet is not offered here (the new-company wizard lists them all). */
-export const availableModules = ['bank-cash', 'customers-suppliers', 'cost-centers', 'sales', 'purchases', 'inventory', 'fixed-assets', 'payroll'] as const
+export const availableModules = ['bank-cash', 'customers-suppliers', 'cost-centers', 'sales', 'purchases', 'inventory', 'fixed-assets', 'payroll', 'expense-claims', 'budgets'] as const
 
 /**
  * Switching optional parts of Baba on or off after the company was made (brief section 10). Switching one off only hides its

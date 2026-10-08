@@ -18,6 +18,7 @@ export interface ReportParams {
   PartyKind?: PartyKind
   ProductId?: string
   WarehouseId?: string
+  FiscalYear?: number
 }
 
 /** Exports a report (or list) the way the format asks: PDF opens in the viewer, Excel and CSV are saved as files. */

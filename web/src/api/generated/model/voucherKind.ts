@@ -27,4 +27,6 @@ export const VoucherKind = {
   Payroll: 'Payroll',
   SalaryPayment: 'SalaryPayment',
   EndOfServiceAccrual: 'EndOfServiceAccrual',
+  ExpenseClaim: 'ExpenseClaim',
+  ClaimPayment: 'ClaimPayment',
 } as const;

@@ -140,6 +140,8 @@ const routeKinds: Record<string, VoucherKind> = {
   payroll: 'Payroll',
   salarypayment: 'SalaryPayment',
   endofserviceaccrual: 'EndOfServiceAccrual',
+  expenseclaim: 'ExpenseClaim',
+  claimpayment: 'ClaimPayment',
 }
 
 export const kindFromRoute = (segment: string | undefined): VoucherKind | undefined => (segment ? routeKinds[segment] : undefined)
@@ -154,7 +156,7 @@ export const hasFreeLines = (kind: VoucherKind): boolean => kind === 'Journal' |
 
 /** Entries that Baba makes by itself (a year's closing, an exchange difference, stock cost, depreciation, a disposal): shown, never edited. */
 export const isSystemKind = (kind: VoucherKind): boolean =>
-  kind === 'FxSettlement' || kind === 'StockCost' || kind === 'StockAdjustment' || kind === 'Depreciation' || kind === 'AssetDisposal' || kind === 'Payroll' || kind === 'SalaryPayment' || kind === 'EndOfServiceAccrual'
+  kind === 'FxSettlement' || kind === 'StockCost' || kind === 'StockAdjustment' || kind === 'Depreciation' || kind === 'AssetDisposal' || kind === 'Payroll' || kind === 'SalaryPayment' || kind === 'EndOfServiceAccrual' || kind === 'ExpenseClaim' || kind === 'ClaimPayment'
 
 /** Where "back" and "after saving" go. The opening balances have no list: there is only ever one. */
 export const listPathOf = (kind: VoucherKind): string =>
