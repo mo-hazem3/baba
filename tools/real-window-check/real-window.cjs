@@ -546,6 +546,85 @@ async function main() {
     }
     await menu('Summary')
 
+    // ---- Phase 6: fixed assets with depreciation, payroll with the country's insurance, an expense claim, a budget ----
+    const api = (path, body) => page.evaluate(async ({ path, body }) => {
+      const r = await fetch('/api' + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+      return { status: r.status, json: r.headers.get('content-type')?.includes('json') ? await r.json() : null }
+    }, { path, body })
+    await api('/company/modules', { modules: ['bank-cash', 'customers-suppliers', 'sales', 'purchases', 'inventory', 'fixed-assets', 'payroll', 'expense-claims', 'budgets'] })
+    await page.reload()
+    const chart = (await api('/accounts')).json
+    const id = (code) => chart.find((a) => a.code === code).id
+
+    await api('/vouchers/post', { id: null, input: { kind: 'Payment', date: '2026-01-15', cashAccountId: id('112'), reference: null, memo: null, lines: [{ id: null, accountId: id('121'), description: null, debit: 1200, credit: 0, partyId: null, costCenterId: null }] } })
+    const asset = await api('/assets', { code: 'A001', nameAr: '', nameEn: 'Real laptop', kind: 'Tangible', acquisitionDate: '2026-01-15', cost: 1200, salvage: 0, usefulLifeMonths: 12, method: 'StraightLine', annualRate: 0, assetAccountId: id('121'), accumulatedAccountId: null, expenseAccountId: null })
+    if (asset.status !== 200) throw new Error('Creating the asset returned ' + asset.status)
+    await page.reload() // opening the company posts the depreciation of the months that ended
+    await menu('Fixed assets')
+    await expect(page.getByRole('row', { name: /A001/ })).toContainText('1,200.00')
+    await expect(page.getByRole('row', { name: /A001/ })).not.toContainText('1,200.00 0.00 ')
+    await page.screenshot({ path: path.join(shots, '29-assets.png') })
+    await page.goto(new URL('/reports/asset-register', page.url()).toString())
+    await expect(page.locator('.check-ok').first()).toBeVisible()
+    await expect(page.locator('.check-bad')).toHaveCount(0)
+    log('fixed asset bought, depreciated by itself on opening, and the register agrees with the ledger')
+
+    const employee = await api('/employees', { code: 'E001', nameAr: '', nameEn: 'Real Employee', jobTitle: 'Accountant', nationalId: null, isNational: true, joinDate: '2025-01-01', leaveDate: null, basicSalary: 2000, bankName: 'Real Bank', bankAccount: 'SA0380000000608010167519', costCenterId: null, annualLeaveDays: 30, leaveBalanceDays: 0, leaveBalanceDate: null, notes: null, components: [] })
+    if (employee.status !== 200) throw new Error('Creating the employee returned ' + employee.status)
+    await menu('Employees')
+    await expect(page.getByRole('row', { name: /Real Employee/ })).toContainText('2,000.00')
+    await menu('Payroll')
+    await page.getByRole('button', { name: '+ New payroll month' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Make payslips' }).click()
+    await expect(page.getByRole('row', { name: /Real Employee/ })).toContainText('1,805.00') // 2,000 less 9.75% insurance
+    await page.getByRole('button', { name: 'Post to the books' }).click()
+    await expect(page.getByText('Posted').first()).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '30-payroll-run.png') })
+    log('payroll month made and posted: the nationals scheme took 9.75%, net 1,805.00')
+    // The payslip as a PDF in the viewer window.
+    const payslipPopup = context.waitForEvent('page', { timeout: 60000 })
+    await page.getByRole('button', { name: /^Payslip Real Employee|Payslip E001/ }).first().click()
+    const payslipPdf = await payslipPopup
+    await sleep(2500)
+    log('payslip opened as a PDF | title:', await payslipPdf.title())
+    await Promise.race([page.bringToFront().catch(() => {}), sleep(5000)])
+
+    const claim = await api('/claims', { id: null, input: { employeeId: employee.json.id, date: '2026-10-01', memo: null, lines: [{ date: '2026-10-01', description: 'Taxi', accountId: id('423'), amount: 45 }] } })
+    if (claim.status !== 200) throw new Error('Creating the claim returned ' + claim.status)
+    await api('/claims/' + claim.json.id + '/submit', {})
+    await menu('Expense claims')
+    await page.getByRole('button', { name: /^Approve EC-/ }).click()
+    await expect(page.getByRole('row', { name: /EC-/ })).toContainText('Approved')
+    log('expense claim approved: posted against what is owed to the employee')
+
+    await menu('Budgets')
+    await page.getByLabel('Add an account', { exact: true }).click()
+    await page.getByLabel('Add an account', { exact: true }).fill('511')
+    await page.locator('.ant-select-dropdown:visible .ant-select-item-option', { hasText: '511' }).first().click()
+    await page.getByLabel('511 Year').fill('12000')
+    await page.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(page.getByText('The budget was saved.')).toBeVisible()
+    await page.screenshot({ path: path.join(shots, '31-budget.png') })
+    log('budget saved: 12,000 for the year spread over the months')
+
+    {
+      const out = await page.evaluate(async () => {
+        const result = {}
+        for (const key of ['assets', 'asset-register', 'employees', 'salary-components', 'payroll-summary', 'leave-balances', 'end-of-service', 'expense-claims', 'budget', 'budget-vs-actual']) {
+          const r = await fetch('/api/reports/' + key + '/export?format=Xlsx&layout=Both&AsOf=2026-10-31&FiscalYear=2026')
+          const b = new Uint8Array(await r.arrayBuffer())
+          result[key] = r.status + ':' + String.fromCharCode(...b.slice(0, 2))
+        }
+        for (const key of ['assets', 'employees', 'budget']) result['template-' + key] = (await fetch('/api/import/templates/' + key)).status
+        return result
+      })
+      for (const [key, value] of Object.entries(out)) {
+        if (key.startsWith('template-') ? value !== 200 : value !== '200:PK') throw new Error('The Excel export or template ' + key + ' is wrong: ' + value)
+      }
+      log('Excel exports of the asset, payroll, claim and budget lists and reports are real .xlsx files; their import templates download')
+    }
+    await menu('Summary')
+
     // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).
     if (native) {
       await page.getByRole('button', { name: /Menu/ }).click()

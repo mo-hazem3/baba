@@ -158,7 +158,7 @@ function BudgetGrid({ budget, startMonth }: { budget: BudgetDto; startMonth: num
     ...Array.from({ length: 12 }, (_, month) => ({
       title: monthName(month),
       key: `m${month}`,
-      width: 100,
+      width: 125,
       render: (_: unknown, r: Row) => (
         <InputNumber
           value={r.amounts[month]}
@@ -204,7 +204,7 @@ function BudgetGrid({ budget, startMonth }: { budget: BudgetDto; startMonth: num
     <>
       <p className="muted">{t('budgets.intro')}</p>
       {problems.length > 0 && <Alert type="error" showIcon className="form-alert" message={problems.join(' ')} />}
-      <Table<Row> columns={columns} dataSource={rows} rowKey="accountId" pagination={false} size="small" bordered scroll={{ x: 1700 }} />
+      <Table<Row> columns={columns} dataSource={rows} rowKey="accountId" pagination={false} size="small" bordered scroll={{ x: 2000 }} />
       <div className="filter-bar">
         <div className="field field-wide">
           <label htmlFor="budget-add">{t('budgets.addAccount')}</label>
