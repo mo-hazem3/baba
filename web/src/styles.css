@@ -95,6 +95,13 @@ body {
 
 .app-sider {
   border-inline-end: 1px solid #7b8597;
+
+  /* With many modules switched on the menu is taller than the window: it stays in view and scrolls by itself. */
+  position: sticky;
+  inset-block-start: 0;
+  align-self: flex-start;
+  max-block-size: 100vh;
+  overflow-y: auto;
 }
 
 .app-content {
