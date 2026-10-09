@@ -53,6 +53,7 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
   return (
     <div className="app-header">
       <span className="brand" lang={settings.language}>
+        <img src="/logo.svg" alt="" width={32} height={32} className="brand-logo" />
         {t('app.name')}
       </span>
       {company && (

@@ -26,6 +26,9 @@ company files are never touched.
 
 ## 3. Your own icon
 
+**Status (2026-10-09): the icon has been provided and is in `branding\` (`baba.ico`, `baba.png`, `baba.svg`); the program, the installer and the web header already use it. Rebuild the installer (section 1) to ship it.** To change the icon later, replace those files as described below.
+
+
 1. Make the picture: a **square** logo, at least 256 x 256 pixels, ideally 1024 x 1024, transparent background (PNG).
 2. Turn it into a Windows icon file named **`baba.ico`** that contains several sizes (16, 24, 32, 48, 64, 128 and 256 pixels). Free web
    converters ("PNG to ICO", choose all sizes) or tools such as IcoFX or GIMP do this. Or give Claude the PNG and ask for the `.ico`.
