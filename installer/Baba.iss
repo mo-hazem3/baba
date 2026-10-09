@@ -41,6 +41,7 @@ Source: "..\artifacts\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignore
 
 [Icons]
 Name: "{autoprograms}\Baba"; Filename: "{app}\Baba.Desktop.exe"
+Name: "{autoprograms}\Uninstall Baba"; Filename: "{uninstallexe}"; Comment: "Remove Baba from this computer. Your company files are not touched."
 Name: "{autodesktop}\Baba"; Filename: "{app}\Baba.Desktop.exe"; Tasks: desktopicon
 
 [Registry]
