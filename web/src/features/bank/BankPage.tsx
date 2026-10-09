@@ -6,10 +6,12 @@ import type { BankAccountDto } from '../../api/generated/model'
 import { useBankAccounts, useCurrencies, useCurrentCompany } from '../../api/hooks'
 import { AmountText } from '../../layout/AmountText'
 import { EmptyState } from '../../layout/EmptyState'
+import { ExportControls } from '../../layout/ExportControls'
 import { PageHeader } from '../../layout/PageHeader'
 import { useSettings } from '../../settings/SettingsContext'
 import { formatDate, parseIsoDate } from '../../utils/format'
 import { itemName } from '../accounting/LookupSelects'
+import { exportAndShow } from '../reports/exportReport'
 
 /**
  * The bank and cash accounts (brief section 10.2): what each holds, how far it has been checked against the bank's statements, and the
@@ -77,9 +79,12 @@ export function BankPage() {
         help="bank"
         crumbs={[{ label: t('breadcrumb.home'), to: '/' }, { label: t('bank.title') }]}
         action={
-          <Button type="primary" onClick={() => navigate('/vouchers/transfer/new')}>
-            {t('voucher.new.Transfer')}
-          </Button>
+          <Space wrap>
+            <ExportControls run={(format, layout) => exportAndShow('bank-accounts', {}, format, layout)} />
+            <Button type="primary" onClick={() => navigate('/vouchers/transfer/new')}>
+              {t('voucher.new.Transfer')}
+            </Button>
+          </Space>
         }
       />
       {accounts.isSuccess && (accounts.data?.length ?? 0) === 0 ? (

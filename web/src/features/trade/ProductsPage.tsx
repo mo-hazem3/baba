@@ -58,7 +58,9 @@ export function ProductsPage() {
             <ExportControls run={(format, layout) => exportAndShow('products', {}, format, layout)} />
             <Button onClick={() => setImporting(true)}>{t('import.productsButton')}</Button>
           </>
-        ) : undefined
+        ) : (
+          <ExportControls run={(format, layout) => exportAndShow('price-lists', {}, format, layout)} />
+        )
       }
       filters={tabs}
     >

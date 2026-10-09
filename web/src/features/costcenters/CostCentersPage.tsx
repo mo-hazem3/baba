@@ -10,10 +10,12 @@ import { ApiError } from '../../api/http'
 import { refreshBooks, useCostCenters } from '../../api/hooks'
 import { EmptyState } from '../../layout/EmptyState'
 import { errorMessage } from '../../layout/errors'
+import { ExportControls } from '../../layout/ExportControls'
 import { ListPage } from '../../layout/ListPage'
 import { useShortcuts } from '../../layout/useShortcuts'
 import { useSettings } from '../../settings/SettingsContext'
 import { itemName } from '../accounting/LookupSelects'
+import { exportAndShow } from '../reports/exportReport'
 
 interface Values {
   code: string
@@ -151,7 +153,13 @@ export function CostCentersPage() {
   ]
 
   return (
-    <ListPage title={t('costCenters.title')} help="costCenters" newLabel={t('costCenters.new')} onNew={() => setForm({ open: true })}>
+    <ListPage
+      title={t('costCenters.title')}
+      help="costCenters"
+      newLabel={t('costCenters.new')}
+      onNew={() => setForm({ open: true })}
+      actions={<ExportControls run={(format, layout) => exportAndShow('cost-center-list', {}, format, layout)} />}
+    >
       {query.isSuccess && costCenters.length === 0 ? (
         <EmptyState title={t('costCenters.emptyTitle')} body={t('costCenters.emptyBody')} />
       ) : (

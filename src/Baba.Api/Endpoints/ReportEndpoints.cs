@@ -33,7 +33,7 @@ public static class ReportEndpoints
         "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
         "stock-valuation", "stock-movements", "stock-reorder", "warehouses", "stock-documents",
         "asset-register", "assets", "employees", "salary-components", "payroll-summary", "leave-balances", "end-of-service",
-        "expense-claims", "budget", "budget-vs-actual", "audit-log",
+        "expense-claims", "budget", "budget-vs-actual", "audit-log", "cost-center-list", "price-lists", "bank-accounts",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
@@ -103,6 +103,9 @@ public static class ReportEndpoints
             case "stock-documents": return await listings.StockDocumentsAsync(q.StockDocumentKind, q.From, q.To, ct);
             case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
             case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);
+            case "cost-center-list": return await listings.CostCentersAsync(ct);
+            case "price-lists": return await listings.PriceListsAsync(ct);
+            case "bank-accounts": return await listings.BankAccountsAsync(ct);
             case "audit-log": return await audit.ReportAsync(new AuditSearch(q.From, q.To, q.User, q.Entity), ct);
             case "tax-return": return await reports.TaxReturnAsync(q.From, q.To, ct);
             case "cost-centers": return await reports.CostCenterSummaryAsync(q.From, q.To, ct);

@@ -42,7 +42,9 @@ public sealed class ListingService(
     ICostCenterStore costCenterStore,
     ILedgerQuery ledger,
     IAccountStore accounts,
-    ICompanyFiles files)
+    ICompanyFiles files,
+    Banking.BankService bank,
+    PriceListService priceLists)
 {
     private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
 
@@ -172,6 +174,59 @@ public sealed class ListingService(
             [new(r.CurrencyCode), new(Date: r.Date), Number(r.Rate, 6)], 0, RowStyle.Normal)).ToList();
         return Table("exchange-rates", ("Exchange rates", "أسعار الصرف"), ($"{list.Count} rates", $"{list.Count} سعراً"),
             [Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("date", ColumnKind.Date, "From", "من"), Column("rate", ColumnKind.Text, "Worth in the company's currency", "تساوي بعملة الشركة")], rows);
+    }
+
+    /// <summary>Cost centers and projects.</summary>
+    public async Task<ReportResult> CostCentersAsync(CancellationToken cancellationToken = default)
+    {
+        var list = (await costCenterStore.ListAsync(cancellationToken)).OrderBy(c => c.Code, StringComparer.OrdinalIgnoreCase).ToList();
+        var rows = list.Select(c => new ReportRow([new(c.Code), new(c.NameEn, c.NameAr), Active(c.IsActive)], 0, RowStyle.Normal)).ToList();
+        return Table("cost-center-list", ("Cost centers", "مراكز التكلفة"), ($"{list.Count} cost centers", $"{list.Count} مركز تكلفة"),
+            [Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("status", ColumnKind.Text, "Status", "الحالة")], rows);
+    }
+
+    /// <summary>Price lists, one row for each price, so the file can be read like the lists are used.</summary>
+    public async Task<ReportResult> PriceListsAsync(CancellationToken cancellationToken = default)
+    {
+        var lists = await priceLists.ListAsync(cancellationToken);
+        var items = (await products.ListAsync(cancellationToken)).ToDictionary(p => p.Id);
+        var rows = new List<ReportRow>();
+        foreach (var list in lists)
+        {
+            if (list.Lines.Count == 0)
+                rows.Add(new ReportRow([new(list.NameEn, list.NameAr), new(list.CurrencyCode), Active(list.IsActive), ReportCell.Blank, ReportCell.Blank, ReportCell.Blank], 0, RowStyle.Normal));
+            foreach (var line in list.Lines)
+            {
+                items.TryGetValue(line.ProductId, out var product);
+                rows.Add(new ReportRow(
+                    [new(list.NameEn, list.NameAr), new(list.CurrencyCode), Active(list.IsActive), new(product?.Code), new(product?.NameEn, product?.NameAr), new(Amount: line.Price)], 0, RowStyle.Normal));
+            }
+        }
+
+        return Table("price-lists", ("Price lists", "قوائم الأسعار"), ($"{lists.Count} price lists", $"{lists.Count} قائمة أسعار"),
+            [
+                Column("list", ColumnKind.Text, "Price list", "قائمة الأسعار"), Column("currency", ColumnKind.Text, "Currency", "العملة"), Column("status", ColumnKind.Text, "Status", "الحالة"),
+                Column("code", ColumnKind.Text, "Product code", "رمز الصنف"), Column("product", ColumnKind.Text, "Product", "الصنف"), Column("price", ColumnKind.Amount, "Price", "السعر"),
+            ], rows);
+    }
+
+    /// <summary>Bank and cash accounts with their balances and how far they are reconciled.</summary>
+    public async Task<ReportResult> BankAccountsAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await bank.ListAccountsAsync(cancellationToken);
+        var rows = list.Select(a => new ReportRow(
+            [
+                new(a.Code), new(a.NameEn, a.NameAr), Active(a.IsActive), new(Amount: a.Balance), new(Amount: a.ReconciledBalance),
+                new(a.Unreconciled.ToString(Invariant)), new(Date: a.LastStatementDate), new(Amount: a.LastStatementBalance),
+            ],
+            0, RowStyle.Normal)).ToList();
+        return Table("bank-accounts", ("Bank and cash accounts", "حسابات البنك والصندوق"), ($"{list.Count} accounts", $"{list.Count} حساب"),
+            [
+                Column("code", ColumnKind.Text, "Code", "الرمز"), Column("name", ColumnKind.Text, "Name", "الاسم"), Column("status", ColumnKind.Text, "Status", "الحالة"),
+                Column("balance", ColumnKind.Amount, "Book balance", "رصيد الدفاتر"), Column("reconciled", ColumnKind.Amount, "Reconciled balance", "الرصيد المطابق"),
+                Column("unreconciled", ColumnKind.Text, "Not yet checked", "لم تُطابق بعد"), Column("statementDate", ColumnKind.Date, "Last statement", "آخر كشف"),
+                Column("statementBalance", ColumnKind.Amount, "Statement balance", "رصيد الكشف"),
+            ], rows);
     }
 
     // ---------------------------------------------------------------- Expense claims and budgets

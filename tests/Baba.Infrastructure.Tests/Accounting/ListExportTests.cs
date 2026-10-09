@@ -114,4 +114,29 @@ public class ListExportTests : AccountingFixture
         Assert.Equal(150d, standard.Cell(5).GetDouble());
         Assert.Equal(XLDataType.Number, standard.Cell(5).DataType);
     }
+
+    [Fact]
+    public async Task Cost_centers_price_lists_and_bank_accounts_export_too()
+    {
+        var e = await SeededAsync(this);
+        await e.CostCenters.CreateAsync(new CostCenterInput("CC1", "مشروع", "Project one"));
+        var product = (await e.Products.ListAsync()).Single();
+        await e.PriceLists.CreateAsync(new PriceListInput("جملة", "Wholesale", null, [new PriceListLineInput(product.Id, 42.5m)]));
+        await e.PriceLists.CreateAsync(new PriceListInput("", "Empty list", null, []));
+
+        var (_, centers) = await ExportAsync(e, await e.Listings.CostCentersAsync());
+        Assert.Equal("Project one", RowWith(centers, "CC1").Cell(2).GetString());
+
+        var (_, prices) = await ExportAsync(e, await e.Listings.PriceListsAsync());
+        var priced = prices.RowsUsed().Single(r => r.Cell(1).GetString() == "Wholesale");
+        Assert.Equal("P1", priced.Cell(4).GetString());
+        Assert.Equal(XLDataType.Number, priced.Cell(6).DataType);
+        Assert.Equal(42.5d, priced.Cell(6).GetDouble());
+        Assert.Equal("", prices.RowsUsed().Single(r => r.Cell(1).GetString() == "Empty list").Cell(4).GetString()); // a list with no prices still shows
+
+        await e.Vouchers.SaveAndPostAsync(null, Receipt(e, Oct6, ("511", 75m)));
+        var (_, banks) = await ExportAsync(e, await e.Listings.BankAccountsAsync());
+        var bank = banks.RowsUsed().Single(r => r.Cell(1).GetString() == "112");
+        Assert.Equal(75d, bank.Cell(4).GetDouble()); // the book balance is a real number
+    }
 }
