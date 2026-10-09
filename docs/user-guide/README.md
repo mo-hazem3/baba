@@ -1,5 +1,7 @@
 # Baba: the user guide
 
+> 🇸🇦 **الدليل بالعربية:** [ar/README.md](ar/README.md)
+
 **Baba** keeps the accounts of your business on your own computer: what you sell, what you buy, what customers owe you, what you owe, what is in the bank and what is in stock. It works in Arabic and English, and it does not need the internet.
 
 This guide is for the people who use Baba every day. You do not need to know anything about computers or accounting software. Every page says what to click and what you will see.
