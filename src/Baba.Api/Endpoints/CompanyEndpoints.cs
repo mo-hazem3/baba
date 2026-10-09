@@ -1,5 +1,6 @@
 using Baba.Api.Contracts;
 using Baba.Application.Companies;
+using Baba.Application.Security;
 
 namespace Baba.Api.Endpoints;
 
@@ -17,18 +18,20 @@ public static class CompanyEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithName("GetCurrentCompany");
 
-        company.MapPost("/create", async (CreateCompanyRequest request, CompanyService service, IRecentFiles recent, CancellationToken cancellationToken) =>
+        company.MapPost("/create", async (CreateCompanyRequest request, CompanyService service, AccessService access, IRecentFiles recent, CancellationToken cancellationToken) =>
             {
                 var info = await service.CreateAsync(request.Path, request.Password, request.Company, cancellationToken);
                 recent.Add(info.FilePath);
+                access.StartSessionOfNewCompany(info.Id);
                 return info;
             })
             .WithName("CreateCompany");
 
-        company.MapPost("/open", async (OpenCompanyRequest request, CompanyService service, IRecentFiles recent, CancellationToken cancellationToken) =>
+        company.MapPost("/open", async (OpenCompanyRequest request, CompanyService service, AccessService access, IRecentFiles recent, CancellationToken cancellationToken) =>
             {
                 var info = await service.OpenAsync(request.Path, request.Password, cancellationToken);
                 recent.Add(info.FilePath);
+                await access.GetAsync(cancellationToken); // reads whether the company has users now, while the file is being opened anyway
                 return info;
             })
             .WithName("OpenCompany");

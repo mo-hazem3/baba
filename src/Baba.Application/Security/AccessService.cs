@@ -142,6 +142,12 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
             session.Load(company.Id, await users.AnyUsersAsync(cancellationToken)); // a different company (or the first look): start signed out
     }
 
+    /// <summary>
+    /// A company that was just made has no users, so there is nothing to read from the file to know that. The screen waits for the answer
+    /// about the session before it shows anything, and on a new file the first database read is slow (cold encrypted connections).
+    /// </summary>
+    public void StartSessionOfNewCompany(Guid companyId) => session.Load(companyId, accountsOn: false);
+
     public async Task<SessionInfo> GetAsync(CancellationToken cancellationToken = default)
     {
         await LoadAsync(cancellationToken);
