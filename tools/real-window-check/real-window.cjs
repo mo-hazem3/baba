@@ -625,6 +625,95 @@ async function main() {
     }
     await menu('Summary')
 
+    // ---- Phase 7: user accounts, sign-in, roles, approval, the audit log ----
+    {
+      const signOutNow = async () => {
+        await page.getByRole('button', { name: /Menu/ }).click()
+        await page.getByRole('menuitem', { name: 'Sign out' }).click()
+        await expect(page.getByText(/^Sign in to /)).toBeVisible()
+      }
+      const signInAs = async (name, pw, newPw) => {
+        await page.getByLabel('User name').fill(name)
+        await page.getByLabel('Password').fill(pw)
+        await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+        if (newPw) {
+          await expect(page.getByText('Choose your own password')).toBeVisible()
+          await page.getByLabel('Current password').fill(pw)
+          await page.getByLabel('New password', { exact: true }).fill(newPw)
+          await page.getByLabel('New password again').fill(newPw)
+          await page.getByRole('button', { name: 'Change password' }).click()
+        }
+        await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible({ timeout: 60000 })
+      }
+
+      await menu('Settings')
+      await page.getByRole('button', { name: 'Turn on user accounts…' }).click()
+      const turnOn = page.getByRole('dialog')
+      await turnOn.getByLabel('Full name').fill('Real Owner')
+      await turnOn.getByLabel('User name').fill('owner')
+      await turnOn.getByLabel('Password', { exact: true }).fill('owner-password')
+      await turnOn.getByLabel('New password again').fill('owner-password')
+      await turnOn.getByRole('button', { name: 'Turn on' }).click()
+      await expect(page.getByText('User accounts are on: everyone signs in with their own name and password.')).toBeVisible()
+      log('user accounts turned on; the owner is the first administrator and is signed in')
+
+      const clerkRole = await api('/roles', { nameAr: '', nameEn: 'Clerk', permissions: ['accounting.View', 'accounting.Edit'] })
+      if (clerkRole.status !== 200) throw new Error('Creating the role returned ' + clerkRole.status)
+      const roles = (await api('/roles')).json
+      const accountantRole = roles.find((r) => r.nameEn === 'Accountant')
+      for (const [name, role] of [['carl', clerkRole.json], ['ann', accountantRole]]) {
+        const made = await api('/users', { userName: name, displayName: name.toUpperCase(), roleId: role.id, password: name + '-temporary' })
+        if (made.status !== 200) throw new Error('Creating the user ' + name + ' returned ' + made.status)
+      }
+      await menu('Users and roles')
+      await expect(page.getByRole('row', { name: /carl/ })).toContainText('Must choose a password')
+      await page.screenshot({ path: path.join(shots, '32-users.png') })
+      await menu('Settings')
+      await page.getByLabel('Ask for approval before posting').click()
+      await expect(page.getByLabel('Ask for approval before posting')).toBeChecked()
+
+      await signOutNow()
+      await page.screenshot({ path: path.join(shots, '33-sign-in.png') })
+      await signInAs('carl', 'carl-temporary', 'carl-own-password')
+      await expect(page.getByRole('menuitem', { name: 'Users and roles', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('menuitem', { name: 'Payroll', exact: true })).toHaveCount(0)
+      log('the clerk signed in, chose a password, and sees only the clerk parts of the program')
+
+      const receipt = { id: null, input: { kind: 'Receipt', date: '2026-10-06', cashAccountId: id('112'), reference: null, memo: 'Rent received', lines: [{ id: null, accountId: id('511'), description: null, debit: 0, credit: 120, partyId: null, costCenterId: null }] } }
+      const refused = await api('/vouchers/post', receipt)
+      if (refused.status !== 400) throw new Error('The clerk could post directly: ' + refused.status)
+      const sent = await api('/vouchers/submit', { ...receipt, note: 'Rent for the month' })
+      if (sent.status !== 200) throw new Error('Sending for approval returned ' + sent.status)
+      await page.getByRole('menuitem', { name: /^Approvals/ }).click()
+      await expect(page.getByRole('row', { name: /Rent for the month/ })).toContainText('Waiting')
+      await page.screenshot({ path: path.join(shots, '34-clerk-approvals.png') })
+      log('the clerk could not post, sent the receipt for approval, and sees it waiting')
+
+      await signOutNow()
+      await signInAs('ann', 'ann-temporary', 'ann-own-password')
+      await expect(page.getByText('1 waiting for your approval.')).toBeVisible()
+      await page.getByRole('menuitem', { name: /^Approvals/ }).click()
+      await page.getByRole('button', { name: /^Approve and post/ }).click()
+      await expect(page.getByText(/Approved and posted RV-/)).toBeVisible()
+      await page.screenshot({ path: path.join(shots, '35-approved.png') })
+      log('the accountant approved it: the receipt was posted')
+
+      await signOutNow()
+      await signInAs('owner', 'owner-password')
+      await menu('Audit log')
+      await expect(page.getByRole('row', { name: /carl/ }).first()).toBeVisible()
+      await expect(page.getByRole('row', { name: /ann/ }).first()).toBeVisible()
+      await page.screenshot({ path: path.join(shots, '36-audit-log.png') })
+      const audit = await page.evaluate(async () => {
+        const r = await fetch('/api/reports/audit-log/export?format=Xlsx&layout=Both')
+        const b = new Uint8Array(await r.arrayBuffer())
+        return r.status + ':' + String.fromCharCode(...b.slice(0, 2))
+      })
+      if (audit !== '200:PK') throw new Error('The Excel export of the audit log is wrong: ' + audit)
+      log('the audit log shows who did what, and exports to a real .xlsx file')
+    }
+    await menu('Summary')
+
     // Restoring a backup, through the NATIVE open and save dialogs (the start screen needs the company to be closed first).
     if (native) {
       await page.getByRole('button', { name: /Menu/ }).click()

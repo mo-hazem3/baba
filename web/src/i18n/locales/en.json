@@ -34,7 +34,10 @@
     "employees": "Employees",
     "payroll": "Payroll",
     "claims": "Expense claims",
-    "budgets": "Budgets"
+    "budgets": "Budgets",
+    "users": "Users and roles",
+    "approvals": "Approvals",
+    "auditLog": "Audit log"
   },
   "header": {
     "language": "Language",
@@ -43,7 +46,10 @@
     "menu": "Menu",
     "closeCompany": "Close company",
     "closeCompanyTitle": "Close {{name}}?",
-    "closeCompanyBody": "The company is saved automatically. You will need the file password to open it again."
+    "closeCompanyBody": "The company is saved automatically. You will need the file password to open it again.",
+    "signedInAs": "Signed in: {{name}} ({{role}})",
+    "changePassword": "Change my password",
+    "signOut": "Sign out"
   },
   "breadcrumb": {
     "home": "Home",
@@ -105,7 +111,10 @@
     "employees": "Your employees with their pay, the allowances and deductions they get, and their leave. Choose \"National\" for citizens of your country: the social insurance of your country applies to them as set in the payroll settings.",
     "payroll": "Each month has a payroll run: a payslip for every employee, worked out from their pay. Posting it records salaries, social insurance and deductions in your books; paying it takes the net salaries out of the bank. Once you have made the first month, later months are made (and posted) for you when you open the company. Change a payslip for overtime or a deduction, and the books follow.",
     "claims": "Expenses your employees paid for and want back. A claim is written, sent for approval, then approved or rejected. Approving it puts the expenses in your books and records that you owe the employee; paying it clears that. Choose the employee, then add a line for each receipt.",
-    "budgets": "Plan what you expect to earn and spend: an amount for each revenue and expense account, month by month. Then open \"Budget versus actual\" to see how the year is going. Type a yearly total to spread it over twelve months, or change single months."
+    "budgets": "Plan what you expect to earn and spend: an amount for each revenue and expense account, month by month. Then open \"Budget versus actual\" to see how the year is going. Type a yearly total to spread it over twelve months, or change single months.",
+    "users": "Here you decide who can use this company and what each person may do. Give each person a role: the built-in roles cover most companies, or make your own by ticking exactly what you want. People sign in with their own name and password.",
+    "approvals": "When the company asks for approval, people who may not post send their vouchers and invoices here. Someone who can approve opens the item, then approves it (it is posted) or sends it back with a reason.",
+    "auditLog": "A record of every change: who made it, when, and the old and new values. It cannot be edited. Use the filters to find something, and export it to Excel if you need to keep it."
   },
   "terms": {
     "fiscalYear": "The 12-month period your accounts are totalled for. For most businesses it is the calendar year.",
@@ -260,7 +269,8 @@
     "overdueInvoices": "Invoices past their due date: {{count}}, {{amount}} {{currency}} unpaid.",
     "overdueBills": "Supplier bills past their due date: {{count}}, {{amount}} {{currency}} unpaid.",
     "lowStock": "{{count}} products are at or below their reorder level.",
-    "lowStockOpen": "See what to reorder"
+    "lowStockOpen": "See what to reorder",
+    "useMenu": "Use the menu on the side to open the parts of Baba you work with."
   },
   "settings": {
     "title": "Settings",
@@ -299,7 +309,10 @@
     "Validation": "Please check the highlighted fields.",
     "BadRequest": "Something in the request is not right.",
     "Network": "Baba cannot be reached. Please close it and start it again.",
-    "Unexpected": "Something went wrong. Please try again."
+    "Unexpected": "Something went wrong. Please try again.",
+    "SignInRequired": "Please sign in to continue.",
+    "Forbidden": "Your role does not allow this. Ask the person who manages users in your company.",
+    "PasswordChangeRequired": "Please choose your own password first."
   },
   "validation": {
     "path": {
@@ -616,6 +629,9 @@
       },
       "opening": {
         "already-exists": "The opening balances already exist. Open them to change them."
+      },
+      "approval": {
+        "required": "Posting needs approval in this company. Use \"Send for approval\" instead."
       }
     },
     "closingNote": "This entry was made by closing the fiscal year. It cannot be changed here: reopen the year from Year-end if it was a mistake.",
@@ -1890,6 +1906,229 @@
         "amounts-missing": "The file needs month columns (1 to 12) or a Yearly total column.",
         "account-unknown": "No revenue or expense account has this code.",
         "amount-invalid": "The amount must be a number, zero or more."
+      }
+    }
+  },
+  "security": {
+    "userName": "User name",
+    "userNameHelp": "What the person types to sign in, for example samira. Letters and numbers, no spaces.",
+    "password": "Password",
+    "oldPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "New password again",
+    "passwordHelp": "At least {{min}} characters. Not the same as the user name.",
+    "passwordsDiffer": "The two passwords are not the same.",
+    "passwordRequired": "Enter the password.",
+    "displayName": "Full name",
+    "displayNameRequired": "Enter the name of the person.",
+    "role": "Role",
+    "roleRequired": "Choose a role.",
+    "firstPassword": "Temporary password",
+    "firstPasswordHelp": "At least {{min}} characters. The person chooses their own when they first sign in.",
+    "signIn": {
+      "title": "Sign in to {{name}}",
+      "intro": "Enter your user name and password.",
+      "userRequired": "Enter the user name.",
+      "passwordRequired": "Enter the password.",
+      "button": "Sign in",
+      "forgot": "I forgot the password"
+    },
+    "recover": {
+      "title": "Get back in",
+      "intro": "If the administrator password is lost, whoever knows the password of the company file can set a new one here. Nobody else can.",
+      "filePassword": "Company file password",
+      "filePasswordHelp": "The password you type to open this company.",
+      "filePasswordRequired": "Enter the company file password.",
+      "userName": "Administrator user name",
+      "userNameHelp": "Use the old one to reset that person, or a new one to make a new administrator.",
+      "button": "Set the new password",
+      "back": "Back to sign in"
+    },
+    "changePassword": {
+      "title": "Change my password",
+      "intro": "Enter your current password, then the new one.",
+      "requiredTitle": "Choose your own password",
+      "requiredIntro": "Someone else set your password. Choose a new one that only you know.",
+      "button": "Change password"
+    },
+    "turnOn": {
+      "open": "Turn on user accounts…",
+      "title": "Turn on user accounts",
+      "intro": "Right now everyone who opens this company can do everything. With user accounts, each person signs in with their own name and password and can only do what their role allows. You become the first administrator.",
+      "warning": "Keep this password safe. If it is lost, the company file password can set a new one.",
+      "button": "Turn on"
+    },
+    "card": {
+      "title": "People and approval",
+      "offBody": "User accounts are off: everyone who opens the company can do everything. Turn them on to give each person their own sign-in and rights.",
+      "onBody": "User accounts are on: everyone signs in with their own name and password.",
+      "manage": "Manage users and roles",
+      "approval": "Ask for approval before posting",
+      "approvalHelp": "People who may not approve send vouchers and invoices to someone who can. Only approvers post them."
+    },
+    "users": {
+      "title": "Users and roles",
+      "tab": "Users",
+      "new": "New user",
+      "edit": "Edit user",
+      "active": "Can sign in",
+      "activeHelp": "Switch off to stop someone signing in without deleting what they did.",
+      "mustChange": "Must choose a password",
+      "lastSignIn": "Last signed in",
+      "never": "Never",
+      "reset": "Reset password",
+      "resetTitle": "New password for {{name}}",
+      "resetIntro": "Give this temporary password to the person. They will be asked to choose their own the next time they sign in.",
+      "passwordReset": "The password of {{name}} was reset.",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteBody": "They can no longer sign in. What they recorded stays, and the audit log still shows their name.",
+      "deleted": "The user was deleted.",
+      "offTitle": "User accounts are off",
+      "offBody": "Everyone who opens this company can do everything. Turn on user accounts to give each person their own sign-in and rights."
+    },
+    "roles": {
+      "tab": "Roles",
+      "new": "New role",
+      "edit": "Edit role",
+      "view": "Role: {{name}}",
+      "builtIn": "Built in",
+      "builtInNote": "Built-in roles cannot be changed. To make a similar role, use New role and copy from this one.",
+      "area": "Part of Baba",
+      "people": "People",
+      "rights": "Rights",
+      "rightsCount": "{{count}} ticked",
+      "open": "Open",
+      "copyFrom": "Start from",
+      "copyFromHelp": "Copies the ticks of an existing role, which you can then change.",
+      "permissionsIntro": "Tick what people with this role may do in each part of Baba.",
+      "nameRequired": "Enter the name of the role.",
+      "deleteTitle": "Delete the role {{name}}?",
+      "deleted": "The role was deleted."
+    },
+    "areas": {
+      "accounting": "Accounts, vouchers, periods",
+      "reports": "Reports and the summary",
+      "banking": "Bank and cash",
+      "parties": "Customers and suppliers",
+      "trade": "Sales and purchases",
+      "products": "Products and prices",
+      "tax": "Tax",
+      "inventory": "Stock and warehouses",
+      "assets": "Fixed assets",
+      "payroll": "Employees and payroll",
+      "claims": "Expense claims",
+      "budgets": "Budgets",
+      "settings": "Settings and backups",
+      "users": "Users, roles and the audit log"
+    },
+    "actions": {
+      "View": "See",
+      "Edit": "Add and change",
+      "Delete": "Delete",
+      "Approve": "Approve",
+      "ViewHelp": "open and read it, and its reports",
+      "EditHelp": "add new things and change them",
+      "DeleteHelp": "delete things",
+      "ApproveHelp": "make things final: post, approve, lock a month, close a year. Where approval is asked for, only people with this can post."
+    },
+    "approvals": {
+      "title": "Approvals",
+      "intro": "Vouchers and invoices wait here until someone who may approve them posts them or sends them back.",
+      "what": "What",
+      "amount": "Amount",
+      "sentBy": "Sent by",
+      "decidedBy": "by {{name}}",
+      "state": {
+        "Pending": "Waiting",
+        "Approved": "Approved",
+        "Rejected": "Sent back"
+      },
+      "approve": "Approve and post",
+      "reject": "Send back",
+      "approved": "Approved and posted {{number}}.",
+      "rejected": "Sent back.",
+      "rejectTitle": "Send back",
+      "rejectBody": "Say why, so the person knows what to fix.",
+      "reason": "Reason (optional)",
+      "emptyTitle": "Nothing is waiting",
+      "emptyBody": "Vouchers and invoices that need approval appear here.",
+      "waiting": "Sent by {{name}}, waiting for approval.",
+      "sentBack": "Sent back by {{name}}.",
+      "noReason": "No reason was given. Change what is needed and send it again.",
+      "seeAll": "See all approvals",
+      "send": "Send for approval",
+      "sentForApproval": "Sent for approval. It is posted when someone who may approve agrees.",
+      "formNote": "In this company a voucher or invoice is posted by someone who can approve. Send it for approval when it is ready.",
+      "postedLocked": "This is posted. Changing or deleting it needs someone who can approve.",
+      "issuedLocked": "This is issued. Changing or deleting it needs someone who can approve.",
+      "waitingForYou": "{{count}} waiting for your approval.",
+      "open": "Open the approvals"
+    },
+    "audit": {
+      "title": "Audit log",
+      "when": "When",
+      "who": "Who",
+      "what": "What happened",
+      "record": "Record",
+      "field": "Field",
+      "before": "Before",
+      "after": "After",
+      "from": "From",
+      "to": "To",
+      "userFilter": "Person",
+      "kindFilter": "Kind of record",
+      "emptyTitle": "Nothing found",
+      "emptyBody": "Change the filters to see more.",
+      "limited": "Only the newest {{count}} are shown. Narrow the dates to see others.",
+      "action": {
+        "Created": "Added",
+        "Updated": "Changed",
+        "Deleted": "Deleted"
+      },
+      "kinds": {
+        "Voucher": "Voucher",
+        "Document": "Sales or purchase document",
+        "Account": "Account",
+        "Party": "Customer or supplier",
+        "Product": "Product",
+        "Employee": "Employee",
+        "PayrollRun": "Payroll run",
+        "ExpenseClaim": "Expense claim",
+        "FixedAsset": "Fixed asset",
+        "AppUser": "User",
+        "Role": "Role",
+        "ApprovalRequest": "Approval request"
+      }
+    },
+    "issues": {
+      "auth": {
+        "wrong-credentials": "The user name or password is not right. Try again.",
+        "file-password-wrong": "That is not the password of this company file."
+      },
+      "user": {
+        "password-short": "Use at least {{min}} characters.",
+        "password-same-as-name": "The password must not be the same as the user name.",
+        "name-invalid": "The user name can have letters and numbers only, with no spaces.",
+        "name-duplicate": "Somebody already has that user name.",
+        "display-name-required": "Enter the name of the person.",
+        "role-unknown": "Choose a role.",
+        "last-admin": "The company needs at least one administrator who can sign in. Make someone else an administrator first.",
+        "is-self": "You cannot delete yourself.",
+        "accounts-already-on": "User accounts are already on."
+      },
+      "role": {
+        "built-in": "Built-in roles cannot be changed. Make your own role instead.",
+        "in-use": "Some people still have this role. Give them another role first.",
+        "name-duplicate": "There is already a role with this name.",
+        "name-required": "Enter the name of the role.",
+        "permission-unknown": "One of the ticked rights does not exist."
+      },
+      "approval": {
+        "required": "This company asks for approval. Send it for approval instead of posting it.",
+        "needs-accounts": "Turn on user accounts first: approval needs people with their own sign-ins.",
+        "not-needed": "This company does not ask for approval for this.",
+        "not-draft": "Only a draft can be sent for approval.",
+        "not-pending": "This is no longer waiting. It may have been decided or changed already."
       }
     }
   }

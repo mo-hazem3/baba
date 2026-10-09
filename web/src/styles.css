@@ -687,3 +687,58 @@ kbd {
 .tax-select {
   min-inline-size: 11em;
 }
+
+.sign-in-page {
+  max-inline-size: 460px;
+  margin-block: 48px;
+  margin-inline: auto;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.permission-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.permission-table .perm-head,
+.permission-table .perm-cell {
+  padding: 6px 10px;
+  border-block-end: 1px solid var(--ant-color-border-secondary, #e5e5e5);
+  text-align: center;
+}
+
+.permission-table .perm-area {
+  padding: 6px 10px;
+  border-block-end: 1px solid var(--ant-color-border-secondary, #e5e5e5);
+  text-align: start;
+  font-weight: 500;
+}
+
+.action-legend {
+  margin-block-start: 12px;
+  padding-inline-start: 1.2em;
+}
+
+.audit-changes {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.audit-changes .audit-head,
+.audit-changes .audit-cell {
+  padding: 4px 10px;
+  text-align: start;
+  vertical-align: top;
+  border-block-end: 1px solid var(--ant-color-border-secondary, #e5e5e5);
+}
+
+.filter-input {
+  inline-size: 14em;
+}
+
+.filter-select {
+  min-inline-size: 14em;
+}

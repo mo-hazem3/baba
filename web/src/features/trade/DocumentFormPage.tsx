@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { RecurringModal } from '../recurring/RecurringModal'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, printDocument, saveDocumentDraft } from '../../api/generated/baba'
+import { convertDocument, deleteDocument, getDocument, getProductPrice, issueDocument, listOutstandingInvoices, printDocument, saveDocumentDraft, submitDocument } from '../../api/generated/baba'
 import type { DocumentDto, DocumentKind, ProductDto, TaxCodeDto } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
 import { refreshBooks, useAccounts, useCostCenters, useCurrencies, useCurrentCompany, useHost, useModules, useParties, usePrintSettings, useProducts, useTaxCodes, useWarehouses } from '../../api/hooks'
@@ -13,6 +13,8 @@ import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
 import { FormPage } from '../../layout/FormPage'
 import { useShortcuts } from '../../layout/useShortcuts'
+import { ApprovalNotice } from '../security/ApprovalNotice'
+import { useAccess } from '../security/useAccess'
 import { useUnsavedWork } from '../../layout/useUnsavedWork'
 import { useSettings } from '../../settings/SettingsContext'
 import { openPdf } from '../../utils/download'
@@ -112,7 +114,11 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   })
   const outstanding = standing.data?.find((o) => o.documentId === initial?.id)?.outstanding
   const settled = outstanding !== undefined && initial !== undefined && outstanding < initial.total
-  const readOnly = converted || settled || initial?.immutable === true // locked by the country's e-invoicing rules
+  const { needsApproval } = useAccess()
+  // Where approval is asked for, someone who may not approve sends invoices and notes to an approver instead of issuing them.
+  const sendsForApproval = needsApproval('trade') && posts(kind)
+  const lockedForApproval = sendsForApproval && initial?.status === 'Issued'
+  const readOnly = converted || settled || initial?.immutable === true || lockedForApproval // locked by the country's e-invoicing rules
 
   const [partyId, setPartyId] = useState<string | undefined>(initial?.partyId)
   const [date, setDate] = useState(initial?.date ?? toIsoDate(new Date()))
@@ -219,12 +225,13 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
   }
 
   const save = useMutation({
-    mutationFn: (issue: boolean) => {
+    mutationFn: async (issue: boolean) => {
       const request = { id: initial?.id ?? null, input: input() }
-      return issue ? issueDocument(request) : saveDocumentDraft(request)
+      if (issue && sendsForApproval) return { sent: true, response: await submitDocument({ ...request, note: null }) }
+      return { sent: false, response: await (issue ? issueDocument(request) : saveDocumentDraft(request)) }
     },
-    onSuccess: (response, issue) =>
-      finish(issue ? (issued ? t('trade.saved') : t('trade.issuedAs', { number: response.data.number })) : t('trade.savedDraft')),
+    onSuccess: ({ sent, response }, issue) =>
+      finish(sent ? t('security.approvals.sentForApproval') : issue ? (issued ? t('trade.saved') : t('trade.issuedAs', { number: (response.data as DocumentDto).number })) : t('trade.savedDraft')),
     onError,
   })
 
@@ -328,7 +335,7 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
         readOnly
           ? undefined
           : {
-              label: issued ? t('trade.save') : t(posts(kind) ? 'trade.issueInvoice' : 'trade.issue'),
+              label: sendsForApproval ? t('security.approvals.send') : issued ? t('trade.save') : t(posts(kind) ? 'trade.issueInvoice' : 'trade.issue'),
               onClick: () => save.mutate(true),
               loading: save.isPending && save.variables === true,
               disabled: busy,
@@ -347,6 +354,9 @@ function DocumentForm({ kind, initial }: { kind: DocumentKind; initial?: Documen
       cancel={{ label: t('common.cancel'), onClick: cancel, disabled: busy }}
       remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
+      {lockedForApproval && <Alert type="info" showIcon className="form-alert" message={t('security.approvals.issuedLocked')} />}
+      {sendsForApproval && !issued && <Alert type="info" showIcon className="form-alert" message={t('security.approvals.formNote')} />}
+      <ApprovalNotice subjectId={initial?.id} />
       {converted && <Alert type="info" showIcon className="form-alert" message={t('trade.convertedNote')} />}
       {settled && <Alert type="info" showIcon className="form-alert" message={t('trade.settledNote')} />}
       {initial?.immutable && <Alert type="info" showIcon className="form-alert" message={t('trade.immutableNote')} />}

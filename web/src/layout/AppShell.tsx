@@ -1,16 +1,18 @@
-import { Layout, Menu } from 'antd'
+import { Badge, Layout, Menu } from 'antd'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
 import type { CompanyInfo } from '../api/generated/model'
-import { useCapabilities } from '../api/hooks'
+import { useApprovals, useCapabilities } from '../api/hooks'
+import { areaOfPath } from '../features/security/access'
+import { useAccess } from '../features/security/useAccess'
 import { AppHeader } from './AppHeader'
 
 /**
  * The one layout every screen uses (brief section 7.3): top bar, a sidebar of modules with text labels
  * (it mirrors to the right in Arabic), and the page. Without an open company there is no sidebar.
  */
-export function AppShell({ company, children }: { company?: CompanyInfo | null; children: ReactNode }) {
+export function AppShell({ company, children, locked = false }: { company?: CompanyInfo | null; children: ReactNode; locked?: boolean }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -18,7 +20,10 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
   // Without a company there is nothing to go to, so the menu only lists the modules of an open one.
   const modules = new Set(company?.enabledModules ?? [])
   const capabilities = useCapabilities()
-  const items = [
+  const { can, accountsOn, session } = useAccess()
+  const approvals = useApprovals(accountsOn && session?.signedIn === true && !locked)
+  const waiting = approvals.data?.filter((a) => a.canDecide).length ?? 0
+  const allItems = [
     { key: '/', label: t('nav.summary') },
     { key: '/accounts', label: t('nav.accounts') },
     { key: '/vouchers/payment', label: t('nav.payments') },
@@ -57,8 +62,16 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
     { key: '/vouchers/opening', label: t('nav.opening') },
     { key: '/year-end', label: t('nav.yearEnd') },
     { key: '/exchange-rates', label: t('nav.exchangeRates') },
+    ...(accountsOn ? [{ key: '/approvals', label: <Badge count={waiting} offset={[12, 0]}>{t('nav.approvals')}</Badge> }] : []),
+    { key: '/users', label: t('nav.users') },
+    { key: '/audit-log', label: t('nav.auditLog') },
     { key: '/settings', label: t('nav.settings') },
   ]
+  // A person is only offered the parts of the program their role lets them see.
+  const items = allItems.filter((i) => {
+    const area = areaOfPath(i.key)
+    return area === undefined || can(area, 'View')
+  })
   // A page deeper in a module (a voucher, a report) keeps its module highlighted.
   const selected = items.map((i) => i.key).filter((key) => key === '/' ? pathname === '/' : pathname === key || pathname.startsWith(key + '/'))
 
@@ -68,10 +81,10 @@ export function AppShell({ company, children }: { company?: CompanyInfo | null; 
         {t('app.skipToContent')}
       </a>
       <Layout.Header className="app-header-bar">
-        <AppHeader company={company} />
+        <AppHeader company={company} locked={locked} />
       </Layout.Header>
       <Layout>
-        {company && (
+        {company && !locked && (
           <Layout.Sider width={230} className="app-sider" theme="light">
             <nav aria-label={t('nav.label')}>
               <Menu

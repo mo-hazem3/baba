@@ -4,7 +4,8 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { runDueDepreciation, runDueEndOfService, runDuePayroll, runDueRecurring, useGetOverdue, useGetReport } from '../../api/generated/baba'
 import type { CompanyInfo } from '../../api/generated/model'
-import { refreshBooks, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
+import { refreshBooks, useApprovals, useCountries, useDashboard, useHost, useModules } from '../../api/hooks'
+import { useAccess } from '../security/useAccess'
 import { Link } from 'react-router'
 import { AmountText } from '../../layout/AmountText'
 import { errorMessage } from '../../layout/errors'
@@ -22,7 +23,10 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   const { settings } = useSettings()
   const countries = useCountries()
   const host = useHost()
-  const dashboard = useDashboard()
+  const { can, accountsOn } = useAccess()
+  const dashboard = useDashboard(can('reports', 'View'))
+  const approvals = useApprovals(accountsOn)
+  const waitingForMe = approvals.data?.filter((a) => a.canDecide).length ?? 0
   const ar = settings.language === 'ar'
 
   const country = countries.data?.find((c) => c.code === company.countryCode)
@@ -31,9 +35,9 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
   const backup = useBackup()
   const modules = useModules()
   const trades = modules.has('sales') || modules.has('purchases')
-  const overdue = useGetOverdue({ query: { select: (r) => r.data, enabled: trades } })
+  const overdue = useGetOverdue({ query: { select: (r) => r.data, enabled: trades && can('trade', 'View') } })
   // Stock at or below its reorder level (brief section 10.4): the same list as the reorder report.
-  const lowStock = useGetReport('stock-reorder', undefined, { query: { select: (r) => (r.status === 200 ? r.data.rows.length : 0), enabled: modules.has('inventory') } })
+  const lowStock = useGetReport('stock-reorder', undefined, { query: { select: (r) => (r.status === 200 ? r.data.rows.length : 0), enabled: modules.has('inventory') && can('inventory', 'View') } })
   const { message } = App.useApp()
   const queryClient = useQueryClient()
 
@@ -80,7 +84,7 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
         title={t('summary.title')}
         help="summary"
         action={
-          host.data?.fileDialogs ? (
+          host.data?.fileDialogs && can('settings', 'View') ? (
             <Button onClick={() => backup.mutate()} loading={backup.isPending}>
               {t('summary.backup')}
             </Button>
@@ -88,6 +92,16 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
         }
       />
 
+      {waitingForMe > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          className="form-alert"
+          message={t('security.approvals.waitingForYou', { count: waitingForMe })}
+          description={<Link to="/approvals">{t('security.approvals.open')}</Link>}
+        />
+      )}
+      {!can('reports', 'View') && <Alert type="info" showIcon className="form-alert" message={t('summary.useMenu')} />}
       {dashboard.isError && <Alert type="error" showIcon message={errorMessage(dashboard.error, t)} className="form-alert" />}
       {dashboard.data && (
         <>
@@ -165,23 +179,29 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
 
       <Card title={t('summary.quickActions')} className="settings-card">
         <div className="form-buttons">
-          <Link to="/vouchers/receipt/new">
-            <Button type="primary">{t('voucher.new.Receipt')}</Button>
-          </Link>
-          <Link to="/vouchers/payment/new">
-            <Button type="primary">{t('voucher.new.Payment')}</Button>
-          </Link>
-          <Link to="/vouchers/journal/new">
-            <Button>{t('voucher.new.Journal')}</Button>
-          </Link>
-          {modules.has('sales') && (
+          {can('accounting', 'Edit') && (
+            <>
+              <Link to="/vouchers/receipt/new">
+                <Button type="primary">{t('voucher.new.Receipt')}</Button>
+              </Link>
+              <Link to="/vouchers/payment/new">
+                <Button type="primary">{t('voucher.new.Payment')}</Button>
+              </Link>
+              <Link to="/vouchers/journal/new">
+                <Button>{t('voucher.new.Journal')}</Button>
+              </Link>
+            </>
+          )}
+          {modules.has('sales') && can('trade', 'Edit') && (
             <Link to="/documents/sales-invoice/new">
               <Button type="primary">{t('trade.new.SalesInvoice')}</Button>
             </Link>
           )}
-          <Link to="/reports">
-            <Button>{t('reports.title')}</Button>
-          </Link>
+          {can('reports', 'View') && (
+            <Link to="/reports">
+              <Button>{t('reports.title')}</Button>
+            </Link>
+          )}
         </div>
       </Card>
 

@@ -110,7 +110,21 @@ describe('translation keys used in the code', () => {
     ]
     const recurringCodes = ['recurring.name-required', 'recurring.next-date-required', 'recurring.end-before-next', 'recurring.template-unavailable', 'recurring.failed']
     const taxCodeCodes = ['tax.code-required', 'tax.code-duplicate', 'tax.name-required', 'tax.rate-invalid', 'tax.dates-invalid', 'tax.account-invalid', 'tax.in-use', 'tax.pack-code', 'tax.inactive']
+    const securityCodes = [
+      'auth.wrong-credentials', 'auth.file-password-wrong', 'user.password-short', 'user.password-same-as-name', 'user.name-invalid', 'user.name-duplicate',
+      'user.display-name-required', 'user.role-unknown', 'user.last-admin', 'user.is-self', 'user.accounts-already-on', 'role.built-in', 'role.in-use',
+      'role.name-duplicate', 'role.name-required', 'role.permission-unknown', 'approval.required', 'approval.needs-accounts', 'approval.not-needed',
+      'approval.not-draft', 'approval.not-pending',
+    ]
+    const permissionAreas = ['accounting', 'reports', 'banking', 'parties', 'trade', 'products', 'tax', 'inventory', 'assets', 'payroll', 'claims', 'budgets', 'settings', 'users']
     const missing = [
+      ...securityCodes.map((code) => `security.issues.${code}`),
+      ...permissionAreas.map((a) => `security.areas.${a}`),
+      ...['View', 'Edit', 'Delete', 'Approve'].flatMap((a) => [`security.actions.${a}`, `security.actions.${a}Help`]),
+      ...['Created', 'Updated', 'Deleted'].map((a) => `security.audit.action.${a}`),
+      ...['Voucher', 'Document', 'Account', 'Party', 'Product', 'Employee', 'PayrollRun', 'ExpenseClaim', 'FixedAsset', 'AppUser', 'Role', 'ApprovalRequest'].map((k) => `security.audit.kinds.${k}`),
+      ...['Pending', 'Approved', 'Rejected'].map((s) => `security.approvals.state.${s}`),
+      'voucher.issues.approval.required', 'errors.SignInRequired', 'errors.Forbidden', 'errors.PasswordChangeRequired',
       ...taxCodeCodes.map((code) => `tax.issues.${code}`),
       ...['Standard', 'Zero', 'Exempt', 'OutOfScope'].map((x) => `tax.treatments.${x}`),
       'accounts.roles.TaxPayable', 'accounts.roles.TaxReceivable',
@@ -163,7 +177,7 @@ describe('translation keys used in the code', () => {
       ...['Payment', 'Receipt', 'Journal', 'Transfer', 'Opening', 'Closing'].flatMap((k) => [`voucher.title.${k}`, `voucher.plural.${k}`, `voucher.new.${k}`, `voucher.emptyTitle.${k}`, `voucher.emptyBody.${k}`]),
       ...['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((t) => `accounts.types.${t}`),
       ...['None', 'CashOrBank', 'Receivable', 'Payable', 'RetainedEarnings'].map((r) => `accounts.roles.${r}`),
-      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets', 'employees', 'payroll', 'claims', 'budgets'].map((h) => `help.${h}`),
+      ...['summary', 'settings', 'accounts', 'vouchers', 'voucher', 'reports', 'report', 'parties', 'costCenters', 'transfer', 'bank', 'reconcile', 'opening', 'yearEnd', 'rates', 'documents', 'products', 'recurring', 'taxCodes', 'stock', 'warehouses', 'assets', 'employees', 'payroll', 'claims', 'budgets', 'users', 'approvals', 'auditLog'].map((h) => `help.${h}`),
       ...['Quote', 'SalesOrder', 'DeliveryNote', 'SalesInvoice', 'SalesCreditNote', 'PurchaseOrder', 'GoodsReceipt', 'PurchaseInvoice', 'PurchaseDebitNote'].flatMap((k) => [`trade.title.${k}`, `trade.plural.${k}`, `trade.new.${k}`, `trade.emptyTitle.${k}`, `trade.emptyBody.${k}`]),
     ].filter((key) => !has(en as Tree, key) || !has(ar as Tree, key))
     expect(missing).toEqual([])

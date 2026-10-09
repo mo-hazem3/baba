@@ -27,6 +27,9 @@ interface ProblemBody {
   issues?: ApiIssue[]
 }
 
+/** Sent when the API says nobody is signed in any more (or a password has to change): the session is read again. */
+export const sessionChangedEvent = 'baba:session-changed'
+
 /** The body of a binary (PDF) response, which the generated client types as `void`. */
 export const asBlob = (data: unknown): Blob => data as Blob
 
@@ -51,6 +54,8 @@ export const http = async <T>(url: string, options: RequestInit): Promise<T> => 
 
   if (!response.ok && response.status !== 501) {
     const body = (data ?? {}) as ProblemBody
+    // The person was signed out, or has to choose a password: the app shows the sign-in screen instead of an error.
+    if (response.status === 401 || body.problem === 'PasswordChangeRequired') window.dispatchEvent(new Event(sessionChangedEvent))
     throw new ApiError(response.status, body.problem ?? 'Unexpected', body.message ?? response.statusText, body.issues ?? [])
   }
 

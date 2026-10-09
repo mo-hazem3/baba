@@ -64,3 +64,12 @@ export const monthName = (month: number, language: string): string =>
 /** A quantity of stock: up to four decimals (the most Baba keeps), none when it is a whole number. */
 export const formatQuantity = (value: number, digits: DigitStyle): string =>
   applyDigitStyle(new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(value), digits)
+
+/** A moment the API sends in universal time without a zone mark (2026-10-09T00:21:08) read as universal time, so it shows in this computer's time. */
+export const parseUtc = (value: string): Date => new Date(/(Z|[+-]\d\d:\d\d)$/.test(value) ? value : `${value}Z`)
+
+/** A date and time such as 09/10/2026 14:05, in this computer's time and the user's digit style. */
+export const formatDateTime = (utc: string, digits: DigitStyle, hijri = false): string => {
+  const moment = parseUtc(utc)
+  return `${formatDate(moment, digits, hijri)} ${applyDigitStyle(`${pad(moment.getHours())}:${pad(moment.getMinutes())}`, digits)}`
+}

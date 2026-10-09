@@ -13,6 +13,7 @@ import { BackupsCard } from './BackupsCard'
 import { BrandingCard } from './BrandingCard'
 import { ModulesCard } from './ModulesCard'
 import { PeriodsCard } from './PeriodsCard'
+import { SecurityCard } from './SecurityCard'
 import { PrintTemplateCard } from './PrintTemplateCard'
 
 /** Language, text size and number style (brief sections 6 and 7.2). Saved on this computer. */
@@ -102,6 +103,7 @@ export function SettingsPage() {
       </Card>
 
       <ModulesCard />
+      <SecurityCard />
       <PrintTemplateCard />
       <BrandingCard />
       <PeriodsCard />

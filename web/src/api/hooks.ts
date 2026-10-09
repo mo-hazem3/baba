@@ -1,6 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query'
 import {
   getGetCurrentCompanyQueryKey,
+  getGetSessionQueryKey,
+  getListApprovalsQueryKey,
+  useGetPermissionCatalog,
+  useGetSession,
+  useListApprovals,
+  useListRoles,
+  useListUsers,
   getGetHostInfoQueryKey,
   getListRecentFilesQueryKey,
   getStartup,
@@ -53,8 +60,11 @@ export const useCurrencies = () => useListCurrencies({ query: { select: (r) => r
 
 export const useRecentFiles = () => useListRecentFiles({ query: { select: (r) => r.data } })
 
-export const refreshCompany = (queryClient: QueryClient) =>
-  queryClient.invalidateQueries({ queryKey: getGetCurrentCompanyQueryKey() })
+export const refreshCompany = (queryClient: QueryClient) => {
+  // Another company, or none: nobody is signed in to it yet. Not waited for, so the screens that follow the company are not held up.
+  void queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
+  return queryClient.invalidateQueries({ queryKey: getGetCurrentCompanyQueryKey() })
+}
 
 export const refreshRecentFiles = (queryClient: QueryClient) =>
   queryClient.invalidateQueries({ queryKey: getListRecentFilesQueryKey() })
@@ -137,12 +147,32 @@ export const useModules = (): ReadonlySet<string> => {
   return new Set(company.data?.enabledModules ?? [])
 }
 
-export const useDashboard = () => useGetDashboard({ query: { select: (r) => r.data } })
+export const useDashboard = (enabled = true) => useGetDashboard({ query: { select: (r) => r.data, enabled } })
+
+// ---- Users, roles and approval ----
+
+/** Who is signed in and what they may do. Every permission when the company has no user accounts. */
+export const useSession = () => useGetSession({ query: { select: (r) => r.data, staleTime: Infinity } })
+
+export const useUsers = () => useListUsers({ query: { select: (r) => r.data } })
+
+export const useRoles = () => useListRoles({ query: { select: (r) => r.data } })
+
+export const usePermissionCatalog = () => useGetPermissionCatalog({ query: { select: (r) => r.data, staleTime: Infinity } })
+
+/** What waits for approval and what the signed-in person sent. Read again every half minute so a decision shows up. */
+export const useApprovals = (enabled = true) => useListApprovals({ query: { select: (r) => r.data, enabled, refetchInterval: 30_000 } })
+
+export const refreshApprovals = (queryClient: QueryClient) => queryClient.invalidateQueries({ queryKey: getListApprovalsQueryKey() })
 
 export const usePrintSettings = () => useGetPrintSettings({ query: { select: (r) => r.data } })
 
 /**
  * Anything that changes the books changes balances, reports and lists. Pages that are not on screen are read again too ("all"), so
- * going to the Summary after posting never shows the balances from before for a moment.
+ * going to the Summary after posting never shows the balances from before for a moment. A list that is still being read for the first time
+ * (a slow first moment after opening a company) is read again from the start, because that first reading may have happened before the change.
  */
-export const refreshBooks = (queryClient: QueryClient) => queryClient.invalidateQueries({ refetchType: 'all' })
+export const refreshBooks = async (queryClient: QueryClient) => {
+  await queryClient.cancelQueries()
+  await queryClient.invalidateQueries({ refetchType: 'all' })
+}

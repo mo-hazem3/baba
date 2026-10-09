@@ -1,5 +1,8 @@
 import { Button, Space } from 'antd'
 import type { ReactNode } from 'react'
+import { useLocation } from 'react-router'
+import { areaOfPath } from '../features/security/access'
+import { useAccess } from '../features/security/useAccess'
 import { PageHeader, type Crumb } from './PageHeader'
 import type { HelpTopic } from './HelpLink'
 
@@ -27,6 +30,11 @@ export function ListPage({
   filters?: ReactNode
   children: ReactNode
 }) {
+  const { pathname } = useLocation()
+  const { can } = useAccess()
+  const area = areaOfPath(pathname)
+  const mayAdd = area === undefined || can(area, 'Edit')
+
   return (
     <div>
       <PageHeader
@@ -36,7 +44,7 @@ export function ListPage({
         action={
           <Space wrap>
             {actions}
-            {onNew && (
+            {onNew && mayAdd && (
               <Button type="primary" onClick={onNew}>
                 + {newLabel}
               </Button>

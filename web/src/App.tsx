@@ -2,7 +2,7 @@ import { Spin } from 'antd'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router'
-import { useCurrentCompany } from './api/hooks'
+import { useCurrentCompany, useSession } from './api/hooks'
 import { ChartOfAccountsPage } from './features/accounts/ChartOfAccountsPage'
 import { BudgetsPage } from './features/budgets/BudgetsPage'
 import { ClaimsPage } from './features/claims/ClaimsPage'
@@ -35,6 +35,11 @@ import { VoucherFormPage } from './features/vouchers/VoucherFormPage'
 import { VoucherListPage } from './features/vouchers/VoucherListPage'
 import { VoucherOpenPage } from './features/vouchers/VoucherOpenPage'
 import { AppShell } from './layout/AppShell'
+import { ApprovalsPage } from './features/security/ApprovalsPage'
+import { AuditLogPage } from './features/security/AuditLogPage'
+import { ChangePasswordPage } from './features/security/ChangePassword'
+import { SignInPage } from './features/security/SignInPage'
+import { UsersPage } from './features/security/UsersPage'
 import { useSettings } from './settings/SettingsContext'
 
 /** Without an open company: the start screen and the new-company wizard. With one: the app itself. */
@@ -42,6 +47,7 @@ export function App() {
   const { t } = useTranslation()
   const { settings } = useSettings()
   const company = useCurrentCompany()
+  const session = useSession()
 
   const name = company.data ? (settings.language === 'ar' ? company.data.nameAr : company.data.nameEn) : null
 
@@ -50,7 +56,7 @@ export function App() {
     document.title = name ? `${name} · ${t('app.name')}` : t('app.name')
   }, [name, t])
 
-  if (company.isPending) return <Spin size="large" className="page-spinner" />
+  if (company.isPending || (company.data && session.isPending)) return <Spin size="large" className="page-spinner" />
 
   if (!company.data) {
     return (
@@ -64,10 +70,30 @@ export function App() {
     )
   }
 
+  // The company asks people to sign in: nothing else is shown until they have (and chosen their own password, if they must).
+  if (session.data?.accountsOn && !session.data.signedIn) {
+    return (
+      <AppShell company={company.data} locked>
+        <SignInPage company={company.data} />
+      </AppShell>
+    )
+  }
+
+  if (session.data?.accountsOn && session.data.mustChangePassword) {
+    return (
+      <AppShell company={company.data} locked>
+        <ChangePasswordPage />
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell company={company.data}>
       <Routes>
         <Route path="/" element={<SummaryPage company={company.data} />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/approvals" element={<ApprovalsPage />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/accounts" element={<ChartOfAccountsPage />} />
         <Route path="/customers" element={<PartiesPage kind="Customer" />} />
         <Route path="/suppliers" element={<PartiesPage kind="Supplier" />} />

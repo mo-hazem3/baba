@@ -5,21 +5,36 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { refreshCompany } from '../api/hooks'
-import { closeCompany } from '../api/generated/baba'
+import { closeCompany, signOut } from '../api/generated/baba'
 import type { CompanyInfo } from '../api/generated/model'
 import { useSettings } from '../settings/SettingsContext'
 import { textSizes } from '../settings/settings'
+import { ChangePasswordModal } from '../features/security/ChangePassword'
+import { useSessionUpdate } from '../features/security/sessionUpdate'
+import { useAccess } from '../features/security/useAccess'
 import { errorMessage } from './errors'
 import { ShortcutsDialog } from './ShortcutsDialog'
 
 /** The blue bar on every screen: name, language, text size and the menu. All controls have text labels (no icon-only buttons). */
-export function AppHeader({ company }: { company?: CompanyInfo | null }) {
+export function AppHeader({ company, locked = false }: { company?: CompanyInfo | null; locked?: boolean }) {
   const { t, i18n } = useTranslation()
   const { settings, setLanguage, setTextSize } = useSettings()
   const { modal, message } = App.useApp()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const { session, accountsOn } = useAccess()
+  const update = useSessionUpdate()
+
+  const leave = useMutation({
+    mutationFn: () => signOut(),
+    onSuccess: async () => {
+      navigate('/')
+      await update()
+    },
+    onError: (error) => void message.error(errorMessage(error, t)),
+  })
 
   const close = useMutation({
     mutationFn: () => closeCompany(),
@@ -41,11 +56,24 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
     })
   }
 
+  const who = session?.signedIn
+    ? [
+        { key: 'who', label: t('header.signedInAs', { name: session.displayName ?? session.userName ?? '', role: i18n.language === 'ar' ? (session.roleNameAr || session.roleNameEn) : (session.roleNameEn || session.roleNameAr) }), disabled: true },
+        ...(locked && session.mustChangePassword ? [] : [{ key: 'password', label: t('header.changePassword'), onClick: () => setChangingPassword(true) }]),
+        { key: 'signout', label: t('header.signOut'), onClick: () => leave.mutate() },
+        { type: 'divider' as const },
+      ]
+    : []
   const menuItems = company
     ? [
-        { key: 'settings', label: t('nav.settings'), onClick: () => navigate('/settings') },
-        { key: 'shortcuts', label: t('nav.shortcuts'), onClick: () => setShortcutsOpen(true) },
-        { type: 'divider' as const },
+        ...who,
+        ...(locked
+          ? []
+          : [
+              { key: 'settings', label: t('nav.settings'), onClick: () => navigate('/settings') },
+              { key: 'shortcuts', label: t('nav.shortcuts'), onClick: () => setShortcutsOpen(true) },
+              { type: 'divider' as const },
+            ]),
         { key: 'close', label: t('header.closeCompany'), onClick: confirmClose },
       ]
     : []
@@ -82,6 +110,7 @@ export function AppHeader({ company }: { company?: CompanyInfo | null }) {
         </Dropdown>
       )}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      {accountsOn && <ChangePasswordModal open={changingPassword} onClose={() => setChangingPassword(false)} />}
     </div>
   )
 }

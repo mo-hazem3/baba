@@ -200,6 +200,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
 
         var user = await users.RecoverAdministratorAsync(userName, displayName, newPassword, cancellationToken);
         session.SetAccountsOn(true);
+        await users.RecordSignInAsync(user, cancellationToken);
         await StartSessionAsync(user, cancellationToken);
         return await DescribeAsync(cancellationToken);
     }
@@ -211,6 +212,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
         await users.TurnOnAccountsAsync(userName, displayName, password, cancellationToken);
         var user = await store.FindUserByNameAsync(userName.Trim(), cancellationToken) ?? throw new NotFoundException("user");
         session.SetAccountsOn(true);
+        await users.RecordSignInAsync(user, cancellationToken);
         await StartSessionAsync(user, cancellationToken);
         return await DescribeAsync(cancellationToken);
     }

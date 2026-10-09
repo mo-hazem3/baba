@@ -3,10 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { deleteVoucher, getVoucher, printVoucher, saveAndPostVoucher, saveVoucherDraft } from '../../api/generated/baba'
+import { deleteVoucher, getVoucher, printVoucher, saveAndPostVoucher, saveVoucherDraft, submitVoucher } from '../../api/generated/baba'
 import type { VoucherDto, VoucherKind } from '../../api/generated/model'
 import { ApiError, asBlob } from '../../api/http'
-import { refreshBooks, useAccounts, useCostCenters, useCurrentCompany, useCurrencies, useHost, useModules, useParties, usePrintSettings } from '../../api/hooks'
+import { refreshApprovals, refreshBooks, useAccounts, useCostCenters, useCurrentCompany, useCurrencies, useHost, useModules, useParties, usePrintSettings } from '../../api/hooks'
+import { ApprovalNotice } from '../security/ApprovalNotice'
+import { useAccess } from '../security/useAccess'
 import { AmountText } from '../../layout/AmountText'
 import { DateField } from '../../layout/DateField'
 import { errorMessage } from '../../layout/errors'
@@ -88,7 +90,11 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
 
   const baseCurrencyCode = company.data?.baseCurrencyCode ?? ''
   const listPath = listPathOf(kind)
-  const readOnly = kind === 'Closing' || isSystemKind(kind) // made by Baba (closing a year, a payment, stock, depreciation), never by hand
+  const { needsApproval } = useAccess()
+  const sendsForApproval = needsApproval('accounting')
+  // A posted voucher cannot be changed or taken back by someone who may not approve (the server says so too).
+  const lockedForApproval = sendsForApproval && initial?.status === 'Posted'
+  const readOnly = kind === 'Closing' || isSystemKind(kind) || lockedForApproval // made by Baba (closing a year, a payment, stock, depreciation), never by hand
   const freeLines = hasFreeLines(kind)
 
   // Opening balances are dated the day before the books start; everything else starts today.
@@ -128,11 +134,15 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
   }
 
   const save = useMutation({
-    mutationFn: (post: boolean) => {
+    mutationFn: async (post: boolean) => {
       const request = { id: initial?.id ?? null, input: input() }
-      return post ? saveAndPostVoucher(request) : saveVoucherDraft(request)
+      if (post && sendsForApproval) return { sent: true, response: await submitVoucher({ ...request, note: null }) }
+      return { sent: false, response: await (post ? saveAndPostVoucher(request) : saveVoucherDraft(request)) }
     },
-    onSuccess: (response, post) => finish(post ? t('voucher.postedAs', { number: response.data.number }) : t('voucher.savedDraft')),
+    onSuccess: async ({ sent, response }, post) => {
+      if (sent) await refreshApprovals(queryClient)
+      await finish(sent ? t('security.approvals.sentForApproval') : post ? t('voucher.postedAs', { number: (response.data as VoucherDto).number }) : t('voucher.savedDraft'))
+    },
     onError: (error) => {
       if (error instanceof ApiError && error.issues.length > 0) setIssues(mapIssues(error.issues, rowsToSend(rows)))
       else void message.error(errorMessage(error, t))
@@ -270,7 +280,7 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
         { label: initial ? (initial.number ?? t('voucher.draft')) : t('voucher.newShort') },
       ]}
       badge={initial && (initial.status === 'Posted' ? <Tag color="blue">{t('voucher.posted')}</Tag> : <Tag>{t('voucher.draft')}</Tag>)}
-      save={readOnly ? undefined : { label: t('voucher.save'), onClick: () => save.mutate(true), loading: save.isPending && save.variables === true, disabled: busy }}
+      save={readOnly ? undefined : { label: sendsForApproval ? t('security.approvals.send') : t('voucher.save'), onClick: () => save.mutate(true), loading: save.isPending && save.variables === true, disabled: busy }}
       saveAsDraft={readOnly ? undefined : { label: t('voucher.saveAsDraft'), onClick: () => save.mutate(false), loading: save.isPending && save.variables === false, disabled: busy }}
       print={{
         label: t('voucher.print'),
@@ -282,7 +292,10 @@ function VoucherForm({ kind, initial }: { kind: VoucherKind; initial?: VoucherDt
       cancel={{ label: t('common.cancel'), onClick: cancel, disabled: busy }}
       remove={initial && !readOnly ? { label: t('voucher.delete'), onClick: confirmDelete, loading: remove.isPending, disabled: busy } : undefined}
     >
-      {readOnly && <Alert type="info" showIcon className="form-alert" message={t(kind === 'Closing' ? 'voucher.closingNote' : kind === 'FxSettlement' ? 'voucher.fxNote' : 'voucher.systemNote')} />}
+      {lockedForApproval && <Alert type="info" showIcon className="form-alert" message={t('security.approvals.postedLocked')} />}
+      {!lockedForApproval && sendsForApproval && initial?.status !== 'Posted' && <Alert type="info" showIcon className="form-alert" message={t('security.approvals.formNote')} />}
+      <ApprovalNotice subjectId={initial?.id} />
+      {readOnly && !lockedForApproval && <Alert type="info" showIcon className="form-alert" message={t(kind === 'Closing' ? 'voucher.closingNote' : kind === 'FxSettlement' ? 'voucher.fxNote' : 'voucher.systemNote')} />}
       {kind === 'Opening' && !initial && <Alert type="info" showIcon className="form-alert" message={t('voucher.openingNote')} />}
       {issues && issues.list.length > 0 && (
         <Alert
