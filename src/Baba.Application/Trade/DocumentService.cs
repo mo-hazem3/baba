@@ -85,6 +85,8 @@ public sealed class DocumentService(
     ICurrencyRateStore currencyRates,
     IAllocationStore allocations,
     VoucherService vouchers,
+    Security.AccessService access,
+    Security.IApprovalStore approvals,
     CountryPackRegistry countryPacks,
     StockService stock,
     WarehouseService warehouses,
@@ -118,11 +120,25 @@ public sealed class DocumentService(
         var (document, issues) = await BuildAsync(existing, input, cancellationToken);
         Throw(issues);
         await documents.SaveAsync([document], cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
         return ToDto(document);
     }
 
+    // A document that was changed or deleted is no longer what was sent for approval.
+    private Task ForgetRequestsAsync(Guid? id, CancellationToken cancellationToken) =>
+        id is { } existing ? approvals.RemoveOpenApprovalsAsync(Domain.Security.ApprovalSubject.Document, existing, cancellationToken) : Task.CompletedTask;
+
     /// <summary>Saves (new or changed) and issues. Editing an issued document makes its ledger entries again.</summary>
     public async Task<DocumentDto> IssueAsync(Guid? id, DocumentInput input, CancellationToken cancellationToken = default)
+    {
+        if (input.Kind.Posts())
+            await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Trade, cancellationToken);
+        var saved = await IssueCoreAsync(id, input, cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
+        return saved;
+    }
+
+    private async Task<DocumentDto> IssueCoreAsync(Guid? id, DocumentInput input, CancellationToken cancellationToken)
     {
         var existing = await FindForEditAsync(id, cancellationToken);
         if (existing is { Status: DocumentStatus.Issued })
@@ -146,7 +162,9 @@ public sealed class DocumentService(
         var input = new DocumentInput(
             stored.Kind, stored.Date, stored.DueDate, stored.PartyId, stored.CurrencyCode, stored.ExchangeRate, stored.Reference, stored.Memo, stored.DiscountPercent,
             stored.Lines.Select(l => new DocumentLineInput(l.Id, l.ProductId, l.AccountId, l.Description, l.Quantity, l.UnitPrice, l.DiscountPercent, l.CostCenterId, l.TaxCodeId)).ToList());
-        return await IssueAsync(id, input, cancellationToken);
+        if (input.Kind.Posts())
+            await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Trade, cancellationToken);
+        return await IssueCoreAsync(id, input, cancellationToken);
     }
 
     private async Task IssueBuiltAsync(Document document, CancellationToken cancellationToken)
@@ -389,6 +407,8 @@ public sealed class DocumentService(
         var document = await documents.FindAsync(id, cancellationToken) ?? throw new NotFoundException("document");
         if (document.Status == DocumentStatus.Converted)
             throw Refused("document", "document.converted");
+        if (document.Kind.Posts() && document.Status == DocumentStatus.Issued)
+            await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Trade, cancellationToken);
         RefuseIfImmutable(document);
         await RefuseIfSettledAsync(document, cancellationToken);
 
@@ -413,6 +433,7 @@ public sealed class DocumentService(
         }
 
         await documents.DeleteAsync(id, cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
     }
 
     // ---------------------------------------------------------------- Building and checking

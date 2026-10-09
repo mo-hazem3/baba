@@ -29,4 +29,6 @@ FiscalYear?: number;
 ProductId?: string;
 WarehouseId?: string;
 StockDocumentKind?: StockDocumentKind;
+User?: string;
+Entity?: string;
 };

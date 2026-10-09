@@ -54,6 +54,8 @@ public sealed class VoucherService(
     IPeriodStore periods,
     ICurrencyRateStore currencyRates,
     Trade.IAllocationStore allocations,
+    Security.AccessService access,
+    Security.IApprovalStore approvals,
     ICompanyFiles files,
     TimeProvider clock)
 {
@@ -68,6 +70,8 @@ public sealed class VoucherService(
     {
         RefuseSystemKind(input.Kind);
         var (voucher, context, wasPosted, oldDate) = await PrepareAsync(id, input, cancellationToken);
+        if (wasPosted)
+            await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Accounting, cancellationToken); // taking a posting back is as weighty as making it
         voucher.Status = VoucherStatus.Draft;
         voucher.PostedAt = null;
 
@@ -78,15 +82,23 @@ public sealed class VoucherService(
         Throw(issues);
 
         await vouchers.SaveAsync(voucher, [], cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
         return ToDto(voucher);
     }
+
+    // A voucher that was changed or deleted is no longer what was sent for approval.
+    private Task ForgetRequestsAsync(Guid? id, CancellationToken cancellationToken) =>
+        id is { } existing ? approvals.RemoveOpenApprovalsAsync(Domain.Security.ApprovalSubject.Voucher, existing, cancellationToken) : Task.CompletedTask;
 
     /// <summary>Saves (new or changed) and posts. Editing a posted voucher regenerates its ledger entries.</summary>
     public async Task<VoucherDto> SaveAndPostAsync(Guid? id, VoucherInput input, CancellationToken cancellationToken = default)
     {
         RefuseSystemKind(input.Kind);
+        await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Accounting, cancellationToken);
         var (voucher, context, wasPosted, oldDate) = await PrepareAsync(id, input, cancellationToken);
-        return await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
+        var saved = await PostPreparedAsync(voucher, context, wasPosted, oldDate, id, cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
+        return saved;
     }
 
     /// <summary>
@@ -147,6 +159,7 @@ public sealed class VoucherService(
     {
         var voucher = await vouchers.FindAsync(id, cancellationToken) ?? throw new NotFoundException("voucher");
         RefuseSystemKind(voucher.Kind);
+        await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Accounting, cancellationToken);
         var context = await ContextAsync(voucher.CurrencyCode, cancellationToken);
         return await PostPreparedAsync(voucher, context, voucher.Status == VoucherStatus.Posted, voucher.Date, id, cancellationToken);
     }
@@ -158,6 +171,7 @@ public sealed class VoucherService(
         RefuseSystemKind(voucher.Kind);
         if (voucher.Status == VoucherStatus.Posted)
         {
+            await access.RequireDirectPostingAsync(Domain.Security.PermissionAreas.Accounting, cancellationToken);
             var issues = new List<PostingIssue>();
             AddLockedPeriodIssue(issues, voucher.Date, await ContextAsync(null, cancellationToken));
             if (await reconciliations.HasReconciledEntriesAsync(id, cancellationToken))
@@ -170,6 +184,7 @@ public sealed class VoucherService(
             await DeleteSystemAsync(settlementId!.Value, cancellationToken);
 
         await vouchers.DeleteAsync(id, cancellationToken);
+        await ForgetRequestsAsync(id, cancellationToken);
     }
 
     private async Task<VoucherDto> PostPreparedAsync(

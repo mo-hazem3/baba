@@ -18,4 +18,5 @@ export interface SessionInfo {
   roleNameAr: string | null;
   mustChangePassword: boolean;
   permissions: string[];
+  approvalRequired?: boolean;
 }

@@ -1,3 +1,4 @@
+using Baba.Application.Companies;
 using Baba.Application.Security;
 using Baba.Domain.Security;
 using Baba.Infrastructure.CompanyFiles;
@@ -5,8 +6,64 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Baba.Infrastructure.Security;
 
-public sealed class SecurityStore(ICompanyDbContextFactory contexts) : ISecurityStore
+public sealed class SecurityStore(ICompanyDbContextFactory contexts, ICompanyFiles files) : ISecurityStore, IApprovalStore
 {
+    public async Task<SecuritySettings> GetSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        return await context.SecuritySettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken)
+            ?? new SecuritySettings { CompanyId = files.Current?.Id ?? Guid.Empty };
+    }
+
+    public async Task SaveSettingsAsync(SecuritySettings settings, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        var stored = await context.SecuritySettings.FirstOrDefaultAsync(cancellationToken);
+        if (stored is null)
+            context.SecuritySettings.Add(settings);
+        else
+            stored.ApprovalRequired = settings.ApprovalRequired;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ApprovalRequest>> ListApprovalsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        return await context.ApprovalRequests.AsNoTracking().ToListAsync(cancellationToken);
+    }
+
+    public async Task<ApprovalRequest?> FindApprovalAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        return await context.ApprovalRequests.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+    }
+
+    public async Task AddApprovalAsync(ApprovalRequest request, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        context.ApprovalRequests.Add(request);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateApprovalAsync(ApprovalRequest request, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        var stored = await context.ApprovalRequests.SingleAsync(r => r.Id == request.Id, cancellationToken);
+        context.Entry(stored).CurrentValues.SetValues(request);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveOpenApprovalsAsync(ApprovalSubject subject, Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        await using var context = contexts.Create();
+        var open = await context.ApprovalRequests
+            .Where(r => r.Subject == subject && r.SubjectId == subjectId && r.State != ApprovalState.Approved).ToListAsync(cancellationToken);
+        if (open.Count == 0)
+            return;
+        context.ApprovalRequests.RemoveRange(open);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<AppUser>> ListUsersAsync(CancellationToken cancellationToken = default)
     {
         await using var context = contexts.Create();

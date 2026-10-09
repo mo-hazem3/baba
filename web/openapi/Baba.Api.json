@@ -257,6 +257,211 @@
         }
       }
     },
+    "/api/vouchers/submit": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "SubmitVoucher",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitVoucherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vouchers/{id}/submit": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "SubmitSavedVoucher",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/submit": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "SubmitDocument",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{id}/submit": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "SubmitSavedDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-log": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "ListAuditLog",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "user",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard": {
       "get": {
         "tags": [
@@ -4532,6 +4737,131 @@
         }
       }
     },
+    "/api/users/settings": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "SetSecuritySettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecuritySettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/approvals": {
+      "get": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "ListApprovals",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/approvals/{id}/approve": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "ApproveRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/approvals/{id}/reject": {
+      "post": {
+        "tags": [
+          "Approvals"
+        ],
+        "operationId": "RejectRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/roles": {
       "get": {
         "tags": [
@@ -5759,6 +6089,20 @@
             "schema": {
               "$ref": "#/components/schemas/StockDocumentKind"
             }
+          },
+          {
+            "name": "User",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Entity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5928,6 +6272,20 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/StockDocumentKind"
+            }
+          },
+          {
+            "name": "User",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Entity",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -6200,6 +6558,111 @@
           }
         }
       },
+      "ApprovalDto": {
+        "required": [
+          "id",
+          "subject",
+          "subjectId",
+          "state",
+          "kind",
+          "number",
+          "date",
+          "amount",
+          "currencyCode",
+          "note",
+          "submittedBy",
+          "submittedAt",
+          "decidedBy",
+          "decidedAt",
+          "decisionNote",
+          "canDecide"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/ApprovalSubject"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApprovalState"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "submittedBy": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decidedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "decisionNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canDecide": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApprovalState": {
+        "enum": [
+          "Pending",
+          "Approved",
+          "Rejected"
+        ]
+      },
+      "ApprovalSubject": {
+        "enum": [
+          "Voucher",
+          "Document"
+        ]
+      },
       "AssetDto": {
         "required": [
           "id",
@@ -6451,6 +6914,94 @@
           "Active",
           "Disposed"
         ]
+      },
+      "AuditAction": {
+        "enum": [
+          "Created",
+          "Updated",
+          "Deleted"
+        ]
+      },
+      "AuditChange": {
+        "required": [
+          "field",
+          "before",
+          "after"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "after": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AuditEntryDto": {
+        "required": [
+          "id",
+          "at",
+          "userId",
+          "action",
+          "entityName",
+          "entityLabelEn",
+          "entityLabelAr",
+          "entityId",
+          "reference",
+          "changes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "entityName": {
+            "type": "string"
+          },
+          "entityLabelEn": {
+            "type": "string"
+          },
+          "entityLabelAr": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditChange"
+            }
+          }
+        }
       },
       "BackupRequest": {
         "required": [
@@ -10353,6 +10904,20 @@
           }
         }
       },
+      "RejectInput": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RemoveRecentFileRequest": {
         "required": [
           "path"
@@ -10897,6 +11462,17 @@
           }
         }
       },
+      "SecuritySettingsRequest": {
+        "required": [
+          "approvalRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "approvalRequired": {
+            "type": "boolean"
+          }
+        }
+      },
       "SessionInfo": {
         "required": [
           "accountsOn",
@@ -10948,6 +11524,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "approvalRequired": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -11359,6 +11939,72 @@
               "number"
             ],
             "format": "double"
+          }
+        }
+      },
+      "SubmitDocumentRequest": {
+        "required": [
+          "id",
+          "input",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "input": {
+            "$ref": "#/components/schemas/DocumentInput"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitInput": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitVoucherRequest": {
+        "required": [
+          "id",
+          "input",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "input": {
+            "$ref": "#/components/schemas/VoucherInput"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12089,6 +12735,12 @@
       "name": "Products"
     },
     {
+      "name": "Approvals"
+    },
+    {
+      "name": "Users"
+    },
+    {
       "name": "Summary"
     },
     {
@@ -12144,9 +12796,6 @@
     },
     {
       "name": "Session"
-    },
-    {
-      "name": "Users"
     },
     {
       "name": "Expense claims"

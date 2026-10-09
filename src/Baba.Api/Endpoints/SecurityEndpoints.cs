@@ -11,6 +11,12 @@ public sealed record RecoverRequest(string FilePassword, string UserName, string
 
 public sealed record ResetPasswordRequest(string NewPassword);
 
+public sealed record SecuritySettingsRequest(bool ApprovalRequired);
+
+public sealed record SubmitVoucherRequest(Guid? Id, Baba.Application.Accounting.VoucherInput Input, string? Note);
+
+public sealed record SubmitDocumentRequest(Guid? Id, Baba.Application.Trade.DocumentInput Input, string? Note);
+
 public sealed record PermissionAreaDto(string Area, string? Module, IReadOnlyList<string> Actions);
 
 /// <summary>Sign-in, users and roles (brief section 10.4).</summary>
@@ -48,6 +54,22 @@ public static class SecurityEndpoints
                 return Results.NoContent();
             })
             .WithName("DeleteUser");
+
+        users.MapPut("/settings", (SecuritySettingsRequest request, AccessService access, CancellationToken ct) => access.SetApprovalRequiredAsync(request.ApprovalRequired, ct)).WithName("SetSecuritySettings");
+
+        // Approval: people who may not post or issue send theirs for approval, and approvers approve (which posts) or reject.
+        var approvals = api.MapGroup("/approvals").WithTags("Approvals");
+        approvals.MapGet("/", (ApprovalService service, CancellationToken ct) => service.ListAsync(ct)).WithName("ListApprovals");
+        approvals.MapPost("/{id:guid}/approve", (Guid id, ApprovalService service, CancellationToken ct) => service.ApproveAsync(id, ct)).WithName("ApproveRequest");
+        approvals.MapPost("/{id:guid}/reject", (Guid id, RejectInput input, ApprovalService service, CancellationToken ct) => service.RejectAsync(id, input.Note, ct)).WithName("RejectRequest");
+        api.MapPost("/vouchers/submit", (SubmitVoucherRequest request, ApprovalService service, CancellationToken ct) => service.SubmitVoucherAsync(request.Id, request.Input, request.Note, ct)).WithName("SubmitVoucher").WithTags("Approvals");
+        api.MapPost("/vouchers/{id:guid}/submit", (Guid id, SubmitInput input, ApprovalService service, CancellationToken ct) => service.SubmitSavedVoucherAsync(id, input.Note, ct)).WithName("SubmitSavedVoucher").WithTags("Approvals");
+        api.MapPost("/documents/submit", (SubmitDocumentRequest request, ApprovalService service, CancellationToken ct) => service.SubmitDocumentAsync(request.Id, request.Input, request.Note, ct)).WithName("SubmitDocument").WithTags("Approvals");
+        api.MapPost("/documents/{id:guid}/submit", (Guid id, SubmitInput input, ApprovalService service, CancellationToken ct) => service.SubmitSavedDocumentAsync(id, input.Note, ct)).WithName("SubmitSavedDocument").WithTags("Approvals");
+
+        api.MapGet("/audit-log", (AuditService service, DateOnly? from, DateOnly? to, string? user, string? entity, int? limit, CancellationToken ct) =>
+                service.ListAsync(new AuditSearch(from, to, user, entity, limit), ct))
+            .WithName("ListAuditLog").WithTags("Users");
 
         var roles = api.MapGroup("/roles").WithTags("Users");
         roles.MapGet("/", (UserService service, CancellationToken ct) => service.ListRolesAsync(ct)).WithName("ListRoles");

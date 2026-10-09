@@ -65,6 +65,8 @@ public static class BabaApi
         services.AddSingleton<Baba.Application.Security.UserService>();
         services.AddSingleton<Baba.Application.Security.AppSession>();
         services.AddSingleton<Baba.Application.Security.AccessService>();
+        services.AddSingleton<Baba.Application.Security.ApprovalService>();
+        services.AddSingleton<Baba.Application.Security.AuditService>();
         services.AddSingleton<Baba.Application.Budgets.BudgetService>();
         services.AddSingleton<Baba.Application.Inventory.StockDocumentService>();
         services.AddSingleton<ExchangeRateService>();

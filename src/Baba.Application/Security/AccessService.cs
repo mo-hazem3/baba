@@ -118,7 +118,9 @@ public sealed record SessionInfo(
     string? RoleNameAr,
     bool MustChangePassword,
     /// <summary>What may be done (every permission when the company has no users).</summary>
-    IReadOnlyList<string> Permissions);
+    IReadOnlyList<string> Permissions,
+    /// <summary>Posting and issuing need someone who may approve; the others send theirs for approval.</summary>
+    bool ApprovalRequired = false);
 
 public sealed record SignInInput(string UserName, string Password);
 
@@ -143,17 +145,18 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
     public async Task<SessionInfo> GetAsync(CancellationToken cancellationToken = default)
     {
         await LoadAsync(cancellationToken);
-        return Describe();
+        return await DescribeAsync(cancellationToken);
     }
 
-    private SessionInfo Describe()
+    private async Task<SessionInfo> DescribeAsync(CancellationToken cancellationToken)
     {
         var user = session.User;
         if (!session.AccountsOn)
             return new SessionInfo(false, false, null, null, null, null, false, Everything);
-        return user is null
-            ? new SessionInfo(true, false, null, null, null, null, false, [])
-            : new SessionInfo(true, true, user.UserName, user.DisplayName, user.RoleNameEn, user.RoleNameAr, user.MustChangePassword, [.. user.Permissions.OrderBy(p => p, StringComparer.Ordinal)]);
+        if (user is null)
+            return new SessionInfo(true, false, null, null, null, null, false, []);
+        var approval = (await store.GetSettingsAsync(cancellationToken)).ApprovalRequired;
+        return new SessionInfo(true, true, user.UserName, user.DisplayName, user.RoleNameEn, user.RoleNameAr, user.MustChangePassword, [.. user.Permissions.OrderBy(p => p, StringComparer.Ordinal)], approval);
     }
 
     public async Task<SessionInfo> SignInAsync(SignInInput input, CancellationToken cancellationToken = default)
@@ -166,7 +169,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
             ?? throw new ValidationException([new ValidationIssue("password", "auth.wrong-credentials")]);
         await users.RecordSignInAsync(user, cancellationToken);
         await StartSessionAsync(user, cancellationToken);
-        return Describe();
+        return await DescribeAsync(cancellationToken);
     }
 
     public void SignOut() => session.SignOut();
@@ -180,7 +183,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
         var fresh = await store.FindUserAsync(user.Id, cancellationToken);
         if (fresh is not null)
             await StartSessionAsync(fresh, cancellationToken);
-        return Describe();
+        return await DescribeAsync(cancellationToken);
     }
 
     /// <summary>
@@ -198,7 +201,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
         var user = await users.RecoverAdministratorAsync(userName, displayName, newPassword, cancellationToken);
         session.SetAccountsOn(true);
         await StartSessionAsync(user, cancellationToken);
-        return Describe();
+        return await DescribeAsync(cancellationToken);
     }
 
     /// <summary>The company just got its first user (an administrator): that person is signed in now.</summary>
@@ -209,7 +212,7 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
         var user = await store.FindUserByNameAsync(userName.Trim(), cancellationToken) ?? throw new NotFoundException("user");
         session.SetAccountsOn(true);
         await StartSessionAsync(user, cancellationToken);
-        return Describe();
+        return await DescribeAsync(cancellationToken);
     }
 
     private async Task StartSessionAsync(Domain.Security.AppUser user, CancellationToken cancellationToken)
@@ -244,6 +247,39 @@ public sealed class AccessService(AppSession session, UserService users, ISecuri
     {
         await LoadAsync(cancellationToken);
         return session.AccountsOn && session.User is null && !session.IsSystem;
+    }
+
+    // ---------------------------------------------------------------- Approval
+
+    /// <summary>
+    /// Posting a voucher or issuing an invoice: when the company asks for approval, only someone who may approve the area can do it
+    /// directly. Everyone else gets "approval.required" and sends it for approval instead.
+    /// </summary>
+    public async Task RequireDirectPostingAsync(string area, CancellationToken cancellationToken = default)
+    {
+        if (session.IsSystem || !session.AccountsOn || Can(area, PermissionAction.Approve))
+            return;
+        if ((await store.GetSettingsAsync(cancellationToken)).ApprovalRequired)
+            throw new ValidationException([new ValidationIssue("approval", "approval.required")]);
+    }
+
+    /// <summary>Sending something for approval only makes sense when the company asks for it.</summary>
+    public async Task RequireApprovalSwitchedOnAsync(CancellationToken cancellationToken = default)
+    {
+        if (!(await store.GetSettingsAsync(cancellationToken)).ApprovalRequired)
+            throw new ValidationException([new ValidationIssue("approval", "approval.not-needed")]);
+    }
+
+    /// <summary>Turns "posting needs approval" on or off. Approval needs people with their own sign-ins.</summary>
+    public async Task<SessionInfo> SetApprovalRequiredAsync(bool required, CancellationToken cancellationToken = default)
+    {
+        await LoadAsync(cancellationToken);
+        if (required && !session.AccountsOn)
+            throw new ValidationException([new ValidationIssue("approval", "approval.needs-accounts")]);
+        var settings = await store.GetSettingsAsync(cancellationToken);
+        settings.ApprovalRequired = required;
+        await store.SaveSettingsAsync(settings, cancellationToken);
+        return await DescribeAsync(cancellationToken);
     }
 
     /// <summary>Makes <see cref="AppSession.AccountsOn"/> right again after users were added or removed.</summary>

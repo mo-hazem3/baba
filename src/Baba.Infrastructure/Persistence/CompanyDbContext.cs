@@ -65,6 +65,8 @@ public sealed class CompanyDbContext(
     public DbSet<StockDocumentLine> StockDocumentLines => Set<StockDocumentLine>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<Role> Roles => Set<Role>();
+    public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<SecuritySettings> SecuritySettings => Set<SecuritySettings>();
     public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
     public DbSet<ExpenseClaimLine> ExpenseClaimLines => Set<ExpenseClaimLine>();
     public DbSet<BudgetEntry> BudgetEntries => Set<BudgetEntry>();
@@ -292,6 +294,15 @@ public sealed class CompanyDbContext(
             user.HasIndex(u => new { u.CompanyId, u.UserName }).IsUnique();
             user.HasQueryFilter(u => u.CompanyId == CurrentCompanyId);
         });
+
+        model.Entity<ApprovalRequest>(request =>
+        {
+            request.HasIndex(r => new { r.Subject, r.SubjectId });
+            request.HasIndex(r => r.State);
+            request.HasQueryFilter(r => r.CompanyId == CurrentCompanyId);
+        });
+
+        model.Entity<SecuritySettings>(settings => settings.HasQueryFilter(s => s.CompanyId == CurrentCompanyId));
 
         model.Entity<ExpenseClaim>(claim =>
         {

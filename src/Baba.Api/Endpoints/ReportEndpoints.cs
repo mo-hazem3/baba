@@ -2,6 +2,7 @@ using Baba.Application;
 using Baba.Application.Accounting;
 using Baba.Application.Printing;
 using Baba.Application.Reporting;
+using Baba.Application.Security;
 using Baba.Application.Trade;
 using Baba.Domain.Inventory;
 using Baba.Domain.Trade;
@@ -16,7 +17,8 @@ public sealed record ReportQuery(
     VoucherKind? Kind = null, VoucherStatus? Status = null, Guid? PartyId = null, Guid? CostCenterId = null,
     DocumentKind? DocumentKind = null, DocumentStatus? DocumentStatus = null, PartyKind? PartyKind = null,
     int? FiscalYear = null,
-    Guid? ProductId = null, Guid? WarehouseId = null, StockDocumentKind? StockDocumentKind = null);
+    Guid? ProductId = null, Guid? WarehouseId = null, StockDocumentKind? StockDocumentKind = null,
+    string? User = null, string? Entity = null);
 
 /// <summary>
 /// The reports (trial balance, profit and loss, balance sheet, statement of account, general ledger, journal) and the two
@@ -31,26 +33,26 @@ public static class ReportEndpoints
         "documents", "products", "parties", "tax-codes", "recurring", "exchange-rates",
         "stock-valuation", "stock-movements", "stock-reorder", "warehouses", "stock-documents",
         "asset-register", "assets", "employees", "salary-components", "payroll-summary", "leave-balances", "end-of-service",
-        "expense-claims", "budget", "budget-vs-actual",
+        "expense-claims", "budget", "budget-vs-actual", "audit-log",
     ];
 
     public static void MapReportEndpoints(this IEndpointRouteBuilder api)
     {
         var reports = api.MapGroup("/reports").WithTags("Reports");
 
-        reports.MapGet("/{key}", async (string key, [AsParameters] ReportQuery query, ReportService service, ListingService listings, TimeProvider clock, CancellationToken ct) =>
-                await BuildAsync(key, query, service, listings, clock, ct) is { } report ? Results.Ok(report) : Results.NotFound())
+        reports.MapGet("/{key}", async (string key, [AsParameters] ReportQuery query, ReportService service, ListingService listings, AuditService audit, TimeProvider clock, CancellationToken ct) =>
+                await BuildAsync(key, query, service, listings, audit, clock, ct) is { } report ? Results.Ok(report) : Results.NotFound())
             .Produces<ReportResult>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .WithName("GetReport");
 
         reports.MapGet("/{key}/export", async (
                 string key, ExportFormat format, PrintLayout? layout, [AsParameters] ReportQuery query,
-                ReportService service, ListingService listings, ExportService exports, DocumentPrintService printing, TimeProvider clock, CancellationToken ct) =>
+                ReportService service, ListingService listings, AuditService audit, ExportService exports, DocumentPrintService printing, TimeProvider clock, CancellationToken ct) =>
             {
                 if (format == ExportFormat.Pdf && !printing.IsAvailable)
                     return Results.StatusCode(StatusCodes.Status501NotImplemented);
-                if (await BuildAsync(key, query, service, listings, clock, ct) is not { } report)
+                if (await BuildAsync(key, query, service, listings, audit, clock, ct) is not { } report)
                     return Results.NotFound();
 
                 var file = await exports.ExportAsync(report, format, layout, ct);
@@ -63,7 +65,7 @@ public static class ReportEndpoints
     }
 
     private static async Task<ReportResult?> BuildAsync(
-        string key, ReportQuery q, ReportService reports, ListingService listings, TimeProvider clock, CancellationToken ct)
+        string key, ReportQuery q, ReportService reports, ListingService listings, AuditService audit, TimeProvider clock, CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(clock.GetLocalNow().DateTime);
         switch (key)
@@ -101,6 +103,7 @@ public static class ReportEndpoints
             case "stock-documents": return await listings.StockDocumentsAsync(q.StockDocumentKind, q.From, q.To, ct);
             case "aging-receivable": return await reports.AgingAsync(PartyKind.Customer, q.AsOf ?? q.To ?? today, ct);
             case "aging-payable": return await reports.AgingAsync(PartyKind.Supplier, q.AsOf ?? q.To ?? today, ct);
+            case "audit-log": return await audit.ReportAsync(new AuditSearch(q.From, q.To, q.User, q.Entity), ct);
             case "tax-return": return await reports.TaxReturnAsync(q.From, q.To, ct);
             case "cost-centers": return await reports.CostCenterSummaryAsync(q.From, q.To, ct);
             case "party-statement":

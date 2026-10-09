@@ -61,7 +61,11 @@ public abstract class AccountingFixture : CompanyFilesFixture
         Baba.Application.Payroll.PayrollService Payroll,
         Baba.Application.Claims.ClaimService Claims,
         Baba.Application.Budgets.BudgetService Budgets,
-        Baba.Application.Security.UserService Users)
+        Baba.Application.Security.UserService Users,
+        Baba.Application.Security.AppSession Session,
+        Baba.Application.Security.AccessService Access,
+        Baba.Application.Security.ApprovalService Approvals,
+        Baba.Application.Security.AuditService Audit)
     {
         public Guid Id(string code) => ByCode[code].Id;
 
@@ -110,7 +114,11 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var reconciliationStore = new ReconciliationStore(files);
         var rateStore = new CurrencyRateStore(files);
         var allocationStore = new Trade.AllocationStore(files);
-        var vouchers = new VoucherService(new VoucherStore(files), accounts, partyStore, costCenterStore, reconciliationStore, new PeriodStore(files), rateStore, allocationStore, files, Clock);
+        var session = new Baba.Application.Security.AppSession();
+        var securityStore = new Security.SecurityStore(files, files);
+        var userService = new Baba.Application.Security.UserService(securityStore, files, new FakeUser(user), Clock);
+        var access = new Baba.Application.Security.AccessService(session, userService, securityStore, files, files);
+        var vouchers = new VoucherService(new VoucherStore(files), accounts, partyStore, costCenterStore, reconciliationStore, new PeriodStore(files), rateStore, allocationStore, access, securityStore, files, Clock);
         var periods = new PeriodService(new PeriodStore(files), files);
         var byCode = (await chart.ListAsync()).ToDictionary(a => a.Code);
         var ledger = new LedgerQuery(files);
@@ -133,9 +141,9 @@ public abstract class AccountingFixture : CompanyFilesFixture
         var payrollService = new Baba.Application.Payroll.PayrollService(payrollStore, accounts, ledger, vouchers, Baba.Localization.CountryPackRegistry.Discover(), files, Clock);
         var claimService = new Baba.Application.Claims.ClaimService(new Claims.ClaimStore(files), payrollStore, accounts, costCenterStore, vouchers, files, Clock);
         var budgetService = new Baba.Application.Budgets.BudgetService(new Budgets.BudgetStore(files), accounts, costCenterStore, files);
-        var userService = new Baba.Application.Security.UserService(new Security.SecurityStore(files), files, new FakeUser(user), Clock);
         var tax = new Baba.Application.Trade.TaxService(taxStore, accounts, Baba.Localization.CountryPackRegistry.Discover(), files);
-        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
+        var trade = new Baba.Application.Trade.DocumentService(documentStore, partyStore, accounts, productStore, taxStore, costCenterStore, rateStore, allocationStore, vouchers, access, securityStore, Baba.Localization.CountryPackRegistry.Discover(), stockService, warehouseService, files, Clock);
+        var approvals = new Baba.Application.Security.ApprovalService(securityStore, vouchers, trade, access, new SessionOrFixedUser(session, user), files, Clock);
 
         var brandingStore = new Printing.BrandingStore(files);
         var renderer = new CapturingRenderer();
@@ -167,7 +175,13 @@ public abstract class AccountingFixture : CompanyFilesFixture
             payrollService,
             claimService,
             budgetService,
-            userService);
+            userService, session, access, approvals, new Baba.Application.Security.AuditService(new Security.AuditStore(files), files));
+    }
+
+    /// <summary>Who is acting: the signed-in person once someone signed in, otherwise the fixed test user.</summary>
+    private sealed class SessionOrFixedUser(Baba.Application.Security.AppSession session, string fallback) : Baba.Application.Abstractions.ICurrentUser
+    {
+        public string UserId => session.User?.UserName ?? fallback;
     }
 
     protected static VoucherInput Payment(Env e, DateOnly date, params (string Code, decimal Amount)[] lines) => new(

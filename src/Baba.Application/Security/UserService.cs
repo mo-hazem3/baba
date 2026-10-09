@@ -19,6 +19,9 @@ public interface ISecurityStore
     Task AddRoleAsync(Role role, CancellationToken cancellationToken = default);
     Task UpdateRoleAsync(Role role, CancellationToken cancellationToken = default);
     Task DeleteRoleAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<SecuritySettings> GetSettingsAsync(CancellationToken cancellationToken = default);
+    Task SaveSettingsAsync(SecuritySettings settings, CancellationToken cancellationToken = default);
 }
 
 public sealed record UserDto(

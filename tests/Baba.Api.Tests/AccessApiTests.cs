@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using Baba.Api.Endpoints;
 using Baba.Api.Errors;
 using Baba.Api.Security;
+using Baba.Application.Accounting;
 using Baba.Application.Security;
+using Baba.Domain.Security;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -165,6 +167,45 @@ public class AccessApiTests : ApiFixture
         await Client.PostAsync("/api/session/sign-out", null);
         Assert.Equal(HttpStatusCode.BadRequest, (await SignInAsync("owner", AdminPassword)).StatusCode); // the old password no longer works
         await SignedInAsAsync("owner", "a new password");
+    }
+
+    [Fact]
+    public async Task With_approval_on_a_clerk_sends_a_voucher_and_an_accountant_approves_it()
+    {
+        await CreateCompanyAsync();
+        await TurnOnAsync();
+        var accounts = await ReadAsync<List<Baba.Application.Accounting.AccountDto>>(await Client.GetAsync("/api/accounts"));
+        var revenue = accounts.First(a => a.Code == "511");
+        var bank = accounts.First(a => a.Code == "112");
+        var clerkRole = await ReadAsync<RoleDto>(await Client.PostAsJsonAsync("/api/roles", new RoleInput("", "Clerk", ["accounting.View", "accounting.Edit"])));
+        await ReadAsync<UserDto>(await Client.PostAsJsonAsync("/api/users", new UserInput("clerk1", "Clerk", clerkRole.Id, "first password")));
+        await AddUserAsync("accountant1", "Accountant");
+        var on = await ReadAsync<SessionInfo>(await Client.PutAsJsonAsync("/api/users/settings", new SecuritySettingsRequest(true)));
+        Assert.True(on.ApprovalRequired);
+
+        var input = new Baba.Application.Accounting.VoucherInput(
+            Baba.Domain.Accounting.VoucherKind.Receipt, new DateOnly(2026, 10, 6), bank.Id, null, null,
+            [new Baba.Application.Accounting.VoucherLineInput(null, revenue.Id, null, 0, 40)]);
+        await Client.PostAsync("/api/session/sign-out", null);
+        await SignedInAsAsync("clerk1", "first password");
+        await Client.PostAsJsonAsync("/api/session/password", new ChangePasswordRequest("first password", "clerk password"));
+
+        var refused = await Client.PostAsJsonAsync("/api/vouchers/post", new SaveVoucherRequest(null, input));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains((await ProblemAsync(refused)).Issues!, i => i.Code == "approval.required");
+
+        var sent = await ReadAsync<ApprovalDto>(await Client.PostAsJsonAsync("/api/vouchers/submit", new SubmitVoucherRequest(null, input, "please")));
+        Assert.Equal(ApprovalState.Pending, sent.State);
+        Assert.Equal(HttpStatusCode.Forbidden, (await Client.PostAsJsonAsync($"/api/approvals/{sent.Id}/approve", new { })).StatusCode);
+
+        await Client.PostAsync("/api/session/sign-out", null);
+        await SignedInAsAsync("accountant1", "first password");
+        await Client.PostAsJsonAsync("/api/session/password", new ChangePasswordRequest("first password", "accountant password"));
+        var waiting = await ReadAsync<List<ApprovalDto>>(await Client.GetAsync("/api/approvals"));
+        Assert.Equal(sent.Id, Assert.Single(waiting).Id);
+        var approved = await ReadAsync<ApprovalDto>(await Client.PostAsJsonAsync($"/api/approvals/{sent.Id}/approve", new { }));
+        Assert.Equal(ApprovalState.Approved, approved.State);
+        Assert.NotNull(approved.Number);
     }
 
     [Fact]

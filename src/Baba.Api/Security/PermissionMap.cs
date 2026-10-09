@@ -43,7 +43,7 @@ public static class PermissionMap
         {
             "host" or "startup" or "countries" or "currencies" or "modules" or "dialogs" or "recent-files" or "session" or "openapi" => OpenRule,
             "company" => rest.Length == 0 && read || rest is ["create" or "open" or "close" or "restore"] ? OpenRule
-                : rest is ["modules"] or ["approval"] ? Needs(PermissionAreas.Settings, PermissionAction.Edit)
+                : rest is ["modules"] ? Needs(PermissionAreas.Settings, PermissionAction.Edit)
                 : rest is ["backup"] ? Needs(PermissionAreas.Settings, PermissionAction.View)
                 : null,
 
@@ -73,7 +73,7 @@ public static class PermissionMap
             "branding" => Lookup(PermissionAreas.Settings),
             "print" => Needs(PermissionAreas.Settings, PermissionAction.View),
             "dashboard" => Needs(PermissionAreas.Reports, PermissionAction.View),
-            "approvals" => Needs(PermissionAreas.Accounting, PermissionAction.View), // the list of what waits; approving needs the area's Approve (checked by the service)
+            "approvals" => SignedIn, // everyone sees what they sent; approving needs the area's Approve (checked by the service)
             "users" or "roles" or "audit-log" => Needs(PermissionAreas.Users, verb),
             _ => null,
         };
