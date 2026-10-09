@@ -91,11 +91,11 @@ public static class BuiltInRoles
         new(Sales, "Sales", "مبيعات",
             [
                 .. ViewAndEdit(PermissionAreas.Trade), .. ViewAndEdit(PermissionAreas.Parties), .. ViewAndEdit(PermissionAreas.Products),
-                View(PermissionAreas.Reports), View(PermissionAreas.Inventory), View(PermissionAreas.Tax), View(PermissionAreas.Settings),
+                View(PermissionAreas.Inventory), View(PermissionAreas.Tax), View(PermissionAreas.Settings),
             ]),
         new(Storekeeper, "Storekeeper", "أمين مخزن",
             [
-                .. Everything(PermissionAreas.Inventory), View(PermissionAreas.Products), View(PermissionAreas.Trade), View(PermissionAreas.Reports), View(PermissionAreas.Settings),
+                .. Everything(PermissionAreas.Inventory), View(PermissionAreas.Products), View(PermissionAreas.Trade), View(PermissionAreas.Settings),
             ]),
         new(Viewer, "Viewer", "مشاهد (للقراءة فقط)",
             [.. PermissionAreas.All.Where(a => a is not (PermissionAreas.Users or PermissionAreas.Settings)).Select(View), View(PermissionAreas.Settings)]),

@@ -1,4 +1,5 @@
 using Baba.Application.Assets;
+using Baba.Application.Security;
 
 namespace Baba.Api.Endpoints;
 
@@ -30,7 +31,12 @@ public static class AssetEndpoints
         assets.MapPost("/{id:guid}/undispose", (Guid id, AssetService service, CancellationToken ct) => service.UndoDisposalAsync(id, ct)).WithName("UndoAssetDisposal");
 
         assets.MapPost("/depreciation/run", (RunDepreciationRequest request, AssetService service, CancellationToken ct) => service.RunDepreciationAsync(request.Through, ct)).WithName("RunDepreciation");
-        assets.MapPost("/depreciation/run-due", (AssetService service, CancellationToken ct) => service.RunDueAsync(ct)).WithName("RunDueDepreciation");
+        assets.MapPost("/depreciation/run-due", async (AssetService service, AppSession session, CancellationToken ct) =>
+            {
+                using (session.AsSystem()) // the program's own run: it does not depend on who signed in
+                    return await service.RunDueAsync(ct);
+            })
+            .WithName("RunDueDepreciation");
         assets.MapPost("/depreciation/undo-last", async (AssetService service, CancellationToken ct) =>
             {
                 await service.UndoLastDepreciationAsync(ct);

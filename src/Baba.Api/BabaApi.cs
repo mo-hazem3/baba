@@ -63,6 +63,8 @@ public static class BabaApi
         services.AddSingleton<Baba.Application.Payroll.PayrollService>();
         services.AddSingleton<Baba.Application.Claims.ClaimService>();
         services.AddSingleton<Baba.Application.Security.UserService>();
+        services.AddSingleton<Baba.Application.Security.AppSession>();
+        services.AddSingleton<Baba.Application.Security.AccessService>();
         services.AddSingleton<Baba.Application.Budgets.BudgetService>();
         services.AddSingleton<Baba.Application.Inventory.StockDocumentService>();
         services.AddSingleton<ExchangeRateService>();
@@ -97,7 +99,7 @@ public static class BabaApi
 
         configure?.Invoke(builder);
 
-        services.TryAddSingleton<ICurrentUser, LocalUser>();
+        services.TryAddSingleton<ICurrentUser, SessionCurrentUser>();
         services.TryAddSingleton<IRecentFiles>(sp => new JsonRecentFiles(
             options.RecentFilesPath ?? DefaultRecentFilesPath(),
             sp.GetRequiredService<TimeProvider>()));
@@ -107,6 +109,7 @@ public static class BabaApi
         app.UseMiddleware<HostFilterMiddleware>();
         app.UseMiddleware<ApiErrorMiddleware>();
         app.UseMiddleware<AccessTokenMiddleware>();
+        app.UseMiddleware<AccessMiddleware>();
 
         var hasWebApp = app.Environment.WebRootFileProvider.GetFileInfo("index.html").Exists;
         if (hasWebApp)
@@ -128,6 +131,7 @@ public static class BabaApi
         api.MapStockEndpoints();
         api.MapAssetEndpoints();
         api.MapPayrollEndpoints();
+        api.MapSecurityEndpoints();
         api.MapClaimEndpoints();
         api.MapBudgetEndpoints();
         api.MapExchangeRateEndpoints();

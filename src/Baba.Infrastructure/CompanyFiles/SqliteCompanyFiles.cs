@@ -13,7 +13,7 @@ namespace Baba.Infrastructure.CompanyFiles;
 /// is backed up before a schema update, and is fully released on <see cref="Close"/>.
 /// </summary>
 public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider clock)
-    : ICompanyFiles, ICompanyDbContextFactory, IDisposable
+    : ICompanyFiles, ICompanyDbContextFactory, Baba.Application.Security.ICompanyPassword, IDisposable
 {
     /// <summary>"BABA" as a number. Stored in the file header so we can tell a Baba file from any other database.</summary>
     internal const int ApplicationId = 0x42414241;
@@ -28,6 +28,16 @@ public sealed class SqliteCompanyFiles(ICurrentUser currentUser, TimeProvider cl
     private CompanyInfo? _current;
 
     public CompanyInfo? Current => _current;
+
+    /// <summary>Whether this is the password the open file was opened with (compared without leaking timing).</summary>
+    public bool Matches(string password)
+    {
+        string? known;
+        lock (_gate)
+            known = _password;
+        return known is not null && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.UTF8.GetBytes(known), System.Text.Encoding.UTF8.GetBytes(password));
+    }
 
     public async Task<CompanyInfo> CreateAsync(string path, string password, NewCompanyData company, CancellationToken cancellationToken = default)
     {

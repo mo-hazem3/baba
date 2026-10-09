@@ -1,4 +1,5 @@
 using Baba.Application.Payroll;
+using Baba.Application.Security;
 using Baba.Application.Printing;
 using Baba.Domain;
 
@@ -62,7 +63,12 @@ public static class PayrollEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .WithName("GetPayrollRun");
         payroll.MapPost("/runs", (CreatePayrollRunRequest request, PayrollService service, CancellationToken ct) => service.CreateRunAsync(request.Month, ct)).WithName("CreatePayrollRun");
-        payroll.MapPost("/runs/run-due", (PayrollService service, CancellationToken ct) => service.RunDueAsync(ct)).WithName("RunDuePayroll");
+        payroll.MapPost("/runs/run-due", async (PayrollService service, AppSession session, CancellationToken ct) =>
+            {
+                using (session.AsSystem())
+                    return await service.RunDueAsync(ct);
+            })
+            .WithName("RunDuePayroll");
         payroll.MapPost("/runs/{id:guid}/refresh", (Guid id, PayrollService service, CancellationToken ct) => service.RefreshRunAsync(id, ct)).WithName("RefreshPayrollRun");
         payroll.MapPut("/runs/{id:guid}/payslips/{payslipId:guid}", (Guid id, Guid payslipId, SavePayslipRequest request, PayrollService service, CancellationToken ct) => service.SavePayslipAsync(id, payslipId, request.Items, ct)).WithName("SavePayslip");
         payroll.MapDelete("/runs/{id:guid}/payslips/{payslipId:guid}", (Guid id, Guid payslipId, PayrollService service, CancellationToken ct) => service.RemovePayslipAsync(id, payslipId, ct)).WithName("RemovePayslip");
@@ -97,7 +103,12 @@ public static class PayrollEndpoints
 
         payroll.MapGet("/end-of-service", (PayrollService service, DateOnly asOf, CancellationToken ct) => service.EndOfServicePositionAsync(asOf, ct)).WithName("GetEndOfServicePosition");
         payroll.MapPost("/end-of-service/accrue", (AccrueEndOfServiceRequest request, PayrollService service, CancellationToken ct) => service.AccrueEndOfServiceAsync(request.Month, ct)).WithName("AccrueEndOfService");
-        payroll.MapPost("/end-of-service/run-due", async (PayrollService service, CancellationToken ct) => await service.RunDueEndOfServiceAsync(ct) ?? new EndOfServiceResult(null, 0)).WithName("RunDueEndOfService");
+        payroll.MapPost("/end-of-service/run-due", async (PayrollService service, AppSession session, CancellationToken ct) =>
+            {
+                using (session.AsSystem())
+                    return await service.RunDueEndOfServiceAsync(ct) ?? new EndOfServiceResult(null, 0);
+            })
+            .WithName("RunDueEndOfService");
         payroll.MapPost("/end-of-service/undo", async (PayrollService service, CancellationToken ct) =>
             {
                 await service.UndoEndOfServiceAsync(ct);

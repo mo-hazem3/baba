@@ -1,5 +1,6 @@
 using Baba.Application;
 using Baba.Application.Companies;
+using Baba.Application.Security;
 
 namespace Baba.Api.Errors;
 
@@ -31,6 +32,9 @@ public sealed class ApiErrorMiddleware(RequestDelegate next, ILogger<ApiErrorMid
     {
         ValidationException v => (StatusCodes.Status400BadRequest, new ApiProblem("Validation", v.Message, v.Issues)),
         CompanyFileException c => (StatusFor(c.Problem), new ApiProblem(c.Problem.ToString(), c.Message)),
+        SignInRequiredException => (StatusCodes.Status401Unauthorized, new ApiProblem("SignInRequired", "Sign in to continue.")),
+        PasswordChangeRequiredException => (StatusCodes.Status403Forbidden, new ApiProblem("PasswordChangeRequired", "Choose your own password first.")),
+        ForbiddenException f => (StatusCodes.Status403Forbidden, new ApiProblem("Forbidden", "Your role does not allow this.", [new ValidationIssue(f.Area, $"forbidden.{f.Action}")])),
         NotFoundException n => (StatusCodes.Status404NotFound, new ApiProblem("NotFound", n.Message)),
         InvalidOperationException { Message: var m } when m.Contains("already open", StringComparison.OrdinalIgnoreCase)
             => (StatusCodes.Status409Conflict, new ApiProblem("CompanyAlreadyOpen", m)),

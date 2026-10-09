@@ -102,7 +102,11 @@ public static class TradeEndpoints
                 return Results.NoContent();
             })
             .WithName("DeleteRecurring");
-        recurring.MapPost("/run-due", (RecurringService service, CancellationToken ct) => service.RunDueAsync(null, ct))
+        recurring.MapPost("/run-due", async (RecurringService service, Baba.Application.Security.AppSession session, CancellationToken ct) =>
+            {
+                using (session.AsSystem()) // the schedules post what is due as the program, whoever signed in
+                    return await service.RunDueAsync(null, ct);
+            })
             .WithName("RunDueRecurring");
 
         var productsGroup = api.MapGroup("/products").WithTags("Products");
