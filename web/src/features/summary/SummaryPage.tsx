@@ -101,6 +101,15 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
           description={<Link to="/approvals">{t('security.approvals.open')}</Link>}
         />
       )}
+      {(lowStock.data ?? 0) > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          className="form-alert"
+          message={t('summary.lowStock', { count: lowStock.data })}
+          description={<Link to="/reports/stock-reorder">{t('summary.lowStockOpen')}</Link>}
+        />
+      )}
       {!can('reports', 'View') && <Alert type="info" showIcon className="form-alert" message={t('summary.useMenu')} />}
       {dashboard.isError && <Alert type="error" showIcon message={errorMessage(dashboard.error, t)} className="form-alert" />}
       {dashboard.data && (
@@ -154,15 +163,6 @@ export function SummaryPage({ company }: { company: CompanyInfo }) {
                 currency: dashboard.data.currencyCode,
               })}
               description={<Link to="/purchases">{t('summary.overdueOpenBills')}</Link>}
-            />
-          )}
-          {(lowStock.data ?? 0) > 0 && (
-            <Alert
-              type="warning"
-              showIcon
-              className="form-alert"
-              message={t('summary.lowStock', { count: lowStock.data })}
-              description={<Link to="/reports/stock-reorder">{t('summary.lowStockOpen')}</Link>}
             />
           )}
           {dashboard.data.draftVouchers > 0 && (
