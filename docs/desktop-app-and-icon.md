@@ -10,7 +10,7 @@ page says how to make that installer, what the people who install it will see, a
 3. After a few minutes the installer is at `artifacts\installer\Baba-Setup-<version>.exe` (about 50 MB, everything inside; the person who
    installs it does not need .NET or anything else except the Microsoft Edge WebView2 runtime, which Windows 10 and 11 already have).
 
-The version number is in `Directory.Build.props`. Build a fresh installer whenever the app changed. (Last built and tested on 2026-10-09:
+The version number is in `Directory.Build.props`. Build a fresh installer whenever the app changed. (Last built and tested on 2026-10-09, now with the Baba icon and the Phase 7 screens:
 silent install, desktop shortcut, `.baba` file association, the app's own self-test and every screen flow from the installed copy, then
 uninstall leaving nothing behind.)
 
