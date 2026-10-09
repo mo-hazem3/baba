@@ -4,8 +4,8 @@ A bilingual (English / العربية) accounting-first ERP for small and medium
 the UAE and Kuwait today, more countries later). Each company is one encrypted file on your computer (`My Company.baba`) that
 works fully offline. The same code is designed to run later as a hosted, multi-user service.
 
-**Status: Phases 0 to 7 are built** (foundation, accounting core, banking and sub-ledgers, sales and purchases, tax, inventory,
-assets / payroll / expense claims / budgets, and users / roles / approval / audit log). The cloud edition (Phase 8) is next.
+**Status: working and ready to try on one computer.** It covers accounting, banking, sales and purchases, tax, stock, assets,
+payroll, expense claims, budgets, and users with roles, approval and an audit log. The hosted cloud edition is next.
 Everything below is checked by automated tests and by driving the real desktop window; what is *not* done is listed honestly
 under [What is not done yet](#what-is-not-done-yet).
 
@@ -92,7 +92,7 @@ client in `web/src/api/generated` and commit both together (CI fails if they are
 Development with hot reload: run `npm run dev` in `web/`, then start the desktop app with
 `BABA_PORT=5054` and `BABA_WEB_URL=http://localhost:5173`.
 
-**Drive the real desktop window** (run after every phase; takes screenshots into `artifacts/real-window/`):
+**Drive the real desktop window** (run after every big change; takes screenshots into `artifacts/real-window/`):
 
 ```powershell
 node tools\real-window-check\real-window.cjs                      # with the native Windows dialogs (needs an unlocked desktop)
