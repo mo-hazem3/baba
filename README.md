@@ -127,7 +127,6 @@ file is migrated when it is opened, after an automatic backup.
 | `branding/` | The Baba icon and logo |
 | `tools/real-window-check/` | Drives the real desktop window end to end |
 | `docs/user-guide/` | The guide for the people who use Baba, in English and Arabic |
-| `docs/adr/` | Decision records (why things are the way they are), 0001 to 0012 |
 | `docs/countries/` | How to add a country, the Saudi notes, and the payroll rules to verify |
 
 ## Rules the code follows

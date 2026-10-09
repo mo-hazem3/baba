@@ -20,7 +20,7 @@ The core only talks to the `ICountryPack` contract, and the UI only reacts to th
 5. **Run `dotnet test`.** The architecture tests fail if any code outside `Baba.Localization` names a country or
    uses a pack, and if one pack uses another.
 6. **If something outside the pack had to change**, stop. Extend the `ICountryPack` contract instead (every pack
-   then implements it, possibly as "not applicable") and record why in an ADR.
+   then implements it, possibly as "not applicable") and write down why.
 
 ## Removing a country
 

@@ -1,6 +1,8 @@
 # Private, personal files: never commit
 docs/baba-brief.md
 CLAUDE.md
+# Decision records: kept on the owner's computer only
+docs/adr/
 
 # Local tooling (portable Node etc.)
 .tools/
