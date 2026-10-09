@@ -15,6 +15,9 @@ obj/
 .vs/
 TestResults/
 artifacts/
+# The installer built by installer/build-installer.ps1 is copied next to its script
+installer/*.exe
+installer/*.zip
 
 # Company files and local data (can contain real financial data)
 *.baba

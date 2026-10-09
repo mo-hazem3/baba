@@ -1,5 +1,6 @@
 # Builds the Baba installer: web app -> published desktop app -> Inno Setup installer.
-# Output: artifacts\installer\Baba-Setup-<version>.exe (or a portable zip if Inno Setup is not installed).
+# Output: artifacts\installer\Baba-Setup-<version>.exe (or a portable zip if Inno Setup is not installed), and a copy of it
+# right here in the installer folder, where people look for it (the copy is not committed).
 # Usage:  powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 $ErrorActionPreference = 'Stop'
@@ -40,11 +41,14 @@ New-Item -ItemType Directory -Force $output | Out-Null
 if ($candidates) {
     & ($candidates | Select-Object -First 1) "/DAppVersion=$version" (Join-Path $PSScriptRoot 'Baba.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
-    Write-Host "Installer: $output\Baba-Setup-$version.exe"
+    Copy-Item "$output\Baba-Setup-$version.exe" $PSScriptRoot -Force
+    Write-Host "Installer: $PSScriptRoot\Baba-Setup-$version.exe"
+    Write-Host "Also in:   $output\Baba-Setup-$version.exe"
 } else {
     $zip = Join-Path $output "Baba-portable-$version.zip"
     if (Test-Path $zip) { Remove-Item $zip }
     Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $zip
     Write-Warning 'Inno Setup was not found, so a portable zip was made instead (no .baba file association).'
-    Write-Host "Portable zip: $zip"
+    Copy-Item $zip $PSScriptRoot -Force
+    Write-Host "Portable zip: $PSScriptRoot\Baba-portable-$version.zip"
 }
