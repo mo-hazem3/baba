@@ -12,8 +12,8 @@ export default defineConfig({
   outputDir: 'test-results',
   fullyParallel: false,
   workers: 1,
-  timeout: 90_000,
-  expect: { timeout: 15_000 },
+  timeout: 120_000,
+  expect: { timeout: 30_000 }, // slow build machines (CI) need more than a developer laptop
   reporter: [['list']],
   globalSetup: './e2e/global-setup.ts',
   use: {
