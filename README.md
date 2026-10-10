@@ -64,6 +64,10 @@ do when something goes wrong. It is written for people who are not used to compu
 
 ## Build, run and test
 
+**First time in a fresh folder** (after cloning or copying the project): double-click `setup.cmd` (or run
+`powershell -ExecutionPolicy Bypass -File setup.ps1`). It installs the web packages, builds the backend, the web app and the
+desktop app, and tells you how to run it. The steps below are what it does, and what to run afterwards.
+
 Requirements: Windows 10/11, the [.NET 10 SDK](https://dotnet.microsoft.com/download), Node.js 24, and the Microsoft Edge
 WebView2 runtime (part of current Windows). Browser tests use the Microsoft Edge that is already installed.
 
@@ -100,8 +104,8 @@ $env:BABA_NO_NATIVE = "1"; node tools\real-window-check\real-window.cjs   # with
 ```
 
 **Build the installer** (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php); falls back to a portable zip without it). The
-result is `artifacts\installer\Baba-Setup-<version>.exe`; see [docs/desktop-app-and-icon.md](docs/desktop-app-and-icon.md) for the
-icon and what to do before giving it to customers:
+finished file is `installer\Baba-Setup-<version>.exe` (a copy is also kept in `artifacts\installer\`). Before giving it to customers
+it should be code-signed (otherwise Windows shows its "protected your PC" warning):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1

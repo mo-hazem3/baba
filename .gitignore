@@ -1,8 +1,9 @@
 # Private, personal files: never commit
 docs/baba-brief.md
 CLAUDE.md
-# Decision records: kept on the owner's computer only
+# Decision records and the installer/icon notes: kept on the owner's computer only
 docs/adr/
+docs/desktop-app-and-icon.md
 
 # Local tooling (portable Node etc.)
 .tools/
